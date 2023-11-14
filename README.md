@@ -169,4 +169,4 @@ make A=apps/net/httpserver ARCH=aarch64 LOG=info NET=y SMP=4 run
 
 ## Design
 
-![](doc/figures/ArceOS.svg)
+![](doc/figures/arceos-hv-architecture.png)
