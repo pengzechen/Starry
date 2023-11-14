@@ -252,6 +252,7 @@ unsafe extern "C" fn _start() -> ! {
 #[no_mangle]
 #[link_section = ".text.boot"]
 unsafe extern "C" fn _start_secondary() -> ! {
+    #[cfg(not(feature = "hv"))]
     core::arch::asm!("
         mrs     x19, mpidr_el1
         and     x19, x19, #0xffffff     // get current CPU id
@@ -268,6 +269,36 @@ unsafe extern "C" fn _start_secondary() -> ! {
         ldr     x8, ={entry}
         blr     x8
         b      .",
+        switch_to_el1 = sym switch_to_el1,
+        init_mmu = sym init_mmu,
+        enable_fp = sym enable_fp,
+        phys_virt_offset = const axconfig::PHYS_VIRT_OFFSET,
+        entry = sym crate::platform::rust_entry_secondary,
+        options(noreturn),
+    );
+    #[cfg(feature = "hv")]
+    core::arch::asm!("
+        ldr x8, ={exception_vector_base_el2}    // setup vbar_el2 for hypervisor
+        msr vbar_el2, x8
+
+        mrs     x19, mpidr_el1
+        and     x19, x19, #0xffffff     // get current CPU id
+
+        mov     sp, x0
+        bl      {init_mmu_el2}
+        bl      {init_mmu}
+        bl      {switch_to_el1}
+        bl      {enable_fp}
+
+        mov     x8, {phys_virt_offset}  // set SP to the high address
+        add     sp, sp, x8
+
+        mov     x0, x19                 // call rust_entry_secondary(cpu_id)
+        ldr     x8, ={entry}
+        blr     x8
+        b      .",
+        exception_vector_base_el2 = sym exception_vector_base_el2,
+        init_mmu_el2 = sym init_mmu_el2,
         switch_to_el1 = sym switch_to_el1,
         init_mmu = sym init_mmu,
         enable_fp = sym enable_fp,
