@@ -21,10 +21,10 @@ bitflags::bitflags! {
         /// Non-secure bit. For memory accesses from Secure state, specifies whether the output
         /// address is in Secure or Non-secure memory.
         const NS =          1 << 5;
-        /// Access permission: accessable at EL0.
-        const AP_EL0 =      1 << 6;
-        /// Access permission: read-only.
-        const AP_RO =       1 << 7;
+       /// Access permission: read-only.
+        const S2AP_RO =      1 << 6;
+        /// Access permission: write-only.
+        const S2AP_WO =       1 << 7;
         /// Shareability: Inner Shareable (otherwise Outer Shareable).
         const INNER =       1 << 8;
         /// Shareability: Inner or Outer Shareable (otherwise Non-shareable).
@@ -36,9 +36,9 @@ bitflags::bitflags! {
         /// Indicates that 16 adjacent translation table entries point to contiguous memory regions.
         const CONTIGUOUS =  1 <<  52;
         /// The Privileged execute-never field.
-        const PXN =         1 <<  53;
+        // const PXN =         1 <<  53;
         /// The Execute-never or Unprivileged execute-never field.
-        const UXN =         1 <<  54;
+        const XN =         1 <<  54;
 
         // Next-level attributes in stage 1 VMSAv8-64 Table descriptors:
 
@@ -91,15 +91,10 @@ impl From<DescriptorAttr> for MappingFlags {
         if attr.contains(DescriptorAttr::VALID) {
             flags |= Self::READ;
         }
-        if !attr.contains(DescriptorAttr::AP_RO) {
+        if !attr.contains(DescriptorAttr::S2AP_WO) {
             flags |= Self::WRITE;
         }
-        if attr.contains(DescriptorAttr::AP_EL0) {
-            flags |= Self::USER;
-            if !attr.contains(DescriptorAttr::UXN) {
-                flags |= Self::EXECUTE;
-            }
-        } else if !attr.intersects(DescriptorAttr::PXN) {
+        if !attr.contains(DescriptorAttr::XN) {
             flags |= Self::EXECUTE;
         }
         if attr.mem_type() == MemType::Device {
@@ -117,26 +112,10 @@ impl From<MappingFlags> for DescriptorAttr {
             Self::from_mem_type(MemType::Normal)
         };
         if flags.contains(MappingFlags::READ) {
-            attr |= Self::VALID;
+            attr |= Self::VALID | Self::S2AP_RO;
         }
-        if !flags.contains(MappingFlags::WRITE) {
-            attr |= Self::AP_RO;
-        }
-        if flags.contains(MappingFlags::USER) {
-            {
-                attr |= Self::AP_EL0 | Self::PXN;
-                if !flags.contains(MappingFlags::EXECUTE) {
-                    attr |= Self::UXN;
-                }
-            }
-        } else {
-            #[cfg(not(feature = "hv"))] 
-            {
-                attr |= Self::UXN;
-                if !flags.contains(MappingFlags::EXECUTE) {
-                    attr |= Self::PXN;
-                }                
-            }
+        if flags.contains(MappingFlags::WRITE) {
+            attr |= Self::S2AP_WO;
         }
         attr
     }
@@ -149,9 +128,9 @@ impl From<MappingFlags> for DescriptorAttr {
 /// system register accordingly.
 #[derive(Clone, Copy)]
 #[repr(transparent)]
-pub struct A64PTE(u64);
+pub struct A64PTEHV(u64);
 
-impl A64PTE {
+impl A64PTEHV {
     const PHYS_ADDR_MASK: usize = 0x0000_ffff_ffff_f000; // bits 12..48
 
     /// Creates an empty descriptor with all bits set to zero.
@@ -160,7 +139,7 @@ impl A64PTE {
     }
 }
 
-impl GenericPTE for A64PTE {
+impl GenericPTE for A64PTEHV {
     fn new_page(paddr: PhysAddr, flags: MappingFlags, is_huge: bool) -> Self {
         let mut attr = DescriptorAttr::from(flags) | DescriptorAttr::AF;
         if !is_huge {
@@ -192,7 +171,7 @@ impl GenericPTE for A64PTE {
     }
 }
 
-impl fmt::Debug for A64PTE {
+impl fmt::Debug for A64PTEHV {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut f = f.debug_struct("A64PTE");
         f.field("raw", &self.0)

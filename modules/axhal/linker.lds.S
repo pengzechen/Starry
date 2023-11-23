@@ -8,11 +8,11 @@ SECTIONS
     . = BASE_ADDRESS;
     skernel = .;
 
-    .text : ALIGN(4K) {
+    .text : ALIGN(%TEXT_ALIGN%) {
         stext = .;
         *(.text.boot)
         *(.text .text.*)
-        . = ALIGN(4K);
+        . = ALIGN(%TEXT_ALIGN%);
         etext = .;
     }
 

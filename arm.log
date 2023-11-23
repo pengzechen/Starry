@@ -1,0 +1,107 @@
+
+       d8888                            .d88888b.   .d8888b.
+      d88888                           d88P" "Y88b d88P  Y88b
+     d88P888                           888     888 Y88b.
+    d88P 888 888d888  .d8888b  .d88b.  888     888  "Y888b.
+   d88P  888 888P"   d88P"    d8P  Y8b 888     888     "Y88b.
+  d88P   888 888     888      88888888 888     888       "888
+ d8888888888 888     Y88b.    Y8b.     Y88b. .d88P Y88b  d88P
+d88P     888 888      "Y8888P  "Y8888   "Y88888P"   "Y8888P"
+
+arch = aarch64
+platform = qemu-virt-aarch64
+smp = 2
+build_mode = release
+log_level = debug
+
+[37m[  0.001622 axruntime:138] [32mLogging is enabled.[m
+[m[37m[  0.002226 axruntime:139] [32mPrimary CPU 0 started, dtb = 0x48000000.[m
+[m[37m[  0.002411 axruntime:144] [32mFound physcial memory regions:[m
+[m[37m[  0.002575 axruntime:146] [32m  [PA:0x40080000, PA:0x40093000) .text (READ | EXECUTE | RESERVED)[m
+[m[37m[  0.002783 axruntime:146] [32m  [PA:0x40093000, PA:0x40097000) .rodata (READ | RESERVED)[m
+[m[37m[  0.002899 axruntime:146] [32m  [PA:0x40097000, PA:0x4009a000) .data (READ | WRITE | RESERVED)[m
+[m[37m[  0.003012 axruntime:146] [32m  [PA:0x4009a000, PA:0x4009c000) .percpu (READ | WRITE | RESERVED)[m
+[m[37m[  0.003120 axruntime:146] [32m  [PA:0x4009c000, PA:0x4011c000) boot stack (READ | WRITE | RESERVED)[m
+[m[37m[  0.003230 axruntime:146] [32m  [PA:0x4011c000, PA:0x4013f000) .bss (READ | WRITE | RESERVED)[m
+[m[37m[  0.003340 axruntime:146] [32m  [PA:0x9000000, PA:0x9001000) mmio (READ | WRITE | DEVICE | RESERVED)[m
+[m[37m[  0.003449 axruntime:146] [32m  [PA:0x8000000, PA:0x8020000) mmio (READ | WRITE | DEVICE | RESERVED)[m
+[m[37m[  0.003558 axruntime:146] [32m  [PA:0xa000000, PA:0xa004000) mmio (READ | WRITE | DEVICE | RESERVED)[m
+[m[37m[  0.003666 axruntime:146] [32m  [PA:0x10000000, PA:0x3eff0000) mmio (READ | WRITE | DEVICE | RESERVED)[m
+[m[37m[  0.003777 axruntime:146] [32m  [PA:0x4010000000, PA:0x4020000000) mmio (READ | WRITE | DEVICE | RESERVED)[m
+[m[37m[  0.003905 axruntime:146] [32m  [PA:0x4013f000, PA:0x48000000) free memory (READ | WRITE | FREE)[m
+[m[37m[  0.004048 axruntime:157] [32mInitialize global memory allocator...[m
+[m[37m[  0.004282 axalloc:184] [36minitialize global allocator at: [0x4013f000, 0x48000000)[m
+[m[37m[  0.005130 axruntime:170] [32mInitialize platform devices...[m
+[m[37m[  0.005251 axruntime::mp:18] [36mstarting CPU 1...[m
+[m[37m[  0.005352 axhal::platform::aarch64_common::psci:68] [36mStarting core 1...[m
+[m[37m[  0.005471 axhal::platform::aarch64_common::psci:35] [36mthis is smc call func:0xc4000003[m
+[m[37m[  0.005641 axhal::platform::aarch64_common::psci:73] [36mStarted core 1![m
+[m[37m[  0.006109 axruntime:200] [32mPrimary CPU 0 init OK.[m
+[m[37m[  0.006114 axruntime::mp:35] [32mSecondary CPU 1 started.[m
+[m[37m[  0.006318 axruntime::mp:53] [32mSecondary CPU 1 init OK.[m
+[mHello, hv!
+[37m[  0.006540 0 hypercraft::arch::cpu:50] [36mpcpu_size: 0x1000[m
+[m[37m[  0.006841 0 hypercraft::arch::cpu:53] [36mpcpu_pages: 0x40147000[m
+[m[37m[  0.006977 0 hypercraft::arch::cpu:58] [36mboot_stack_top: 0x0[m
+[m[37m[  0.008964 0 arceos_hv::dtb_aarch64:42] [36mvirtio mmio addr: 0xa000000, size: 0x200[m
+[m[37m[  0.009094 0 arceos_hv::dtb_aarch64:42] [36mvirtio mmio addr: 0xa000200, size: 0x200[m
+[m[37m[  0.009191 0 arceos_hv::dtb_aarch64:42] [36mvirtio mmio addr: 0xa000400, size: 0x200[m
+[m[37m[  0.009294 0 arceos_hv::dtb_aarch64:42] [36mvirtio mmio addr: 0xa000600, size: 0x200[m
+[m[37m[  0.009397 0 arceos_hv::dtb_aarch64:42] [36mvirtio mmio addr: 0xa000800, size: 0x200[m
+[m[37m[  0.009500 0 arceos_hv::dtb_aarch64:42] [36mvirtio mmio addr: 0xa000a00, size: 0x200[m
+[m[37m[  0.009596 0 arceos_hv::dtb_aarch64:42] [36mvirtio mmio addr: 0xa000c00, size: 0x200[m
+[m[37m[  0.009694 0 arceos_hv::dtb_aarch64:42] [36mvirtio mmio addr: 0xa000e00, size: 0x200[m
+[m[37m[  0.009790 0 arceos_hv::dtb_aarch64:42] [36mvirtio mmio addr: 0xa001000, size: 0x200[m
+[m[37m[  0.009891 0 arceos_hv::dtb_aarch64:42] [36mvirtio mmio addr: 0xa001200, size: 0x200[m
+[m[37m[  0.009988 0 arceos_hv::dtb_aarch64:42] [36mvirtio mmio addr: 0xa001400, size: 0x200[m
+[m[37m[  0.010084 0 arceos_hv::dtb_aarch64:42] [36mvirtio mmio addr: 0xa001600, size: 0x200[m
+[m[37m[  0.010211 0 arceos_hv::dtb_aarch64:42] [36mvirtio mmio addr: 0xa001800, size: 0x200[m
+[m[37m[  0.010308 0 arceos_hv::dtb_aarch64:42] [36mvirtio mmio addr: 0xa001a00, size: 0x200[m
+[m[37m[  0.010404 0 arceos_hv::dtb_aarch64:42] [36mvirtio mmio addr: 0xa001c00, size: 0x200[m
+[m[37m[  0.010500 0 arceos_hv::dtb_aarch64:42] [36mvirtio mmio addr: 0xa001e00, size: 0x200[m
+[m[37m[  0.010596 0 arceos_hv::dtb_aarch64:42] [36mvirtio mmio addr: 0xa002000, size: 0x200[m
+[m[37m[  0.010692 0 arceos_hv::dtb_aarch64:42] [36mvirtio mmio addr: 0xa002200, size: 0x200[m
+[m[37m[  0.010789 0 arceos_hv::dtb_aarch64:42] [36mvirtio mmio addr: 0xa002400, size: 0x200[m
+[m[37m[  0.010884 0 arceos_hv::dtb_aarch64:42] [36mvirtio mmio addr: 0xa002600, size: 0x200[m
+[m[37m[  0.010980 0 arceos_hv::dtb_aarch64:42] [36mvirtio mmio addr: 0xa002800, size: 0x200[m
+[m[37m[  0.011076 0 arceos_hv::dtb_aarch64:42] [36mvirtio mmio addr: 0xa002a00, size: 0x200[m
+[m[37m[  0.011172 0 arceos_hv::dtb_aarch64:42] [36mvirtio mmio addr: 0xa002c00, size: 0x200[m
+[m[37m[  0.011268 0 arceos_hv::dtb_aarch64:42] [36mvirtio mmio addr: 0xa002e00, size: 0x200[m
+[m[37m[  0.011364 0 arceos_hv::dtb_aarch64:42] [36mvirtio mmio addr: 0xa003000, size: 0x200[m
+[m[37m[  0.011460 0 arceos_hv::dtb_aarch64:42] [36mvirtio mmio addr: 0xa003200, size: 0x200[m
+[m[37m[  0.011556 0 arceos_hv::dtb_aarch64:42] [36mvirtio mmio addr: 0xa003400, size: 0x200[m
+[m[37m[  0.011652 0 arceos_hv::dtb_aarch64:42] [36mvirtio mmio addr: 0xa003600, size: 0x200[m
+[m[37m[  0.011748 0 arceos_hv::dtb_aarch64:42] [36mvirtio mmio addr: 0xa003800, size: 0x200[m
+[m[37m[  0.011843 0 arceos_hv::dtb_aarch64:42] [36mvirtio mmio addr: 0xa003a00, size: 0x200[m
+[m[37m[  0.011942 0 arceos_hv::dtb_aarch64:42] [36mvirtio mmio addr: 0xa003c00, size: 0x200[m
+[m[37m[  0.012041 0 arceos_hv::dtb_aarch64:42] [36mvirtio mmio addr: 0xa003e00, size: 0x200[m
+[m[37m[  0.012411 0 arceos_hv::dtb_aarch64:56] [36mpl011 addr: 0x9000000, size: 0x1000[m
+[m[37m[  0.012630 0 arceos_hv::dtb_aarch64:67] [36mpl031 addr: 0x9010000, size: 0x1000[m
+[m[37m[  0.012853 0 arceos_hv::dtb_aarch64:78] [36mpl061 addr: 0x9030000, size: 0x1000[m
+[m[37m[  0.013101 0 arceos_hv::dtb_aarch64:91] [36mintc addr: 0x8000000, size: 0x10000[m
+[m[37m[  0.013206 0 arceos_hv::dtb_aarch64:91] [36mintc addr: 0x8010000, size: 0x10000[m
+[m[37m[  0.013467 0 arceos_hv::dtb_aarch64:103] [36mintc addr: 0x8020000, size: 0x1000[m
+[m[37m[  0.013719 0 arceos_hv::dtb_aarch64:117] [36mpcie addr: 0x4010000000, size: 0x10000000[m
+[m[37m[  0.013968 0 arceos_hv::dtb_aarch64:130] [36mflash addr: 0x0, size: 0x4000000[m
+[m[37m[  0.014071 0 arceos_hv::dtb_aarch64:130] [36mflash addr: 0x4000000, size: 0x4000000[m
+[m[37m[  0.014652 0 arceos_hv:267] [32mphysical memory: [0x70000000: 0x7c000000)[m
+[m[37m[  0.015768 0 axalloc:90] [36mexpand heap memory: [0x40169000, 0x40179000)[m
+[m[37m[  0.016956 0 axalloc:90] [36mexpand heap memory: [0x40199000, 0x401d9000)[m
+[m[37m[  0.018343 0 arceos_hv:289] [36mthis is paddr for 0xFFFF800008000000: 0x8000000[m
+[m[37m[  0.018794 0 arceos_hv:87] [32mvm run cpu0[m
+[m[37m[  0.018886 0 hypercraft::arch::vm:35] [36mvttbr_token: 0x40148000[m
+[m[37m[  0.019085 0 hypercraft::arch::exception:167] [36mlower_aarch64_synchronous exception class:0x16[m
+[m[37m[  0.019930 0 hypercraft::arch::sync:86] [36mhvc_handler: mode:0[m
+[m[37m[  0.051890 0 hypercraft::arch::exception:167] [36mlower_aarch64_synchronous exception class:0x17[m
+[m[37m[  0.052764 0 hypercraft::arch::psci:14] [36msmc_guest_handler: fid 0x84000000, x1 0x0, x2 0x0, x3 0x0[m
+[m[37m[  0.053133 0 hypercraft::arch::exception:167] [36mlower_aarch64_synchronous exception class:0x17[m
+[m[37m[  0.053248 0 hypercraft::arch::psci:14] [36msmc_guest_handler: fid 0x84000006, x1 0x0, x2 0x0, x3 0x0[m
+[m[37m[  0.053386 0 hypercraft::arch::exception:167] [36mlower_aarch64_synchronous exception class:0x17[m
+[m[37m[  0.053493 0 hypercraft::arch::psci:14] [36msmc_guest_handler: fid 0x8400000a, x1 0x80000000, x2 0x0, x3 0x0[m
+[m[37m[  0.053647 0 hypercraft::arch::exception:167] [36mlower_aarch64_synchronous exception class:0x17[m
+[m[37m[  0.053754 0 hypercraft::arch::psci:14] [36msmc_guest_handler: fid 0x8400000a, x1 0xc4000001, x2 0x0, x3 0x0[m
+[m[37m[  0.053880 0 hypercraft::arch::exception:167] [36mlower_aarch64_synchronous exception class:0x17[m
+[m[37m[  0.053986 0 hypercraft::arch::psci:14] [36msmc_guest_handler: fid 0x8400000a, x1 0xc400000e, x2 0x0, x3 0x0[m
+[m[37m[  0.054125 0 hypercraft::arch::exception:167] [36mlower_aarch64_synchronous exception class:0x17[m
+[m[37m[  0.054231 0 hypercraft::arch::psci:14] [36msmc_guest_handler: fid 0x8400000a, x1 0xc4000012, x2 0x0, x3 0x0[m
+[m

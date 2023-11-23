@@ -10,7 +10,7 @@ use dtb_riscv64::MachineMeta;
 #[cfg(target_arch = "aarch64")]
 use dtb_aarch64::MachineMeta;
 #[cfg(target_arch = "aarch64")]
-use aarch64_config::GUEST_KERNEL_BASE_VADDR;
+use aarch64_config::*;
 #[cfg(target_arch = "aarch64")]
 use libax::{
     hv::{
@@ -76,15 +76,18 @@ fn main(hart_id: usize) {
 
         // create vcpu, need to change addr for aarch64!
         let gpt = setup_gpm(0x7000_0000, 0x7020_0000).unwrap();  
-        let vcpu = pcpu.create_vcpu(0).unwrap();
+        let vcpu0 = pcpu.create_vcpu(0).unwrap();
+        let vcpu1 = pcpu.create_vcpu(1).unwrap();
         let mut vcpus = VmCpus::new();
 
         // add vcpu into vm
-        vcpus.add_vcpu(vcpu).unwrap();
+        vcpus.add_vcpu(vcpu0).unwrap();
+        // vcpus.add_vcpu(vcpu1).unwrap();
         let mut vm: VM<HyperCraftHalImpl, GuestPageTable> = VM::new(vcpus, gpt, 0).unwrap();
-        vm.init_vm_vcpu(0, 0x7020_0000, 0x7000_0000);
+        vm.init_vm_vcpus(0x7020_0000, 0x7000_0000);
+        // vm.init_vm_vcpu(0, 0x7020_0000, 0x7000_0000);
 
-        info!("vm run cpu{}", hart_id);
+        // info!("vm run cpu{}", hart_id);
         // suppose hart_id to be 0
         vm.run(0);
     }
@@ -237,7 +240,7 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
             MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
         )?;
     }
-
+    
     for intc in meta.intc.iter() {
         gpt.map_region(
             intc.base_address,
@@ -270,23 +273,20 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
         meta.physical_memory_offset,
         meta.physical_memory_offset + meta.physical_memory_size
     );
-    
+
     gpt.map_region(
         meta.physical_memory_offset,
         meta.physical_memory_offset,
         meta.physical_memory_size,
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE | MappingFlags::USER,
     )?;
-    
+/* 
     gpt.map_region(
-        GUEST_KERNEL_BASE_VADDR,
+        NIMBOS_KERNEL_BASE_VADDR,
         kernel_entry,
         meta.physical_memory_size,
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE | MappingFlags::USER,
     )?;
-
-    let gaddr:usize = 0x40_1000_0000;
-    let paddr = gpt.translate(gaddr).unwrap();
-    debug!("this is paddr for 0x{:X}: 0x{:X}", gaddr, paddr);
+*/
     Ok(gpt)
 }

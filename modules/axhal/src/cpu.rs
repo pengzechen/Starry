@@ -11,8 +11,17 @@ static CURRENT_TASK_PTR: usize = 0;
 
 /// Returns the ID of the current CPU.
 #[inline]
+#[cfg(not(all(feature = "hv", target_arch = "aarch64")))]
 pub fn this_cpu_id() -> usize {
     CPU_ID.read_current()
+}
+
+/// Returns the ID of the current CPU.
+#[inline]
+#[cfg(all(feature = "hv", target_arch = "aarch64"))]
+// TODO(): need more suitable method to get el2 cpu id
+pub fn this_cpu_id() -> usize {
+    0
 }
 
 /// Returns whether the current CPU is the primary CPU (aka the bootstrap

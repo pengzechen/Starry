@@ -338,13 +338,13 @@ impl<M: PagingMetaData, PTE: GenericPTE, IF: PagingIf> PageTable64<M, PTE, IF> {
         if page_size == PageSize::Size1G {
             return Ok(p3e);
         }
-
+        
         let p2 = self.next_table_mut_or_create(p3e)?;
         let p2e = &mut p2[p2_index(vaddr)];
         if page_size == PageSize::Size2M {
             return Ok(p2e);
         }
-
+        
         let p1 = self.next_table_mut_or_create(p2e)?;
         let p1e = &mut p1[p1_index(vaddr)];
         Ok(p1e)
