@@ -69,26 +69,25 @@ fn main(hart_id: usize) {
     #[cfg(target_arch = "aarch64")]
     {
         // boot cpu
-        PerCpu::<HyperCraftHalImpl>::init(0, 0x4000);   // change to pub const CPU_STACK_SIZE: usize = PAGE_SIZE * 128?
+        PerCpu::<HyperCraftHalImpl>::init(0);   // change to pub const CPU_STACK_SIZE: usize = PAGE_SIZE * 128?
 
         // get current percpu
-        let pcpu = PerCpu::<HyperCraftHalImpl>::this_cpu();
-
+        // let pcpu0 = PerCpu::<HyperCraftHalImpl>::this_cpu();
+        let pcpu0 = PerCpu::<HyperCraftHalImpl>::ptr_for_cpu(0);
+        let pcpu1 = PerCpu::<HyperCraftHalImpl>::ptr_for_cpu(1);
         // create vcpu, need to change addr for aarch64!
         let gpt = setup_gpm(0x7000_0000, 0x7020_0000).unwrap();  
-        let vcpu0 = pcpu.create_vcpu(0).unwrap();
-        let vcpu1 = pcpu.create_vcpu(1).unwrap();
+        let vcpu0 = pcpu0.create_vcpu(0).unwrap();
+        let vcpu1 = pcpu1.create_vcpu(1).unwrap();
         let mut vcpus = VmCpus::new();
 
         // add vcpu into vm
         vcpus.add_vcpu(vcpu0).unwrap();
-        // vcpus.add_vcpu(vcpu1).unwrap();
+        vcpus.add_vcpu(vcpu1).unwrap();
         let mut vm: VM<HyperCraftHalImpl, GuestPageTable> = VM::new(vcpus, gpt, 0).unwrap();
         vm.init_vm_vcpus(0x7020_0000, 0x7000_0000);
         // vm.init_vm_vcpu(0, 0x7020_0000, 0x7000_0000);
 
-        // info!("vm run cpu{}", hart_id);
-        // suppose hart_id to be 0
         vm.run(0);
     }
     #[cfg(target_arch = "x86_64")]

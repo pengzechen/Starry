@@ -19,9 +19,16 @@ impl GuestPageTableTrait for GuestPageTable {
         }
         #[cfg(target_arch = "aarch64")]
         {
-            let agpt = NestedPageTable::<GuestPagingIfImpl>::try_new()
-            .map_err(|_| HyperError::NoMemory)?;
-            Ok(GuestPageTable(agpt))
+            let agpt = NestedPageTable::<GuestPagingIfImpl>::try_new().unwrap();
+            if usize::from(agpt.root_paddr()) & (1<<12) != 0 {
+                let nextapt = NestedPageTable::<GuestPagingIfImpl>::try_new().map_err(|_| HyperError::NoMemory)?;
+                {
+                    let _ = agpt; // drop agpt
+                }
+                Ok(GuestPageTable(nextapt))
+            }else {
+                Ok(GuestPageTable(agpt))
+            }
         }
         #[cfg(target_arch = "x86_64")]
         {

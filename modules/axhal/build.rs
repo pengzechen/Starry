@@ -37,7 +37,7 @@ fn gen_linker_script(arch: &str, platform: &str, is_hv: bool) -> Result<()> {
     );
         
     let ld_content = ld_content.replace("%SMP%", &format!("{}", axconfig::SMP));
-    
+    /* 
     let text_align: &str;
     if is_hv && platform == "qemu-virt-aarch64" {
         text_align = r#"8K"#;
@@ -45,17 +45,9 @@ fn gen_linker_script(arch: &str, platform: &str, is_hv: bool) -> Result<()> {
         text_align = r#"4K"#;
     }
     let ld_content = ld_content.replace("%TEXT_ALIGN%", text_align);
-
+    
     let el2_link: &str;
     if is_hv {
-        /*el2_link = r#". = 0xff00000000;
-    el2code_start = ABSOLUTE(.);
-    .el2code (NOLOAD) : ALIGN(4k) {
-        *(.el2code)
-    }
-    . = el2code_start + SIZEOF(.el2code);
-    . = ALIGN(4k);
-    el2code_ened = .;"#;*/
     el2_link = r#"el2code_start = .;
     .el2code 0x10000 : AT(el2code_start) ALIGN(4096) {
         *(.el2code.test)
@@ -64,6 +56,7 @@ fn gen_linker_script(arch: &str, platform: &str, is_hv: bool) -> Result<()> {
         el2_link = r#""#;
     }
     let ld_content = ld_content.replace("%EL2CODE%", el2_link);
+    */
     //#[cfg(not(feature = "hv"))]
     //
 

@@ -61,9 +61,14 @@ pub extern "C" fn rust_main_secondary(cpu_id: usize) -> ! {
     axhal::arch::enable_irqs();
 
     #[cfg(feature = "multitask")]
-    axtask::run_idle();
+    {
+        debug!("secondary CPU {} enter idle loop", cpu_id);
+        axtask::run_idle();
+    }
+    
     #[cfg(not(feature = "multitask"))]
     loop {
+        // debug!("secondary CPU {} wait for irqs", cpu_id);
         axhal::arch::wait_for_irqs();
     }
 }

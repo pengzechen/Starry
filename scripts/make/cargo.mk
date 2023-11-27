@@ -21,6 +21,10 @@ ifeq ($(ARCH), x86_64)
   features-$(HV) += libax/irq
 endif
 
+ifeq ($(ARCH), aarch64)
+  features-$(HV) += libax/irq
+endif
+
 ifeq ($(BUS),pci)
   features-y += libax/bus-pci
 endif

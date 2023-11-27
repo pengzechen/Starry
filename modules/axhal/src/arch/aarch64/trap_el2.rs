@@ -40,5 +40,8 @@ fn invalid_exception_el2(tf: &mut TrapFrame, kind: TrapKind, source: TrapSource)
 #[no_mangle]
 fn handle_irq_exception_el2(_tf: &mut TrapFrame) {
     // timer interrupt
-    crate::trap::handle_irq_extern(0)
+    // crate::trap::handle_irq_extern(0)
+    panic!(
+        "Invalid irq todo!!!!",
+    );
 }
