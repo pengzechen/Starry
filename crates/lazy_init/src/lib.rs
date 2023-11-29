@@ -80,6 +80,17 @@ impl<T> LazyInit<T> {
         }
     }
 
+    /// Gets a mut reference to the value.
+    ///
+    /// Returns [`None`] if the value is not initialized.
+    pub fn try_get_mut(&self) -> Option<&mut T> {
+        if self.is_init() {
+            unsafe { Some(&mut *(*self.data.get()).as_mut_ptr()) }
+        } else {
+            None
+        }
+    }
+
     fn check_init(&self) {
         if !self.is_init() {
             panic!(

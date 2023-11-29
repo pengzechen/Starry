@@ -80,7 +80,7 @@ register_structs! {
 }
 
 // #[cfg(feature = "hv")]
-register_structs! {
+/*register_structs! {
     /// GIC Hypervisor Interface registers
     #[allow(non_snake_case)]
     GicHypervisorInterfaceRegs {
@@ -106,8 +106,36 @@ register_structs! {
         (0x0200 => reserve5),
         (0x1000 => @END),
     }
+}*/
+register_structs! {
+    #[allow(non_snake_case)]
+    GicHypervisorInterfaceRegs {
+        /// Hypervisor Control Register.
+        (0x0000 => HCR: ReadWrite<u32>),
+        /// VGIC Type Register.
+        (0x0004 => VTR: ReadOnly<u32>),
+        /// Virtual Machine Control Register.
+        (0x0008 => VMCR: ReadWrite<u32>),
+        (0x000c => _reserved_0),
+        // Maintenance Interrupt Status Register.
+        (0x0010 => MISR: ReadOnly<u32>),
+        (0x0014 => _reserved_1),
+        // End of Interrupt Status Registers 0 and 1.
+        (0x0020 => EISR0: ReadOnly<u32>),
+        (0x0024 => EISR1: ReadOnly<u32>),
+        (0x0028 => _reserved_2),
+        // Empty List Register Status Registers 0 and 1.
+        (0x0030 => ELSR0: ReadOnly<u32>),
+        (0x0034 => ELSR1: ReadOnly<u32>),
+        (0x0038 => _reserved_3),
+        // Active Priorities Register.
+        (0x00f0 => APR: ReadWrite<u32>),
+        (0x00f4 => _reserved_4),
+        // List Registers 0-63.
+        (0x0100 => LR: [ReadWrite<u32>; 0x40]),
+        (0x0200 => @END),
+    }
 }
-
 /// The GIC distributor.
 ///
 /// The Distributor block performs interrupt prioritization and distribution
@@ -163,7 +191,6 @@ pub struct GicCpuInterface {
 /// - setting an interrupt priority mask for the processor
 /// - defining the preemption policy for the processor
 /// - determining the highest priority pending interrupt for the processor.
-// #[cfg(feature = "hv")]
 #[derive(Debug, Clone)]
 pub struct GicHypervisorInterface {
     base: NonNull<GicHypervisorInterfaceRegs>,
@@ -175,9 +202,7 @@ unsafe impl Sync for GicDistributor {}
 unsafe impl Send for GicCpuInterface {}
 unsafe impl Sync for GicCpuInterface {}
 
-//#[cfg(feature = "hv")]
 unsafe impl Send for GicHypervisorInterface {}
-//#[cfg(feature = "hv")]
 unsafe impl Sync for GicHypervisorInterface {}
 
 impl GicDistributor {
@@ -483,7 +508,6 @@ impl GicCpuInterface {
     }
 }
 
-// #[cfg(feature = "hv")]
 impl GicHypervisorInterface {
     /// Construct a new GIC hypervisor interface instance from the base address.
     pub const fn new(base: *mut u8) -> Self {
@@ -505,16 +529,22 @@ impl GicHypervisorInterface {
         self.regs().HCR.set(hcr);
     }
 
-    // ELRSR: Indicates which List registers contain valid interrupts.
-    // Get ELRSR by index.
-    pub fn get_elrsr_by_idx(&self, elsr_idx: usize) -> u32 {
-        self.regs().ELRSR[elsr_idx].get()
+    // ELSR1
+    pub fn get_elsr1(&self) -> u32 {
+        self.regs().ELSR1.get()
+    }
+    // ELSR0
+    pub fn get_elsr0(&self) -> u32 {
+        self.regs().ELSR0.get()
     }
 
-    // EISR: Indicates which List registers have outstanding EOI maintenance interrupts.
-    // Get EISR by index.
-    pub fn get_eisr_by_idx(&self, eisr_idx: usize) -> u32 {
-        self.regs().EISR[eisr_idx].get()
+    // VTR: Indicates the number of implemented virtual priority bits and List registers.
+    // VTR ListRegs, bits [4:0]: The number of implemented List registers, minus one.
+    // Get ListRegs number.
+    #[inline(always)]
+    pub fn get_lrs_num(&self) -> usize {
+        let vtr = self.regs().VTR.get();
+        ((vtr & 0b11111) + 1) as usize
     }
 
     // LR<n>: These registers provide context information for the virtual CPU interface.
@@ -542,15 +572,6 @@ impl GicHypervisorInterface {
     }
     pub fn set_apr(&self, apr: u32) {
         self.regs().APR.set(apr);
-    }
-
-    // VTR: Indicates the number of implemented virtual priority bits and List registers.
-    // VTR ListRegs, bits [4:0]: The number of implemented List registers, minus one.
-    // Get ListRegs number.
-    #[inline(always)]
-    pub fn get_lrs_num(&self) -> usize {
-        let vtr = self.regs().VTR.get();
-        ((vtr & 0b11111) + 1) as usize
     }
 
     pub fn init(&self) {

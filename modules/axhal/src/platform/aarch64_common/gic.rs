@@ -3,8 +3,8 @@ use arm_gic::gic_v2::{GicCpuInterface, GicDistributor, GicHypervisorInterface};
 use memory_addr::PhysAddr;
 use spinlock::SpinNoIrq;
 
-// #[cfg(feature = "hv")]
-// use hypercraft::arch;
+#[cfg(feature = "hv")]
+use hypercraft;
 
 /// The maximum number of IRQs.
 pub const MAX_IRQ_COUNT: usize = 1024;
@@ -72,11 +72,15 @@ pub(crate) fn init_primary() {
     #[cfg(feature = "hv")]
     {
         GICH.init();
-        // arch::GICH = Some(&GICH);
-        // arch::GICC = Some(&GICC);
-        // arch::GICD = Some(&GICD);
+        unsafe {
+            hypercraft::GICH.init_by(&GICH);
+            hypercraft::GICC.init_by(&GICC);
+            hypercraft::GICD.init_by(&GICD);            
+        }
+        // hypercraft::GICH = Some(&GICH);
+        // hypercraft::GICC = Some(&GICC);
+        // hypercraft::GICD = Some(&GICD);
     }
-    
 }
 
 /// Initializes GICC on secondary CPUs.

@@ -37,15 +37,15 @@ fn gen_linker_script(arch: &str, platform: &str, is_hv: bool) -> Result<()> {
     );
         
     let ld_content = ld_content.replace("%SMP%", &format!("{}", axconfig::SMP));
-    /* 
-    let text_align: &str;
+     
+    let align: &str;
     if is_hv && platform == "qemu-virt-aarch64" {
-        text_align = r#"8K"#;
+        align = r#"8K"#;
     } else {
-        text_align = r#"4K"#;
+        align = r#"4K"#;
     }
-    let ld_content = ld_content.replace("%TEXT_ALIGN%", text_align);
-    
+    let ld_content = ld_content.replace("%ALIGN%", align);
+    /*
     let el2_link: &str;
     if is_hv {
     el2_link = r#"el2code_start = .;

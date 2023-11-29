@@ -49,17 +49,17 @@ SECTIONS
     . = percpu_start + SIZEOF(.percpu);
     percpu_end = .;
 
-    .bss : ALIGN(4K) {
+    .bss : ALIGN(%ALIGN%) {
         boot_stack = .;
         *(.bss.stack)
-        . = ALIGN(4K);
+        . = ALIGN(%ALIGN%);
         boot_stack_top = .;
 
         sbss = .;
         *(.bss .bss.*)
         *(.sbss .sbss.*)
         *(COMMON)
-        . = ALIGN(4K);
+        . = ALIGN(%ALIGN%);
         ebss = .;
     }
     

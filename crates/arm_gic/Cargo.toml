@@ -10,5 +10,6 @@ repository = "https://github.com/rcore-os/arceos/tree/main/crates/arm_gic"
 documentation = "https://rcore-os.github.io/arceos/arm_gic/index.html"
 
 [dependencies]
+log = "0.4"
 tock-registers = "0.8"
 spin = { version = "0.9.4", features = ["use_ticket_mutex"] }

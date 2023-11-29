@@ -60,6 +60,11 @@ pub extern "C" fn rust_main_secondary(cpu_id: usize) -> ! {
     #[cfg(feature = "irq")]
     axhal::arch::enable_irqs();
 
+    #[cfg(all(target_arch = "aarch64", feature = "hv"))]
+    unsafe {
+        secondary_main_hv(cpu_id);
+    }
+    debug!("after init main hv");
     #[cfg(feature = "multitask")]
     {
         debug!("secondary CPU {} enter idle loop", cpu_id);
@@ -68,7 +73,11 @@ pub extern "C" fn rust_main_secondary(cpu_id: usize) -> ! {
     
     #[cfg(not(feature = "multitask"))]
     loop {
-        // debug!("secondary CPU {} wait for irqs", cpu_id);
         axhal::arch::wait_for_irqs();
     }
+}
+
+#[cfg(all(target_arch = "aarch64", feature = "hv"))]
+extern "C" {
+    fn secondary_main_hv(cpu_id: usize);
 }

@@ -63,7 +63,7 @@
 .p2align 7
     SAVE_REGS_EL2
     mov     x0, sp
-    bl      handle_irq_exception_el2
+    bl      irq_aarch64_el2
     b       .Lexception_return_el2
 .endm
 

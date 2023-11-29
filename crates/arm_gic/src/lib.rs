@@ -6,7 +6,11 @@
 #![feature(const_option)]
 #![feature(const_nonnull_new)]
 
+#[macro_use]
+extern crate log;
+
 pub mod gic_v2;
+
 
 use core::ops::Range;
 

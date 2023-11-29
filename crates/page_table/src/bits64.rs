@@ -30,6 +30,7 @@ const fn p1_index(vaddr: VirtAddr) -> usize {
 ///
 /// It also tracks all intermediate level tables. They will be deallocated
 /// When the [`PageTable64`] itself is dropped.
+#[derive(Clone)]
 pub struct PageTable64<M: PagingMetaData, PTE: GenericPTE, IF: PagingIf> {
     root_paddr: PhysAddr,
     intrm_tables: Vec<PhysAddr>,

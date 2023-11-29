@@ -15,7 +15,7 @@ use aarch64_config::*;
 use libax::{
     hv::{
         self, GuestPageTable, GuestPageTableTrait, HyperCraftHalImpl, PerCpu,
-        Result, VCpu, VmCpus, VM,
+        Result, VCpu, VmCpus, VM, VcpusArray,
     },
     info,
 };
@@ -36,9 +36,91 @@ mod dtb_riscv64;
 mod dtb_aarch64;
 #[cfg(target_arch = "aarch64")]
 mod aarch64_config;
+#[cfg(target_arch = "aarch64")]
+use lazy_init::LazyInit;
 
 #[cfg(target_arch = "x86_64")]
 mod x64;
+
+use libax::thread;
+use libax::time::Duration;
+use alloc::vec::Vec;
+use spin::Mutex;
+
+use core::sync::atomic::{AtomicUsize, Ordering};
+static INITED_VCPUS: AtomicUsize = AtomicUsize::new(0);
+
+fn is_init_ok() -> bool {
+    INITED_VCPUS.load(Ordering::Acquire) == VCPU_CNT
+}
+
+fn is_primary_ok() -> bool {
+    INITED_VCPUS.load(Ordering::Acquire) == 1
+}
+
+#[cfg(target_arch = "aarch64")]
+const VM_MAX_NUM: usize = 8;
+#[cfg(target_arch = "aarch64")]
+static mut VM_ARRAY: LazyInit<Vec<Option<VM<HyperCraftHalImpl, GuestPageTable>>>> = LazyInit::new();
+
+/// Get vm by index
+#[cfg(target_arch = "aarch64")]
+fn init_vm_vcpu(vm_id: usize, vcpu: VCpu<HyperCraftHalImpl>) {
+    if vm_id >= VM_MAX_NUM {
+        panic!("vm_id {} out of bound", vm_id);
+    }
+    unsafe {
+        if let Some(vm_option) = VM_ARRAY.get_mut(vm_id) {
+            if let Some(vm) = vm_option {
+                vm.add_vm_vcpu(vcpu.clone());
+                vm.init_vm_vcpu(vcpu.vcpu_id(), 0x7020_0000, 0x7000_0000);
+            }
+        }
+    }
+    debug!("finish init_vm_vcpu vm_id:{} vcpu {:?}", vm_id, vcpu);
+    INITED_VCPUS.fetch_add(1, Ordering::Relaxed);
+}
+
+/// Add vm to vm array
+#[cfg(target_arch = "aarch64")]
+fn add_vm(vm_id: usize, vm: VM<HyperCraftHalImpl, GuestPageTable>) {
+    if vm_id >= VM_MAX_NUM {
+        panic!("vm_id {} out of bound", vm_id);
+    }
+
+    unsafe {
+        while VM_ARRAY.len() <= vm_id {
+            VM_ARRAY.push(None);
+        }
+    
+        VM_ARRAY[vm_id] = Some(vm);
+    }
+
+}
+
+#[cfg(target_arch = "aarch64")]
+#[no_mangle]
+pub extern "C" fn print_vm(vm_id: usize) {
+    unsafe {
+        if let Some(vm_option) = VM_ARRAY.get_mut(vm_id) {
+            if let Some(vm) = vm_option {
+                debug!("vcpus: {:?}", vm.vcpus)
+            }
+        }
+    }
+}
+
+#[cfg(target_arch = "aarch64")]
+#[no_mangle]
+pub fn run_vm_vcpu(vm_id: usize, vcpu_id: usize) {
+    unsafe {
+        if let Some(vm_option) = VM_ARRAY.get_mut(vm_id) {
+            if let Some(vm) = vm_option {
+                vm.run(vcpu_id);
+            }
+        }
+    }
+}
 
 #[no_mangle]
 fn main(hart_id: usize) {
@@ -70,25 +152,33 @@ fn main(hart_id: usize) {
     {
         // boot cpu
         PerCpu::<HyperCraftHalImpl>::init(0);   // change to pub const CPU_STACK_SIZE: usize = PAGE_SIZE * 128?
-
         // get current percpu
-        // let pcpu0 = PerCpu::<HyperCraftHalImpl>::this_cpu();
-        let pcpu0 = PerCpu::<HyperCraftHalImpl>::ptr_for_cpu(0);
-        let pcpu1 = PerCpu::<HyperCraftHalImpl>::ptr_for_cpu(1);
+        let percpu = PerCpu::<HyperCraftHalImpl>::ptr_for_cpu(hart_id);
         // create vcpu, need to change addr for aarch64!
         let gpt = setup_gpm(0x7000_0000, 0x7020_0000).unwrap();  
-        let vcpu0 = pcpu0.create_vcpu(0).unwrap();
-        let vcpu1 = pcpu1.create_vcpu(1).unwrap();
-        let mut vcpus = VmCpus::new();
+        let vcpu = percpu.create_vcpu(0, 0).unwrap();
+        percpu.set_active_vcpu(Some(vcpu.clone()));
+
+        let vcpus = VcpusArray::new();
 
         // add vcpu into vm
-        vcpus.add_vcpu(vcpu0).unwrap();
-        vcpus.add_vcpu(vcpu1).unwrap();
+        // vcpus.add_vcpu(vcpu).unwrap();
         let mut vm: VM<HyperCraftHalImpl, GuestPageTable> = VM::new(vcpus, gpt, 0).unwrap();
-        vm.init_vm_vcpus(0x7020_0000, 0x7000_0000);
-        // vm.init_vm_vcpu(0, 0x7020_0000, 0x7000_0000);
-
-        vm.run(0);
+        unsafe {
+            let mut vm_array = Vec::with_capacity(VM_MAX_NUM);
+            for _ in 0..VM_MAX_NUM {
+                vm_array.push(None);
+            }
+            VM_ARRAY.init_by(vm_array);
+            debug!("this is VM_ARRAY: {:p}", &VM_ARRAY as *const _);
+        }
+        add_vm(0, vm);
+        init_vm_vcpu(0, vcpu);
+        // thread::sleep(Duration::from_millis(2000));
+        while !is_init_ok() {
+            core::hint::spin_loop();
+        } 
+        run_vm_vcpu(0, 0);
     }
     #[cfg(target_arch = "x86_64")]
     {
@@ -115,6 +205,28 @@ fn main(hart_id: usize) {
     {
         panic!("Other arch is not supported yet!")
     }
+}
+
+#[cfg(target_arch = "aarch64")]
+#[no_mangle]
+pub extern "C" fn secondary_main_hv(cpu_id: usize) {
+    // info!("before sleep cpu {}", cpu_id);
+    // thread::sleep(Duration::from_millis(1000));
+    info!("Hello World from cpu {}", cpu_id);
+    while !is_primary_ok() {
+        core::hint::spin_loop();
+    }
+    PerCpu::<HyperCraftHalImpl>::setup_this_cpu(cpu_id);
+    let percpu = PerCpu::<HyperCraftHalImpl>::this_cpu();
+    let vcpu = percpu.create_vcpu(0, 1).unwrap();
+    percpu.set_active_vcpu(Some(vcpu.clone()));
+    init_vm_vcpu(0, vcpu);
+    while !is_init_ok() {
+        core::hint::spin_loop();
+    }
+    info!("vcpu {} init ok", cpu_id);
+    // run_vm_vcpu(0, 1);
+    // print_vm(0);
 }
 
 #[cfg(target_arch = "riscv64")]
@@ -279,6 +391,9 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
         meta.physical_memory_size,
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE | MappingFlags::USER,
     )?;
+    let vaddr = 0x8000000014;
+    let hpa = gpt.translate(vaddr)?;
+    debug!("translate vaddr: {:#x}, hpa: {:#x}", vaddr, hpa);
 /* 
     gpt.map_region(
         NIMBOS_KERNEL_BASE_VADDR,

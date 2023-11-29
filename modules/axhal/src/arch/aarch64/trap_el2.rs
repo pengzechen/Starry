@@ -3,9 +3,11 @@ use core::arch::global_asm;
 use aarch64_cpu::registers::{ESR_EL1, FAR_EL1};
 use tock_registers::interfaces::Readable;
 
-use hypercraft::lower_aarch64_synchronous;
+use hypercraft::{lower_aarch64_synchronous, irq_aarch64_el2};
 
 use super::TrapFrame;
+
+pub use crate::platform::aarch64_common::gic::*;
 
 global_asm!(include_str!("trap_el2.S"));
 
@@ -34,14 +36,5 @@ fn invalid_exception_el2(tf: &mut TrapFrame, kind: TrapKind, source: TrapSource)
     panic!(
         "Invalid exception {:?} from {:?}:\n{:#x?}",
         kind, source, tf
-    );
-}
-
-#[no_mangle]
-fn handle_irq_exception_el2(_tf: &mut TrapFrame) {
-    // timer interrupt
-    // crate::trap::handle_irq_extern(0)
-    panic!(
-        "Invalid irq todo!!!!",
     );
 }

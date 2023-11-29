@@ -6,7 +6,9 @@ use hypercraft::{HostPhysAddr, HostVirtAddr, HyperCraftHal, HyperResult, VCpu};
 mod vmx;
 
 /// An empty struct to implementate of `HyperCraftHal`
+#[derive(Clone, Debug)]
 pub struct HyperCraftHalImpl;
+
 
 impl HyperCraftHal for HyperCraftHalImpl {
     fn alloc_pages(num_pages: usize) -> Option<hypercraft::HostVirtAddr> {
