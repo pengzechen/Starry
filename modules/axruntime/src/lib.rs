@@ -41,7 +41,11 @@ mod hv;
 pub use gpm::GuestPageTable;
 #[cfg(feature = "hv")]
 pub use hv::HyperCraftHalImpl;
-
+#[cfg(all(target_arch = "aarch64", feature = "hv"))]
+pub use hv::{
+    VM_ARRAY, VM_MAX_NUM, 
+    is_vcpu_init_ok, is_vcpu_primary_ok, init_vm_vcpu, add_vm, print_vm, run_vm_vcpu
+};
 
 const LOGO: &str = r#"
        d8888                            .d88888b.   .d8888b.

@@ -13,3 +13,8 @@ pub use hypercraft::{PerCpu, VCpu, VmCpus, VM};
 pub use hypercraft::{HyperCallMsg, VmExitInfo, GuestPhysAddr, GuestVirtAddr, HostPhysAddr, HostVirtAddr};
 #[cfg(target_arch = "aarch64")]
 pub use hypercraft::VcpusArray;
+#[cfg(target_arch = "aarch64")]
+pub use axruntime::{
+    VM_ARRAY, VM_MAX_NUM, 
+    is_vcpu_init_ok, is_vcpu_primary_ok, init_vm_vcpu, add_vm, print_vm, run_vm_vcpu
+};

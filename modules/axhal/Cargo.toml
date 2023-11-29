@@ -62,6 +62,8 @@ aarch64-cpu = "9.3"
 tock-registers = "0.8"
 arm_gic = { path = "../../crates/arm_gic" }
 arm_pl011 = { path = "../../crates/arm_pl011" }
+cortex-a = "8.1.1"
+smccc = "0.1.1"
 
 [build-dependencies]
 axconfig = { path = "../axconfig" }
