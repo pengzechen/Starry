@@ -75,9 +75,6 @@ pub extern "C" fn rust_main_secondary(cpu_id: usize) -> ! {
     
     #[cfg(not(feature = "multitask"))]
     loop {
-        // let (id, src) = gicc_get_current_irq();
-        // debug!("1111111111111 this is id:{} src:{}", id, src);
-        debug!("!111111111111");
         axhal::arch::wait_for_irqs();
         // let (id, src) = gicc_get_current_irq();
     }

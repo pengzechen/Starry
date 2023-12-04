@@ -106,7 +106,7 @@ pub fn ipi_send_msg(target_id: usize, ipi_type: IpiType, ipi_message: IpiInnerMs
 }
 
 fn ipi_send(target_id: usize) -> bool {
-   // interrupt_cpu_ipi_send(target_id, IPI_IRQ_NUM);
+    interrupt_cpu_ipi_send(target_id, IPI_IRQ_NUM);
     true
 }
 /* 
