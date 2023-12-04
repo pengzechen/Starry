@@ -42,85 +42,7 @@ use lazy_init::LazyInit;
 #[cfg(target_arch = "x86_64")]
 mod x64;
 
-use libax::thread;
-use libax::time::Duration;
 use alloc::vec::Vec;
-use spin::Mutex;
-
-use core::sync::atomic::{AtomicUsize, Ordering};
-static INITED_VCPUS: AtomicUsize = AtomicUsize::new(0);
-
-fn is_init_ok() -> bool {
-    INITED_VCPUS.load(Ordering::Acquire) == VCPU_CNT
-}
-
-fn is_primary_ok() -> bool {
-    INITED_VCPUS.load(Ordering::Acquire) == 1
-}
-
-#[cfg(target_arch = "aarch64")]
-const VM_MAX_NUM: usize = 8;
-#[cfg(target_arch = "aarch64")]
-static mut VM_ARRAY: LazyInit<Vec<Option<VM<HyperCraftHalImpl, GuestPageTable>>>> = LazyInit::new();
-
-/// Get vm by index
-#[cfg(target_arch = "aarch64")]
-fn init_vm_vcpu(vm_id: usize, vcpu: VCpu<HyperCraftHalImpl>) {
-    if vm_id >= VM_MAX_NUM {
-        panic!("vm_id {} out of bound", vm_id);
-    }
-    unsafe {
-        if let Some(vm_option) = VM_ARRAY.get_mut(vm_id) {
-            if let Some(vm) = vm_option {
-                vm.add_vm_vcpu(vcpu.clone());
-                vm.init_vm_vcpu(vcpu.vcpu_id(), 0x7020_0000, 0x7000_0000);
-            }
-        }
-    }
-    debug!("finish init_vm_vcpu vm_id:{} vcpu {:?}", vm_id, vcpu);
-    INITED_VCPUS.fetch_add(1, Ordering::Relaxed);
-}
-
-/// Add vm to vm array
-#[cfg(target_arch = "aarch64")]
-fn add_vm(vm_id: usize, vm: VM<HyperCraftHalImpl, GuestPageTable>) {
-    if vm_id >= VM_MAX_NUM {
-        panic!("vm_id {} out of bound", vm_id);
-    }
-
-    unsafe {
-        while VM_ARRAY.len() <= vm_id {
-            VM_ARRAY.push(None);
-        }
-    
-        VM_ARRAY[vm_id] = Some(vm);
-    }
-
-}
-
-#[cfg(target_arch = "aarch64")]
-#[no_mangle]
-pub extern "C" fn print_vm(vm_id: usize) {
-    unsafe {
-        if let Some(vm_option) = VM_ARRAY.get_mut(vm_id) {
-            if let Some(vm) = vm_option {
-                debug!("vcpus: {:?}", vm.vcpus)
-            }
-        }
-    }
-}
-
-#[cfg(target_arch = "aarch64")]
-#[no_mangle]
-pub fn run_vm_vcpu(vm_id: usize, vcpu_id: usize) {
-    unsafe {
-        if let Some(vm_option) = VM_ARRAY.get_mut(vm_id) {
-            if let Some(vm) = vm_option {
-                vm.run(vcpu_id);
-            }
-        }
-    }
-}
 
 #[no_mangle]
 fn main(hart_id: usize) {
@@ -179,7 +101,7 @@ fn main(hart_id: usize) {
         init_vm_vcpu(0, vcpu_id, 0x7020_0000, 0x7000_0000);
 
         // thread::sleep(Duration::from_millis(2000));
-        while !is_init_ok() {
+        while !is_vcpu_init_ok() {
             core::hint::spin_loop();
         } 
         run_vm_vcpu(0, 0);
@@ -217,7 +139,7 @@ pub extern "C" fn secondary_main_hv(cpu_id: usize) {
     // info!("before sleep cpu {}", cpu_id);
     // thread::sleep(Duration::from_millis(1000));
     info!("Hello World from cpu {}", cpu_id);
-    while !is_primary_ok() {
+    while !is_vcpu_primary_ok() {
         core::hint::spin_loop();
     }
     PerCpu::<HyperCraftHalImpl>::setup_this_cpu(cpu_id);

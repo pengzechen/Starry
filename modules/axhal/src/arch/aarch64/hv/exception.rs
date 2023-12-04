@@ -39,118 +39,6 @@ enum TrapSource {
     LowerAArch32 = 3,
 }
 
-macro_rules! arm_at {
-    ($at_op:expr, $addr:expr) => {
-        unsafe {
-            core::arch::asm!(concat!("AT ", $at_op, ", {0}"), in(reg) $addr, options(nomem, nostack));
-            core::arch::asm!("isb");
-        }
-    };
-}
-
-/// deal with invalid aarch64 synchronous exception
-#[no_mangle]
-fn invalid_exception_el2(tf: &mut ContextFrame, kind: TrapKind, source: TrapSource) {
-    panic!(
-        "Invalid exception {:?} from {:?}:\n{:#x?}",
-        kind, source, tf
-    );
-}
-
-#[no_mangle]
-fn current_el_spx_irq(ctx: *mut ContextFrame) {
-    debug!("!!!!!!!!!!enter current_el_spx_irq");
-    lower_aarch64_irq(ctx);
-}
-
-// need to remove in the future. modify entering guest methods
-#[no_mangle]
-fn current_el_spx_synchronous(ctx: &mut ContextFrame) {
-    debug!("enter current_el_spx_synchronous exception class:0x{:X}", exception_class());
-    match exception_class() {
-        0x16 => {
-            hvc_handler(ctx);
-        }
-        // 0x18 todo？
-        _ => {   
-            panic!(
-                "handler not presents for EC_{} @ipa 0x{:x}, @pc 0x{:x}, @esr 0x{:x}, @sctlr_el1 0x{:x}, @vttbr_el2 0x{:x}, @vtcr_el2: {:#x} hcr: {:#x} ctx:{}",
-                exception_class(),
-                exception_fault_addr(),
-                (*ctx).exception_pc(),
-                exception_esr(),
-                cortex_a::registers::SCTLR_EL1.get() as usize,
-                cortex_a::registers::VTTBR_EL2.get() as usize,
-                cortex_a::registers::VTCR_EL2.get() as usize,
-                cortex_a::registers::HCR_EL2.get() as usize,
-                ctx
-            );
-        },
-    }
-}
-
-/// deal with lower aarch64 interruption exception
-/* 
-#[no_mangle]
-pub extern "C" fn lower_aarch64_irq() {
-    debug!("IRQ routed to EL2");
-    let (src, id) = gicc_get_current_irq();
-    debug!("src {:#x} id{:#x}", src, id);
-    if let Some(irq_id) = pending_irq() {
-        // deactivate_irq(irq_id);
-        inject_irq(irq_id);
-    }
-}
-*/
-#[no_mangle]
-fn lower_aarch64_irq(ctx: *mut ContextFrame) {
-    // current_cpu().set_ctx(ctx);
-    let (id, src) = gicc_get_current_irq();
-    debug!("!!!!!!!!!!enter lower_aarch64_irq id:{} src:{}", id, src);
-    if id >= 1022 {
-        return;
-    }
-    crate::trap::handle_irq_extern_hv(id, src);
-    deactivate_irq(id<<10|src);
-    // let handled_by_hypervisor = interrupt_handler(id, src);
-    // gicc_clear_current_irq(handled_by_hypervisor);
-    // current_cpu().clear_ctx();
-}
-
-/// deal with lower aarch64 synchronous exception
-#[no_mangle]
-fn lower_aarch64_synchronous(ctx: &mut ContextFrame) {
-    debug!("enter lower_aarch64_synchronous exception class:0x{:X}", exception_class());
-
-    match exception_class() {
-        0x24 => {
-            // info!("Core[{}] data_abort_handler", cpu_id());
-            data_abort_handler(ctx);
-        }
-        0x16 => {
-            hvc_handler(ctx);
-        }
-        0x17 => {
-            smc_handler(ctx);
-        }
-        // 0x18 todo？
-        _ => {   
-            panic!(
-                "handler not presents for EC_{} @ipa 0x{:x}, @pc 0x{:x}, @esr 0x{:x}, @sctlr_el1 0x{:x}, @vttbr_el2 0x{:x}, @vtcr_el2: {:#x} hcr: {:#x} ctx:{}",
-                exception_class(),
-                exception_fault_addr(),
-                (*ctx).exception_pc(),
-                exception_esr(),
-                cortex_a::registers::SCTLR_EL1.get() as usize,
-                cortex_a::registers::VTTBR_EL2.get() as usize,
-                cortex_a::registers::VTCR_EL2.get() as usize,
-                cortex_a::registers::HCR_EL2.get() as usize,
-                ctx
-            );
-        },
-    }
-}
-
 #[inline(always)]
 pub fn exception_esr() -> usize {
     cortex_a::registers::ESR_EL2.get() as usize
@@ -182,6 +70,15 @@ fn exception_hpfar() -> usize {
 const ESR_ELx_S1PTW_SHIFT: usize = 7;
 #[allow(non_upper_case_globals)]
 const ESR_ELx_S1PTW: usize = 1 << ESR_ELx_S1PTW_SHIFT;
+
+macro_rules! arm_at {
+    ($at_op:expr, $addr:expr) => {
+        unsafe {
+            core::arch::asm!(concat!("AT ", $at_op, ", {0}"), in(reg) $addr, options(nomem, nostack));
+            core::arch::asm!("isb");
+        }
+    };
+}
 
 fn translate_far_to_hpfar(far: usize) -> Result<usize, ()> {
     /*
@@ -282,4 +179,71 @@ pub fn exception_data_abort_access_reg_width() -> usize {
 #[inline(always)]
 pub fn exception_data_abort_access_is_sign_ext() -> bool {
     ((exception_iss() >> 21) & 1) != 0
+}
+
+/// deal with invalid aarch64 synchronous exception
+#[no_mangle]
+fn invalid_exception_el2(tf: &mut ContextFrame, kind: TrapKind, source: TrapSource) {
+    panic!(
+        "Invalid exception {:?} from {:?}:\n{:#x?}",
+        kind, source, tf
+    );
+}
+
+/// deal with lower aarch64 interruption exception
+#[no_mangle]
+fn current_spxel_irq(ctx: &mut ContextFrame) {
+    debug!("[current_spxel_irq] ");
+    lower_aarch64_irq(ctx);
+}
+
+/// deal with lower aarch64 interruption exception
+#[no_mangle]
+fn lower_aarch64_irq(ctx: &mut ContextFrame) {
+    debug!("IRQ routed to EL2");
+    let (irq, src) = gicc_get_current_irq();
+    debug!("src {} id{}", src, irq);
+    crate::trap::handle_irq_extern_hv(irq, src);
+    // deactivate_irq(irq);
+    /* 
+    if let Some(irq_id) = pending_irq() {
+        // deactivate_irq(irq_id);
+        inject_irq(irq_id);
+    }
+    */
+}
+
+/// deal with lower aarch64 synchronous exception
+#[no_mangle]
+fn lower_aarch64_synchronous(ctx: &mut ContextFrame) {
+    debug!("enter lower_aarch64_synchronous exception class:0x{:X}", exception_class());
+    // current_cpu().set_context_addr(ctx);
+
+    match exception_class() {
+        0x24 => {
+            // info!("Core[{}] data_abort_handler", cpu_id());
+            data_abort_handler(ctx);
+        }
+        0x16 => {
+            hvc_handler(ctx);
+        }
+        0x17 => {
+            smc_handler(ctx);
+        }
+        // 0x18 todo？
+        _ => {   
+            panic!(
+                "handler not presents for EC_{} @ipa 0x{:x}, @pc 0x{:x}, @esr 0x{:x}, @sctlr_el1 0x{:x}, @vttbr_el2 0x{:x}, @vtcr_el2: {:#x} hcr: {:#x} ctx:{}",
+                exception_class(),
+                exception_fault_addr(),
+                (*ctx).exception_pc(),
+                exception_esr(),
+                cortex_a::registers::SCTLR_EL1.get() as usize,
+                cortex_a::registers::VTTBR_EL2.get() as usize,
+                cortex_a::registers::VTCR_EL2.get() as usize,
+                cortex_a::registers::HCR_EL2.get() as usize,
+                ctx
+            );
+        },
+    }
 }

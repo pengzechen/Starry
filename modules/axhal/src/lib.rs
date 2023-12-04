@@ -36,6 +36,10 @@
 #[macro_use]
 extern crate log;
 
+#[cfg(all(target_arch = "aarch64", feature = "hv"))]
+#[macro_use]
+extern crate hypercraft;
+
 mod platform;
 
 #[cfg(all(target_arch = "aarch64", feature = "hv"))]

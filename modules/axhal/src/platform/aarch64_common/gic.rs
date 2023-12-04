@@ -6,6 +6,9 @@ use spinlock::SpinNoIrq;
 #[cfg(feature = "hv")]
 use hypercraft;
 
+#[cfg(feature = "hv")]
+use hypercraft::arch::utils::bit_extract;
+
 /// The maximum number of IRQs.
 pub const MAX_IRQ_COUNT: usize = 1024;
 
@@ -20,6 +23,8 @@ pub const IPI_IRQ_NUM: usize = 1;
 
 /// The maintenance interrupt irq number.
 pub const MAINTENANCE_IRQ_NUM: usize = 25;
+
+pub const GIC_SGIS_NUM: usize = 16;
 
 const GICD_BASE: PhysAddr = PhysAddr::from(axconfig::GICD_PADDR);
 const GICC_BASE: PhysAddr = PhysAddr::from(axconfig::GICC_PADDR);
@@ -77,6 +82,7 @@ pub fn dispatch_irq(_unused: usize) {
 
 #[cfg(feature = "hv")]
 pub fn dispatch_irq(irq_num: usize) {
+    debug!("dispatch_irq_hv: irq_num {}", irq_num);
     crate::irq::dispatch_irq_common(irq_num as _);
 }
 
@@ -103,9 +109,9 @@ pub fn gicc_get_current_irq() -> (usize, usize) {
     let iar = GICC.get_iar();
     let irq = iar as usize;
     // current_cpu().current_irq = irq;
-    let id = bit_extract(irq, 0, 10);
+    let irq = bit_extract(irq, 0, 10);
     let src = bit_extract(irq, 10, 3);
-    (id, src)
+    (irq, src)
 }
 
 #[cfg(feature = "hv")]

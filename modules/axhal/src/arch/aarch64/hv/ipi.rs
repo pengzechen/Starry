@@ -33,7 +33,7 @@ pub struct IpiMessage {
 
 #[derive(Copy, Clone, Debug)]
 pub enum IpiType {
-    IpiTPower = 1,
+    Power = 1,
 }
 
 #[derive(Clone, Debug)]

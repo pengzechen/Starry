@@ -3,7 +3,7 @@ use super::current_cpu;
 use super::guest_psci::psci_ipi_handler;
 
 pub fn init_ipi() {
-    if !ipi_register(IpiType::IpiTPower, psci_ipi_handler) {
+    if !ipi_register(IpiType::Power, psci_ipi_handler) {
         panic!("power_arch_init: failed to register ipi IpiTPower");
     }
 }
