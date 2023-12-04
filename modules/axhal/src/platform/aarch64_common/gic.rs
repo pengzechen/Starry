@@ -24,8 +24,7 @@ pub const IPI_IRQ_NUM: usize = 1;
 /// The maintenance interrupt irq number.
 pub const MAINTENANCE_IRQ_NUM: usize = 25;
 
-/// The sgi numbers
-const GIC_SGIS_NUM: usize = 16;
+pub const GIC_SGIS_NUM: usize = 16;
 
 const GICD_BASE: PhysAddr = PhysAddr::from(axconfig::GICD_PADDR);
 const GICC_BASE: PhysAddr = PhysAddr::from(axconfig::GICC_PADDR);
@@ -40,10 +39,6 @@ const LR_PENDING_BIT: u32 = 1 << 28;
 const LR_PHYSIRQ_MASK: usize = 0x3ff << 10;
 #[cfg(feature = "hv")]
 const LR_HW_BIT: u32 = 1 << 31;
-#[cfg(feature = "hv")]
-#[cfg(feature = "hv")]
-#[cfg(feature = "hv")]
-#[cfg(feature = "hv")]
 
 pub static GICD: SpinNoIrq<GicDistributor> =
     SpinNoIrq::new(GicDistributor::new(phys_to_virt(GICD_BASE).as_mut_ptr()));
@@ -60,6 +55,7 @@ pub fn set_enable(irq_num: usize, enabled: bool) {
     GICD.lock().set_enable(irq_num as _, enabled);
     #[cfg(feature = "hv")]
     {
+        debug!("in platform gic set_enable: irq_num {}, enabled {}", irq_num, enabled);
         GICD.lock().set_priority(irq_num as _, 0x7f);
         GICD.lock().set_target_cpu(irq_num as _, 1 << 0);   // only enable one cpu
         GICD.lock().set_enable(irq_num as _, enabled);
@@ -74,6 +70,7 @@ pub fn register_handler(irq_num: usize, handler: IrqHandler) -> bool {
     crate::irq::register_handler_common(irq_num, handler)
 }
 
+#[cfg(not(feature = "hv"))]
 /// Dispatches the IRQ.
 ///
 /// This function is called by the common interrupt handler. It looks
@@ -83,6 +80,12 @@ pub fn dispatch_irq(_unused: usize) {
     GICC.handle_irq(|irq_num| crate::irq::dispatch_irq_common(irq_num as _));
 }
 
+#[cfg(feature = "hv")]
+pub fn dispatch_irq(irq_num: usize) {
+    debug!("dispatch_irq_hv: irq_num {}", irq_num);
+    crate::irq::dispatch_irq_common(irq_num as _);
+}
+
 /// Initializes GICD, GICC on the primary CPU.
 pub(crate) fn init_primary() {
     info!("Initialize GICv2...");
@@ -90,28 +93,31 @@ pub(crate) fn init_primary() {
     GICC.init();
     #[cfg(feature = "hv")]
     {
-        GICH.init();
+        // GICH.init();
     }
 }
 
 /// Initializes GICC on secondary CPUs.
 #[cfg(feature = "smp")]
 pub(crate) fn init_secondary() {
+    info!("Initialize init_secondary GICv2...");
     GICC.init();
 }
 
 #[cfg(feature = "hv")]
-pub(crate) fn gicc_get_current_irq() -> (usize, usize) {
+pub fn gicc_get_current_irq() -> (usize, usize) {
     let iar = GICC.get_iar();
     let irq = iar as usize;
     // current_cpu().current_irq = irq;
-    let id = bit_extract(irq, 0, 10);
+    let irq = bit_extract(irq, 0, 10);
     let src = bit_extract(irq, 10, 3);
-    (id, src)
+    (irq, src)
 }
 
 #[cfg(feature = "hv")]
+#[no_mangle]
 pub fn interrupt_cpu_ipi_send(cpu_id: usize, ipi_id: usize) {
+    debug!("interrupt_cpu_ipi_send: cpu_id {}, ipi_id {}", cpu_id, ipi_id);
     if ipi_id < GIC_SGIS_NUM {
         GICD.lock().set_sgi(cpu_id, ipi_id);
     }
@@ -130,8 +136,8 @@ pub fn pending_irq() -> Option<usize> {
 }
 
 #[cfg(feature = "hv")]
-pub fn deactivate_irq(irq_num: usize) {
-    GICC.set_eoi(irq_num as _);    
+pub fn deactivate_irq(iar: usize) {
+    GICC.set_eoi(iar as _);    
 }
 
 #[cfg(feature = "hv")]

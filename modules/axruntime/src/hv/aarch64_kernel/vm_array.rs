@@ -4,30 +4,43 @@ use core::sync::atomic::{AtomicUsize, Ordering};
 use alloc::vec::Vec;
 
 use lazy_init::LazyInit;
-use hypercraft::{VM, VCpu};
+use hypercraft::{VM, VCpu, PerCpu};
 
 use crate::{HyperCraftHalImpl, GuestPageTable};
 
+use axhal::cpu::this_cpu_id;
 const VCPU_CNT: usize = 2;
 static INITED_VCPUS: AtomicUsize = AtomicUsize::new(0);
 pub const VM_MAX_NUM: usize = 8;
 pub static mut VM_ARRAY: LazyInit<Vec<Option<VM<HyperCraftHalImpl, GuestPageTable>>>> = LazyInit::new();
 
-/// Get vm by index
-pub fn init_vm_vcpu(vm_id: usize, vcpu: VCpu<HyperCraftHalImpl>) {
+/// Add vm vcpu by index
+pub fn add_vm_vcpu(vm_id: usize, vcpu:VCpu<HyperCraftHalImpl>) {
     if vm_id >= VM_MAX_NUM {
         panic!("vm_id {} out of bound", vm_id);
     }
     unsafe {
         if let Some(vm_option) = VM_ARRAY.get_mut(vm_id) {
             if let Some(vm) = vm_option {
-                vm.add_vm_vcpu(vcpu.clone());
-                vm.init_vm_vcpu(vcpu.vcpu_id(), 0x7020_0000, 0x7000_0000);
+                vm.add_vm_vcpu(vcpu);
             }
         }
     }
-    debug!("finish init_vm_vcpu vm_id:{} vcpu {:?}", vm_id, vcpu);
     INITED_VCPUS.fetch_add(1, Ordering::Relaxed);
+}
+
+/// Init vm vcpu by index
+pub fn init_vm_vcpu(vm_id: usize, vcpu_id: usize, entry:usize, x0:usize) {
+    if vm_id >= VM_MAX_NUM {
+        panic!("vm_id {} out of bound", vm_id);
+    }
+    unsafe {
+        if let Some(vm_option) = VM_ARRAY.get_mut(vm_id) {
+            if let Some(vm) = vm_option {
+                vm.init_vm_vcpu(vcpu_id, entry, x0);
+            }
+        }
+    } // debug!("finish init_vm_vcpu vm_id:{} vcpu {:?}", vm_id
 }
 
 /// Add vm to vm array
@@ -60,6 +73,7 @@ pub fn print_vm(vm_id: usize) {
 /// Run vm by id
 pub fn run_vm_vcpu(vm_id: usize, vcpu_id: usize) {
     unsafe {
+        debug!("current pcpu id: {} vcpu id:{}", this_cpu_id(), vcpu_id);
         if let Some(vm_option) = VM_ARRAY.get_mut(vm_id) {
             if let Some(vm) = vm_option {
                 vm.run(vcpu_id);

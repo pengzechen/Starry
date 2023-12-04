@@ -47,6 +47,9 @@ mod imp;
 pub use self::imp::*;
 pub use percpu_macros::def_percpu;
 
+#[macro_use]
+extern crate log;
+
 #[doc(hidden)]
 pub mod __priv {
     #[cfg(feature = "preempt")]

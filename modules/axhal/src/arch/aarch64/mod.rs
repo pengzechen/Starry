@@ -2,7 +2,7 @@ mod context;
 pub(crate) mod trap;
 
 #[cfg(feature = "hv")]
-pub(crate) mod hv;
+pub mod hv;
 
 use core::arch::asm;
 

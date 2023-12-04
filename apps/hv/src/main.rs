@@ -15,7 +15,7 @@ use aarch64_config::*;
 use libax::{
     hv::{
         self, GuestPageTable, GuestPageTableTrait, HyperCraftHalImpl, PerCpu,
-        Result, VCpu, VmCpus, VM, VcpusArray, VM_ARRAY, VM_MAX_NUM, is_vcpu_init_ok, is_vcpu_primary_ok, init_vm_vcpu, add_vm, print_vm, run_vm_vcpu, 
+        Result, VCpu, VmCpus, VM, VcpusArray, VM_ARRAY, VM_MAX_NUM, is_vcpu_init_ok, is_vcpu_primary_ok, init_vm_vcpu, add_vm, add_vm_vcpu, print_vm, run_vm_vcpu, 
     },
     info,
 };
@@ -41,10 +41,6 @@ use alloc::vec::Vec;
 
 #[cfg(target_arch = "x86_64")]
 mod x64;
-
-use libax::thread;
-use libax::time::Duration;
-use spin::Mutex;
 
 #[no_mangle]
 fn main(hart_id: usize) {
@@ -97,7 +93,11 @@ fn main(hart_id: usize) {
             debug!("this is VM_ARRAY: {:p}", &VM_ARRAY as *const _);
         }
         add_vm(0, vm);
-        init_vm_vcpu(0, vcpu);
+        // init_vm_vcpu(0, vcpu, 0x7020_0000, 0x7000_0000);
+        let vcpu_id = vcpu.vcpu_id;
+        add_vm_vcpu(0, vcpu);
+        init_vm_vcpu(0, vcpu_id, 0x7020_0000, 0x7000_0000);
+
         // thread::sleep(Duration::from_millis(2000));
         while !is_vcpu_init_ok() {
             core::hint::spin_loop();
@@ -144,7 +144,7 @@ pub extern "C" fn secondary_main_hv(cpu_id: usize) {
     let percpu = PerCpu::<HyperCraftHalImpl>::this_cpu();
     let vcpu = percpu.create_vcpu(0, 1).unwrap();
     percpu.set_active_vcpu(Some(vcpu.clone()));
-    init_vm_vcpu(0, vcpu);
+    add_vm_vcpu(0, vcpu);
     while !is_vcpu_init_ok() {
         core::hint::spin_loop();
     }

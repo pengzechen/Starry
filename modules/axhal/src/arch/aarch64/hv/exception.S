@@ -59,6 +59,14 @@
     b       .Lexception_return_el2
 .endm
 
+.macro HANDLE_CURRENT_IRQ
+.p2align 7
+    SAVE_REGS_EL2
+    mov     x0, sp
+    bl      current_spxel_irq
+    b       .Lexception_return_el2
+.endm
+
 .macro HANDLE_LOWER_IRQ
 .p2align 7
     SAVE_REGS_EL2
@@ -89,7 +97,7 @@ exception_vector_base_el2:
 
     // current EL, with SP_ELx
     INVALID_EXCP_EL2 0 1
-    INVALID_EXCP_EL2 1 1
+    HANDLE_CURRENT_IRQ
     INVALID_EXCP_EL2 2 1
     INVALID_EXCP_EL2 3 1
 

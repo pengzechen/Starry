@@ -331,6 +331,7 @@ dependencies = [
  "riscv 0.10.1",
  "sbi-rt",
  "smccc",
+ "spin 0.9.8",
  "spinlock",
  "static_assertions",
  "tock-registers",
@@ -1232,7 +1233,9 @@ name = "percpu"
 version = "0.1.0"
 dependencies = [
  "cfg-if",
+ "cortex-a",
  "kernel_guard",
+ "log",
  "percpu_macros",
  "spin 0.9.8",
  "x86",

@@ -192,20 +192,30 @@ fn invalid_exception_el2(tf: &mut ContextFrame, kind: TrapKind, source: TrapSour
 
 /// deal with lower aarch64 interruption exception
 #[no_mangle]
-pub extern "C" fn lower_aarch64_irq() {
+fn current_spxel_irq(ctx: &mut ContextFrame) {
+    debug!("[current_spxel_irq] ");
+    lower_aarch64_irq(ctx);
+}
+
+/// deal with lower aarch64 interruption exception
+#[no_mangle]
+fn lower_aarch64_irq(ctx: &mut ContextFrame) {
     debug!("IRQ routed to EL2");
-    let (src, id) = gicc_get_current_irq();
-    debug!("src {:#x} id{:#x}", src, id);
+    let (irq, src) = gicc_get_current_irq();
+    debug!("src {} id{}", src, irq);
+    crate::trap::handle_irq_extern_hv(irq, src);
+    // deactivate_irq(irq);
+    /* 
     if let Some(irq_id) = pending_irq() {
         // deactivate_irq(irq_id);
         inject_irq(irq_id);
     }
+    */
 }
-
 
 /// deal with lower aarch64 synchronous exception
 #[no_mangle]
-pub extern "C" fn lower_aarch64_synchronous(ctx: &mut ContextFrame) {
+fn lower_aarch64_synchronous(ctx: &mut ContextFrame) {
     debug!("enter lower_aarch64_synchronous exception class:0x{:X}", exception_class());
     // current_cpu().set_context_addr(ctx);
 

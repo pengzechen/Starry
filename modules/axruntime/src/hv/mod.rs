@@ -6,11 +6,11 @@ use hypercraft::{HostPhysAddr, HostVirtAddr, HyperCraftHal, HyperResult, VCpu};
 mod vmx;
 
 #[cfg(target_arch = "aarch64")]
-mod aarch64_kernel;
+pub mod aarch64_kernel;
 #[cfg(target_arch = "aarch64")]
 pub use aarch64_kernel::{
     VM_ARRAY, VM_MAX_NUM, 
-    is_vcpu_init_ok, is_vcpu_primary_ok, init_vm_vcpu, add_vm, print_vm, run_vm_vcpu
+    is_vcpu_init_ok, is_vcpu_primary_ok, init_vm_vcpu, add_vm, add_vm_vcpu, print_vm, run_vm_vcpu
 };
 
 /// An empty struct to implementate of `HyperCraftHal`

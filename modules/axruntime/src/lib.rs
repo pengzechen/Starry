@@ -41,11 +41,16 @@ mod hv;
 pub use gpm::GuestPageTable;
 #[cfg(feature = "hv")]
 pub use hv::HyperCraftHalImpl;
+
 #[cfg(all(target_arch = "aarch64", feature = "hv"))]
 pub use hv::{
     VM_ARRAY, VM_MAX_NUM, 
-    is_vcpu_init_ok, is_vcpu_primary_ok, init_vm_vcpu, add_vm, print_vm, run_vm_vcpu
+    is_vcpu_init_ok, is_vcpu_primary_ok, init_vm_vcpu, add_vm, add_vm_vcpu, print_vm, run_vm_vcpu
 };
+#[cfg(all(target_arch = "aarch64", feature = "hv"))]
+use axhal::IPI_IRQ_NUM;
+#[cfg(all(target_arch = "aarch64", feature = "hv"))]
+use crate::hv::aarch64_kernel::{ipi_irq_handler, init_ipi};
 
 const LOGO: &str = r#"
        d8888                            .d88888b.   .d8888b.
@@ -78,11 +83,13 @@ impl axlog::LogIf for LogIfImpl {
     }
 
     fn current_cpu_id() -> Option<usize> {
+        // #[cfg(all(feature = "hv", target_arch = "aarch64"))]
+        // return None;
         #[cfg(feature = "smp")]
         if is_init_ok() {
-            Some(axhal::cpu::this_cpu_id())
+            return Some(axhal::cpu::this_cpu_id());
         } else {
-            None
+            return None;
         }
         #[cfg(not(feature = "smp"))]
         Some(0)
@@ -281,38 +288,45 @@ fn remap_kernel_memory() -> Result<(), axhal::paging::PagingError> {
 
 #[cfg(feature = "irq")]
 fn init_interrupt() {
-    use axhal::time::TIMER_IRQ_NUM;
-
-    // Setup timer interrupt handler
-    const PERIODIC_INTERVAL_NANOS: u64 =
-        axhal::time::NANOS_PER_SEC / axconfig::TICKS_PER_SEC as u64;
-
-    #[percpu::def_percpu]
-    static NEXT_DEADLINE: u64 = 0;
-
-    fn update_timer() {
-        let now_ns = axhal::time::current_time_nanos();
-        // Safety: we have disabled preemption in IRQ handler.
-        let mut deadline = unsafe { NEXT_DEADLINE.read_current_raw() };
-        if now_ns >= deadline {
-            deadline = now_ns + PERIODIC_INTERVAL_NANOS;
-        }
-        unsafe { NEXT_DEADLINE.write_current_raw(deadline + PERIODIC_INTERVAL_NANOS) };
-        axhal::time::set_oneshot_timer(deadline);
-    }
-
-    axhal::irq::register_handler(TIMER_IRQ_NUM, || {
-        update_timer();
-        #[cfg(feature = "multitask")]
-        axtask::on_timer_tick();
-    });
-
-    /* 
-    #[cfg(all(feature = "hv", target_arch = "aarch64"))]
+    #[cfg(not(all(target_arch = "aarch64", feature = "hv")))]
     {
-        hv::interrupt_register_for_aarch64_hv();
+        use axhal::time::TIMER_IRQ_NUM;
+
+        // Setup timer interrupt handler
+        const PERIODIC_INTERVAL_NANOS: u64 =
+            axhal::time::NANOS_PER_SEC / axconfig::TICKS_PER_SEC as u64;
+
+        #[percpu::def_percpu]
+        static NEXT_DEADLINE: u64 = 0;
+
+        fn update_timer() {
+            let now_ns = axhal::time::current_time_nanos();
+            // Safety: we have disabled preemption in IRQ handler.
+            let mut deadline = unsafe { NEXT_DEADLINE.read_current_raw() };
+            if now_ns >= deadline {
+                deadline = now_ns + PERIODIC_INTERVAL_NANOS;
+            }
+            unsafe { NEXT_DEADLINE.write_current_raw(deadline + PERIODIC_INTERVAL_NANOS) };
+            axhal::time::set_oneshot_timer(deadline);
+        }
+    
+        axhal::irq::register_handler(TIMER_IRQ_NUM, || {
+            update_timer();
+            #[cfg(feature = "multitask")]
+            axtask::on_timer_tick();
+        });
+
+    }    
+
+    // Setup IPI interrupt handler for hv
+    #[cfg(all(target_arch = "aarch64", feature = "hv"))]
+    {
+        debug!("init ipi interrupt handler");
+        axhal::irq::register_handler(IPI_IRQ_NUM, ipi_irq_handler);
+        axhal::arch::hv::ipi::cpu_int_list_init();
+        init_ipi();
     }
-    */
+    
     // Enable IRQs before starting app
     axhal::arch::enable_irqs();
 }

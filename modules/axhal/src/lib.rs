@@ -42,6 +42,11 @@ extern crate hypercraft;
 
 mod platform;
 
+#[cfg(all(target_arch = "aarch64", feature = "hv"))]
+pub use platform::aarch64_common::gic::IPI_IRQ_NUM;
+#[cfg(all(target_arch = "aarch64", feature = "hv"))]
+pub use platform::aarch64_common::gic::gicc_get_current_irq;
+
 pub mod arch;
 pub mod cpu;
 pub mod mem;
