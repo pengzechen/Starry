@@ -21,7 +21,7 @@ pub fn this_cpu_id() -> usize {
 #[cfg(all(feature = "hv", target_arch = "aarch64"))]
 // TODO(): need more suitable method to get el2 cpu id
 pub fn this_cpu_id() -> usize {
-    0
+    CPU_ID.read_current()
 }
 
 /// Returns whether the current CPU is the primary CPU (aka the bootstrap

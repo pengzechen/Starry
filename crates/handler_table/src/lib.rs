@@ -46,4 +46,23 @@ impl<const N: usize> HandlerTable<N> {
             false
         }
     }
+
+    /// Checks if the specified IRQ number exists in the handler table.
+    ///
+    /// # Arguments
+    ///
+    /// * `idx` - The index of the IRQ number to check.
+    ///
+    /// # Returns
+    ///
+    /// Returns `true` if the IRQ number exists in the handler table, otherwise `false`.
+    pub fn irq_num_exist(&self, idx: usize) -> bool {
+        let handler = self.handlers[idx].load(Ordering::Acquire);
+        if handler != 0 {
+            true
+        } else {
+            false
+        }
+    }
+
 }

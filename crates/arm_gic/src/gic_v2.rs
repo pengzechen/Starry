@@ -264,6 +264,7 @@ impl GicDistributor {
 
     /// Set SGIR for sgi int id and target cpu.
     pub fn set_sgi(&self, cpu_interface: usize, sgi_num: usize) {
+        debug!("set sgi!!!!");
         let int_id = (sgi_num & 0b1111) as u32;
         let cpu_targetlist = 1 << (16 + cpu_interface);
         self.regs().SGIR.set(cpu_targetlist | int_id);
@@ -408,8 +409,8 @@ impl GicDistributor {
         if self.cpu_num() > 1 {
             for i in (SPI_RANGE.start..max_irqs).step_by(4) {
                 // Set external interrupts to target cpu 0
-                self.regs().ITARGETSR[i / 4].set(0x01_01_01_01);
                 self.regs().IPRIORITYR[i / 4].set(u32::MAX);
+                self.regs().ITARGETSR[i / 4].set(0x01_01_01_01);
             }
         }
         // Initialize all the SPIs to edge triggered
@@ -418,7 +419,8 @@ impl GicDistributor {
         }
 
         // enable GIC0
-        self.regs().CTLR.set(1);
+        let prev = self.regs().CTLR.get();
+        self.regs().CTLR.set( prev | 1 );
     }
 }
 
@@ -481,6 +483,7 @@ impl GicCpuInterface {
     where
         F: FnOnce(u32),
     {
+        debug!("handle_irq in crate gic!!!!!!!!!!!!!!!!");
         let iar = self.get_iar();
         let vector = iar & 0x3ff;
         if vector < 1020 {
@@ -502,7 +505,8 @@ impl GicCpuInterface {
         self.regs().CTLR.set(1);
         #[cfg(feature = "hv")]
         // set EOImodeNS and EN bit for hypervisor
-        self.regs().CTLR.set(1| 0x200);
+        self.regs().CTLR.set(1);
+        //self.regs().CTLR.set(1| 0x200);
         // unmask interrupts at all priority levels
         self.regs().PMR.set(0xff);
     }

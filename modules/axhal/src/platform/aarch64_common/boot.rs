@@ -58,6 +58,27 @@ unsafe fn switch_to_el1() {
     }
 }
 
+unsafe fn switch_to_el2() {
+    SPSel.write(SPSel::SP::ELx);
+    let current_el = CurrentEL.read(CurrentEL::EL);
+    if current_el == 3 {
+        SCR_EL3.write(
+            SCR_EL3::NS::NonSecure + SCR_EL3::HCE::HvcEnabled + SCR_EL3::RW::NextELIsAarch64,
+        );
+        SPSR_EL3.write(
+            SPSR_EL3::M::EL2h
+                + SPSR_EL3::D::Masked
+                + SPSR_EL3::A::Masked
+                + SPSR_EL3::I::Masked
+                + SPSR_EL3::F::Masked,
+        );
+        ELR_EL3.set(LR.get());
+        SP_EL1.set(BOOT_STACK.as_ptr_range().end as u64);
+        // This should be SP_EL2. To
+        asm::eret();
+    }
+}
+
 unsafe fn init_mmu_el2() {
     /* 
     MAIR_EL2.write(
@@ -267,8 +288,7 @@ unsafe extern "C" fn _start() -> ! {
 
         bl      {init_boot_page_table}
         bl      {init_mmu_el2}
-        bl      {init_mmu}              // setup MMU
-        bl      {switch_to_el1}         // switch to EL1
+        bl      {switch_to_el2}         // switch to EL1
         bl      {enable_fp}             // enable fp/neon
 
         mov     x8, {phys_virt_offset}  // set SP to the high address
@@ -283,8 +303,7 @@ unsafe extern "C" fn _start() -> ! {
         exception_vector_base_el2 = sym exception_vector_base_el2,
         init_boot_page_table = sym init_boot_page_table,
         init_mmu_el2 = sym init_mmu_el2,
-        switch_to_el1 = sym switch_to_el1,
-        init_mmu = sym init_mmu,
+        switch_to_el2 = sym switch_to_el2,
         enable_fp = sym enable_fp,
         boot_stack = sym BOOT_STACK,
         boot_stack_size = const TASK_STACK_SIZE,
@@ -334,8 +353,7 @@ unsafe extern "C" fn _start_secondary() -> ! {
 
         mov     sp, x0
         bl      {init_mmu_el2}
-        bl      {init_mmu}
-        bl      {switch_to_el1}
+        bl      {switch_to_el2}
         bl      {enable_fp}
 
         mov     x8, {phys_virt_offset}  // set SP to the high address
@@ -347,8 +365,7 @@ unsafe extern "C" fn _start_secondary() -> ! {
         b      .",
         exception_vector_base_el2 = sym exception_vector_base_el2,
         init_mmu_el2 = sym init_mmu_el2,
-        switch_to_el1 = sym switch_to_el1,
-        init_mmu = sym init_mmu,
+        switch_to_el2 = sym switch_to_el2,
         enable_fp = sym enable_fp,
         phys_virt_offset = const axconfig::PHYS_VIRT_OFFSET,
         entry = sym crate::platform::rust_entry_secondary,
