@@ -41,9 +41,7 @@ mod hv;
 pub use gpm::GuestPageTable;
 #[cfg(feature = "hv")]
 pub use hv::HyperCraftHalImpl;
-<<<<<<< Updated upstream
 
-=======
 #[cfg(all(target_arch = "aarch64", feature = "hv"))]
 pub use hv::{
     VM_ARRAY, VM_MAX_NUM, 
@@ -53,7 +51,6 @@ pub use hv::{
 use axhal::IPI_IRQ_NUM;
 #[cfg(all(target_arch = "aarch64", feature = "hv"))]
 use crate::hv::aarch64_kernel::{ipi_irq_handler, init_ipi};
->>>>>>> Stashed changes
 
 const LOGO: &str = r#"
        d8888                            .d88888b.   .d8888b.
