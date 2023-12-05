@@ -4,6 +4,9 @@ use core::sync::atomic::{AtomicUsize, Ordering};
 
 use axhal::gicc_get_current_irq;
 
+use aarch64_cpu::{asm, asm::barrier, registers::*};
+use tock_registers::interfaces::{ReadWriteable, Readable, Writeable};
+
 #[link_section = ".bss.stack"]
 static mut SECONDARY_BOOT_STACK: [[u8; TASK_STACK_SIZE]; SMP - 1] = [[0; TASK_STACK_SIZE]; SMP - 1];
 
@@ -72,9 +75,11 @@ pub extern "C" fn rust_main_secondary(cpu_id: usize) -> ! {
         debug!("secondary CPU {} enter idle loop", cpu_id);
         axtask::run_idle();
     }
-    
+
     #[cfg(not(feature = "multitask"))]
     loop {
+        // let current_el = CurrentEL.read(CurrentEL::EL);
+        // debug!("Current el:{:?}", current_el);
         axhal::arch::wait_for_irqs();
         // let (id, src) = gicc_get_current_irq();
     }

@@ -29,11 +29,11 @@ pub fn smc_guest_handler(
         },
         PSCI_VERSION => Ok(smc_call(PSCI_VERSION, 0, 0, 0).0),
         PSCI_CPU_ON_64 => Ok(psci_guest_cpu_on(x1, x2, x3)),
-       
-        /*PSCI_CPU_ON_64 => {
-            unsafe {
-                run_vm_vcpu(0, 1);
-            }
+        /* 
+        PSCI_CPU_ON_64 => {
+            // unsafe {
+            //     run_vm_vcpu(0, 1);
+            // }
             
             let smc_ret = smc_call(PSCI_CPU_ON_64, x1, x2, x3).0;
             if smc_ret == 0 {
@@ -42,9 +42,10 @@ pub fn smc_guest_handler(
                 // todo();
                 Ok(0)
             }
-        },*/
+        }
+        */
         // PSCI_SYSTEM_RESET => psci_guest_sys_reset(),
-        PSCI_SYSTEM_RESET => Ok(smc_call(PSCI_SYSTEM_RESET, 0, 0, 0).0),
+        // PSCI_SYSTEM_RESET => Ok(smc_call(PSCI_SYSTEM_RESET, 0, 0, 0).0),
         // PSCI_SYSTEM_OFF => psci_guest_sys_off(),
         PSCI_SYSTEM_OFF => Ok(smc_call(PSCI_SYSTEM_OFF, 0, 0, 0).0),
         PSCI_MIGRATE_INFO_TYPE => Ok(PSCI_TOS_NOT_PRESENT_MP),
