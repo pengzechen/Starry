@@ -35,7 +35,6 @@ pub fn irqs_enabled() -> bool {
 /// It must be called with interrupts enabled, otherwise it will never return.
 #[inline]
 pub fn wait_for_irqs() {
-    // debug!("this is wait for irq!!!!!!!!");
     aarch64_cpu::asm::wfi();
 }
 

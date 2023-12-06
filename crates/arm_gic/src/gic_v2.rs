@@ -254,7 +254,6 @@ impl GicDistributor {
         }
         let reg = vector / 32;
         let mask = 1 << (vector % 32);
-        
         if enable {
             self.regs().ISENABLER[reg].set(mask);
         } else {
@@ -263,11 +262,26 @@ impl GicDistributor {
     }
 
     /// Set SGIR for sgi int id and target cpu.
+    /* 
     pub fn set_sgi(&self, cpu_interface: usize, sgi_num: usize) {
         debug!("set sgi!!!!");
         let int_id = (sgi_num & 0b1111) as u32;
         let cpu_targetlist = 1 << (16 + cpu_interface);
         self.regs().SGIR.set(cpu_targetlist | int_id);
+    }
+    
+
+    pub fn send_sgi(&mut self, cpu_if: usize, sgi_num: usize) {
+        debug!("send ipi to cpu {}", cpu_if);
+        self.regs().SGIR.set(((1 << (16 + cpu_if)) | (sgi_num & 0b1111)) as u32);
+    }
+    */
+    pub fn send_sgi(&mut self, cpu_if: usize, sgi_num: usize) {
+        debug!("send sgi {} with priority {:#x} to cpu {}", sgi_num, self.get_priority(sgi_num), cpu_if);
+        // debug!("send sgi 2 with priority {:#x} to cpu {}", self.get_priority(2), cpu_if);
+        let sgir = ((1 << (16 + cpu_if)) | (sgi_num & 0b1111)) as u32;
+        debug!("this is sgir value: {:#x}", sgir);
+        self.regs().SGIR.set(sgir);
     }
 
     /// Get interrupt priority.
@@ -278,7 +292,7 @@ impl GicDistributor {
     }
 
     /// Set interrupt priority.
-    pub fn set_priority(&self, int_id: usize, priority: u8) {
+    pub fn set_priority(&mut self, int_id: usize, priority: u8) {
         let idx = (int_id * 8) / 32;
         let offset = (int_id * 8) % 32;
         let mask: u32 = 0xff << offset;
@@ -297,17 +311,15 @@ impl GicDistributor {
     }
 
     /// Set interrupt target cpu.
-    pub fn set_target_cpu(&self, int_id: usize, target: u8) {
+    pub fn set_target_cpu(&mut self, int_id: usize, target: u8) {
         let idx = (int_id * 8) / 32;
         let offset = (int_id * 8) % 32;
         let mask: u32 = 0xff << offset;
 
         let prev_reg_val = self.regs().ITARGETSR[idx].get();
-        // clear target int_id priority and set its priority.
-        let reg_val = (prev_reg_val & !mask) | (((target as u32) << offset) & mask);
-        // println!("idx {}, val {:x}", idx, value);
+        // clear target int_id target and set its target.
+        let reg_val: u32 = (prev_reg_val & !mask) | (((target as u32) << offset) & mask);
         self.regs().ITARGETSR[idx].set(reg_val);
-
     }
 
     /// Set interrupt state to pending or not.

@@ -5,6 +5,7 @@ use super::vm_array::{init_vm_vcpu, run_vm_vcpu};
 use crate::hv::HyperCraftHalImpl;
 
 pub(crate) fn psci_ipi_handler(msg: &IpiMessage) {
+    debug!("enter psci_ipi_handler");
     match &msg.ipi_message {
         IpiInnerMsg::Power(power_msg) => {
             // only one vcpu for a pcpu and only one vm. need to modify in the future

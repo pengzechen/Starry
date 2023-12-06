@@ -28,7 +28,7 @@ pub(crate) fn handle_irq_extern(irq_num: usize) {
 /// Call the external IRQ handler.
 #[allow(dead_code)]
 #[cfg(all(feature = "hv", target_arch = "aarch64"))]
-pub(crate) fn handle_irq_extern_hv(irq_num: usize, src: usize) {
+pub fn handle_irq_extern_hv(irq_num: usize, src: usize) {
     debug!("in handle_irq_extern_hv: irq_num {}, src {}", irq_num, src);
     call_interface!(TrapHandler::handle_irq_hv, irq_num, src);
 }

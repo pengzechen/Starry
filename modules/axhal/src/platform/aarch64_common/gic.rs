@@ -51,15 +51,18 @@ pub static GICH: GicHypervisorInterface = GicHypervisorInterface::new(phys_to_vi
 
 /// Enables or disables the given IRQ.
 pub fn set_enable(irq_num: usize, enabled: bool) {
-    #[cfg(not(feature = "hv"))]
+    debug!("in platform gic set_enable: irq_num {}, enabled {}", irq_num, enabled);
+    // #[cfg(not(feature = "hv"))]
     GICD.lock().set_enable(irq_num as _, enabled);
+    /* 
     #[cfg(feature = "hv")]
     {
         debug!("in platform gic set_enable: irq_num {}, enabled {}", irq_num, enabled);
-        GICD.lock().set_priority(irq_num as _, 0x7f);
-        GICD.lock().set_target_cpu(irq_num as _, 1 << 0);   // only enable one cpu
+        // GICD.lock().set_priority(irq_num as _, 0x7f);
+        // GICD.lock().set_target_cpu(irq_num as _, 1 << 0);   // only enable one cpu
         GICD.lock().set_enable(irq_num as _, enabled);
     }
+    */
 }
 
 /// Registers an IRQ handler for the given IRQ.
@@ -108,6 +111,7 @@ pub(crate) fn init_secondary() {
 pub fn gicc_get_current_irq() -> (usize, usize) {
     let iar = GICC.get_iar();
     let irq = iar as usize;
+    debug!("this is iar:{:#x}", iar);
     // current_cpu().current_irq = irq;
     let irq = bit_extract(irq, 0, 10);
     let src = bit_extract(irq, 10, 3);
@@ -119,7 +123,7 @@ pub fn gicc_get_current_irq() -> (usize, usize) {
 pub fn interrupt_cpu_ipi_send(cpu_id: usize, ipi_id: usize) {
     debug!("interrupt_cpu_ipi_send: cpu_id {}, ipi_id {}", cpu_id, ipi_id);
     if ipi_id < GIC_SGIS_NUM {
-        GICD.lock().set_sgi(cpu_id, ipi_id);
+       GICD.lock().send_sgi(cpu_id, ipi_id);
     }
 }
 

@@ -2,7 +2,7 @@ use axconfig::{SMP, TASK_STACK_SIZE};
 use axhal::mem::{virt_to_phys, VirtAddr};
 use core::sync::atomic::{AtomicUsize, Ordering};
 
-use axhal::gicc_get_current_irq;
+use axhal::{gicc_get_current_irq, deactivate_irq};
 
 use aarch64_cpu::{asm, asm::barrier, registers::*};
 use tock_registers::interfaces::{ReadWriteable, Readable, Writeable};
@@ -78,10 +78,16 @@ pub extern "C" fn rust_main_secondary(cpu_id: usize) -> ! {
 
     #[cfg(not(feature = "multitask"))]
     loop {
-        // let current_el = CurrentEL.read(CurrentEL::EL);
-        // debug!("Current el:{:?}", current_el);
         axhal::arch::wait_for_irqs();
-        // let (id, src) = gicc_get_current_irq();
+        #[cfg(feature = "hv")]
+        {
+            let (irq, src) = gicc_get_current_irq();
+            debug!("src {} id{}", src, irq);
+            deactivate_irq(irq);
+            debug!("after wfi secondary CPU {} irq id {} src {}", cpu_id, irq, src);
+            debug!("is irq enabled: {}", axhal::arch::irqs_enabled());
+            axhal::trap::handle_irq_extern_hv(irq, cpu_id);
+        }
     }
 }
 

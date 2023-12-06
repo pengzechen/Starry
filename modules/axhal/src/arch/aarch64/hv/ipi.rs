@@ -33,7 +33,7 @@ pub struct IpiMessage {
 
 #[derive(Copy, Clone, Debug)]
 pub enum IpiType {
-    Power = 1,
+    Power = 0,
 }
 
 #[derive(Clone, Debug)]
@@ -87,7 +87,7 @@ pub fn ipi_register(ipi_type: IpiType, handler: IpiHandlerFunc) -> bool {
             return false;
         }
     }
-
+    
     while (ipi_type as usize) >= ipi_handler_list.len() {
         ipi_handler_list.push(IpiHandler::new(handler, ipi_type));
     }

@@ -27,7 +27,7 @@ pub fn ipi_irq_handler() {
         if len <= ipi_type {
             debug!("illegal ipi type {}", ipi_type)
         } else {
-            // debug!("ipi type is {:#?}", ipi_msg.ipi_type);
+            debug!("!!!!!!!!! this is handler: {:#?}", handler as *const());
             handler(&ipi_msg);
         }
         let mut cpu_int_list = CPU_INT_LIST.lock();

@@ -73,54 +73,13 @@ fn psci_guest_cpu_on(mpidr: usize, entry: usize, ctx: usize) -> usize {
         warn!("psci_guest_cpu_on: fail to send msg");
         return usize::MAX - 1;
     }
+    /* 
+    let ipi_handler_list = IPI_HANDLER_LIST.lock();
+    debug!("[psci_guest_cpu_on] after ipi_send_msg handler: {:#?}", ipi_handler_list[0].handler as *const());
+    drop(ipi_handler_list);
+    */
     0
 }
-
-pub fn psci_ipi_handler(msg: IpiMessage) {
-    /* 
-    match msg.ipi_message {
-        IpiInnerMsg::Power(power_msg) => {
-            let trgt_vcpu = match current_cpu().vcpu_array.pop_vcpu_through_vmid(power_msg.src) {
-                None => {
-                    warn!(
-                        "Core {} failed to find target vcpu, source vmid {}",
-                        current_cpu().id,
-                        power_msg.src
-                    );
-                    return;
-                }
-                Some(vcpu) => vcpu,
-            };
-            match power_msg.event {
-                PowerEvent::PsciIpiCpuOn => {
-                    /* 
-                    if trgt_vcpu.state() != VcpuState::Inv {
-                        warn!(
-                            "psci_ipi_handler: target VCPU {} in VM {} is already running",
-                            trgt_vcpu.id(),
-                            trgt_vcpu.vm().unwrap().id()
-                        );
-                        return;
-                    }
-                    info!(
-                        "Core {} (vm {}, vcpu {}) is woke up",
-                        current_cpu().id,
-                        trgt_vcpu.vm().unwrap().id(),
-                        trgt_vcpu.id()
-                    );*/
-                    psci_vcpu_on(trgt_vcpu, power_msg.entry, power_msg.context);
-                }
-                PowerEvent::PsciIpiCpuOff => {
-                    warn!("PowerEvent::PsciIpiCpuOff")
-                }
-            }
-        }
-        _ => {
-            error!("psci_ipi_handler: receive illegal psci ipi type");
-        }
-    }*/
-}
-
 #[inline(never)]
 pub fn smc_call(x0: u32, x1: usize, x2: usize, x3: usize) -> (usize, usize, usize, usize) {
     #[cfg(target_arch = "aarch64")]
