@@ -1,5 +1,5 @@
-#[cfg(all(feature = "hv", target_arch = "aarch64"))]
-use crate::hv::aarch64_kernel::handle_virtual_interrupt;
+// #[cfg(all(feature = "hv", target_arch = "aarch64"))]
+// use crate::hv::aarch64_kernel::handle_virtual_interrupt;
 struct TrapHandlerImpl;
 
 #[crate_interface::impl_interface]

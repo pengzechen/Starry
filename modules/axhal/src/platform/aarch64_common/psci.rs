@@ -70,5 +70,4 @@ pub fn cpu_on(id: usize, entry: usize, arg: usize) {
     assert_eq!(psci_hvc_call(PSCI_CPU_ON, id, entry, arg), 0);
     #[cfg(feature = "hv")]
     assert_eq!(psci_smc_call(PSCI_CPU_ON, id, entry, arg), 0);
-    debug!("Started core {}!", id);
 }

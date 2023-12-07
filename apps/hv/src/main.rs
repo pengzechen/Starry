@@ -98,10 +98,6 @@ fn main(hart_id: usize) {
         add_vm_vcpu(0, vcpu);
         init_vm_vcpu(0, vcpu_id, 0x7020_0000, 0x7000_0000);
 
-        // thread::sleep(Duration::from_millis(2000));
-        while !is_vcpu_init_ok() {
-            core::hint::spin_loop();
-        } 
         run_vm_vcpu(0, 0);
     }
     #[cfg(target_arch = "x86_64")]
@@ -130,7 +126,7 @@ fn main(hart_id: usize) {
         panic!("Other arch is not supported yet!")
     }
 }
-
+/* 
 #[cfg(target_arch = "aarch64")]
 #[no_mangle]
 pub extern "C" fn secondary_main_hv(cpu_id: usize) {
@@ -152,7 +148,7 @@ pub extern "C" fn secondary_main_hv(cpu_id: usize) {
     // run_vm_vcpu(0, 1);
     // print_vm(0);
 }
-
+*/
 #[cfg(target_arch = "riscv64")]
 pub fn setup_gpm(dtb: usize) -> Result<GuestPageTable> {
     let mut gpt = GuestPageTable::new()?;

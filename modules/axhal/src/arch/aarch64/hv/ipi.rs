@@ -95,8 +95,16 @@ pub fn ipi_register(ipi_type: IpiType, handler: IpiHandlerFunc) -> bool {
     true
 }
 
+#[no_mangle]
 pub fn ipi_send_msg(target_id: usize, ipi_type: IpiType, ipi_message: IpiInnerMsg) -> bool {
     // push msg to cpu int list
+    /* 
+    let ipi_handler_list = IPI_HANDLER_LIST.lock();
+    debug!("[ipi_send_msg] !!!!!!!!!!!!!!!!!!!!!!!!!!!Address of ipi_handler_list: {:p}", &*ipi_handler_list as *const _);
+    debug!("[ipi_send_msg] !!!!!!!!! Address of handler: {:p}", &ipi_handler_list[0].handler as *const _);
+    debug!("[ipi_send_msg] 111111111111 ipi_send_msg handler: {:#?}", ipi_handler_list[0].handler as *const());
+    drop(ipi_handler_list);
+    */
     let msg = IpiMessage { ipi_type, ipi_message };
     let mut cpu_int_list = CPU_INT_LIST.lock();
     cpu_int_list[target_id].msg_queue.push(msg);
@@ -105,45 +113,8 @@ pub fn ipi_send_msg(target_id: usize, ipi_type: IpiType, ipi_message: IpiInnerMs
     ipi_send(target_id)
 }
 
+#[no_mangle]
 fn ipi_send(target_id: usize) -> bool {
     interrupt_cpu_ipi_send(target_id, IPI_IRQ_NUM);
-    // interrupt_cpu_ipi_send(0, 15);
-    // interrupt_cpu_ipi_send(1, 15);
     true
 }
-/* 
-pub fn ipi_send_msg(target_id: usize, ipi_type: IpiType, ipi_message: IpiInnerMsg) -> bool {
-    let msg = IpiMessage { ipi_type, ipi_message };
-    ipi_send(target_id, msg)
-}
-
-fn ipi_send(target_id: usize, msg: IpiMessage) -> bool {
-    // CPU_INT_LIST[target_id].lock().push(msg);
-    interrupt_cpu_ipi_send(target_id, IPI_IRQ_NUM);
-
-    true
-}
-
-fn ipi_pop_message(cpu_id: usize) -> Option<IpiMessage> {
-    // let mut cpu_if = CPU_INT_LIST[cpu_id].lock();
-    // let msg = cpu_if.pop();
-    // drop the lock manully
-    // drop(cpu_if);
-    // msg
-    None
-}
-
-fn ipi_irq_handler() {
-    //let cpu_id = current_cpu().id;
-    let cpu_id = 1;
-
-    while let Some(ipi_msg) = ipi_pop_message(cpu_id) {
-        let ipi_type = ipi_msg.ipi_type;
-
-        if let Some(handler) = IPI_HANDLER_LIST.get(ipi_type as usize) {
-            handler(ipi_msg);
-        } else {
-            error!("illegal ipi type {:?}", ipi_type)
-        }
-    }
-}*/

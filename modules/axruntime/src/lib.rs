@@ -50,7 +50,7 @@ pub use hv::{
 #[cfg(all(target_arch = "aarch64", feature = "hv"))]
 use axhal::IPI_IRQ_NUM;
 #[cfg(all(target_arch = "aarch64", feature = "hv"))]
-use crate::hv::aarch64_kernel::{ipi_irq_handler, init_ipi};
+use crate::hv::kernel::{ipi_irq_handler, init_ipi};
 
 const LOGO: &str = r#"
        d8888                            .d88888b.   .d8888b.

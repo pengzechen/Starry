@@ -2,8 +2,6 @@ use axconfig::{SMP, TASK_STACK_SIZE};
 use axhal::mem::{virt_to_phys, VirtAddr};
 use core::sync::atomic::{AtomicUsize, Ordering};
 
-use axhal::{gicc_get_current_irq, deactivate_irq};
-
 use aarch64_cpu::{asm, asm::barrier, registers::*};
 use tock_registers::interfaces::{ReadWriteable, Readable, Writeable};
 
@@ -65,11 +63,6 @@ pub extern "C" fn rust_main_secondary(cpu_id: usize) -> ! {
     #[cfg(feature = "irq")]
     axhal::arch::enable_irqs();
 
-    #[cfg(all(target_arch = "aarch64", feature = "hv"))]
-    unsafe {
-        secondary_main_hv(cpu_id);
-    }
-    debug!("after init main hv");
     #[cfg(feature = "multitask")]
     {
         debug!("secondary CPU {} enter idle loop", cpu_id);
@@ -81,17 +74,8 @@ pub extern "C" fn rust_main_secondary(cpu_id: usize) -> ! {
         axhal::arch::wait_for_irqs();
         #[cfg(feature = "hv")]
         {
-            let (irq, src) = gicc_get_current_irq();
-            debug!("src {} id{}", src, irq);
-            deactivate_irq(irq);
-            debug!("after wfi secondary CPU {} irq id {} src {}", cpu_id, irq, src);
-            debug!("is irq enabled: {}", axhal::arch::irqs_enabled());
-            axhal::trap::handle_irq_extern_hv(irq, cpu_id);
+            debug!("after wfi!!!!!!!!!!!");
+            crate::hv::secondary_main_hv(cpu_id);
         }
     }
-}
-
-#[cfg(all(target_arch = "aarch64", feature = "hv"))]
-extern "C" {
-    fn secondary_main_hv(cpu_id: usize);
 }

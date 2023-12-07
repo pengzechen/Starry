@@ -73,11 +73,7 @@ fn psci_guest_cpu_on(mpidr: usize, entry: usize, ctx: usize) -> usize {
         warn!("psci_guest_cpu_on: fail to send msg");
         return usize::MAX - 1;
     }
-    /* 
-    let ipi_handler_list = IPI_HANDLER_LIST.lock();
-    debug!("[psci_guest_cpu_on] after ipi_send_msg handler: {:#?}", ipi_handler_list[0].handler as *const());
-    drop(ipi_handler_list);
-    */
+    
     0
 }
 #[inline(never)]
