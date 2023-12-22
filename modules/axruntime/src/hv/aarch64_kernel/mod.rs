@@ -1,20 +1,28 @@
-pub mod vm_array;
-mod ipi_handler;
-mod interrupt;
+mod emu;
+mod emuintc_handler;
 mod guest_psci;
+mod interrupt;
+mod ipi;
+mod sync;
+mod vgic;
+pub mod vm_array;
 
 pub use vm_array::{
-    VM_ARRAY, VM_MAX_NUM, 
-    is_vcpu_init_ok, is_vcpu_primary_ok, init_vm_vcpu, add_vm, add_vm_vcpu, print_vm, run_vm_vcpu
+    VM_ARRAY, VM_MAX_NUM,
+    add_vm, add_vm_vcpu, get_vm, print_vm,
+    init_vm_vcpu, init_vm_emu_device, init_vm_passthrough_device, 
+    is_vcpu_init_ok, is_vcpu_primary_ok,
+    run_vm_vcpu, 
 };
 
-use hypercraft::PerCpu;
-use crate::hv::HyperCraftHalImpl;
+use crate::{HyperCraftHalImpl, GuestPageTable};
+use hypercraft::{PerCpu, VM};
 
+pub use emuintc_handler::gic_maintenance_handler;
 pub use interrupt::handle_virtual_interrupt;
-pub use ipi_handler::{ipi_irq_handler, init_ipi};
+pub use ipi::{init_ipi, ipi_irq_handler, cpu_int_list_init};
 
-use axhal::{gicc_get_current_irq, deactivate_irq};
+use axhal::{deactivate_irq, gicc_get_current_irq};
 
 /// get current cpu
 pub fn current_cpu() -> &'static mut PerCpu<HyperCraftHalImpl> {
@@ -22,12 +30,27 @@ pub fn current_cpu() -> &'static mut PerCpu<HyperCraftHalImpl> {
     PerCpu::<HyperCraftHalImpl>::ptr_for_cpu(cpu_id)
 }
 
+/// get active vm
+pub fn active_vm() -> &'static mut VM<HyperCraftHalImpl, GuestPageTable> {
+    let cpu_id = axhal::cpu::this_cpu_id();
+    let percpu = PerCpu::<HyperCraftHalImpl>::ptr_for_cpu(cpu_id);
+    let vm_id = percpu.get_active_vcpu().unwrap().vm_id;
+    let vm_id = 0; // Replace this with your actual logic to get the active VM ID
+    match get_vm(vm_id) {
+        Some(vm) => vm,
+        None => panic!("No active VM found"),
+    }
+}
+
 pub fn secondary_main_hv(cpu_id: usize) {
     info!("Hello World from cpu {}", cpu_id);
 
     let (irq, src) = gicc_get_current_irq();
     deactivate_irq(irq);
-    debug!("after wfi in secondary CPU {} irq id {} src {}", cpu_id, irq, src);
+    debug!(
+        "after wfi in secondary CPU {} irq id {} src {}",
+        cpu_id, irq, src
+    );
 
     while !is_vcpu_primary_ok() {
         core::hint::spin_loop();
@@ -41,7 +64,8 @@ pub fn secondary_main_hv(cpu_id: usize) {
         core::hint::spin_loop();
     }
     info!("vcpu {} init ok", cpu_id);
-    
+
     debug!("is irq enabled: {}", axhal::arch::irqs_enabled());
-    axhal::trap::handle_irq_extern_hv(irq, cpu_id);
+    let ctx = current_cpu().get_ctx().unwrap();
+    axhal::trap::handle_irq_extern_hv(irq, cpu_id, ctx);
 }

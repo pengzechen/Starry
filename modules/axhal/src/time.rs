@@ -14,6 +14,9 @@ pub use crate::platform::irq::TIMER_IRQ_NUM;
 pub use crate::platform::time::set_oneshot_timer;
 pub use crate::platform::time::{current_ticks, nanos_to_ticks, ticks_to_nanos};
 
+#[cfg(all(feature = "irq", feature = "hv", target_arch = "aarch64"))]
+pub use crate::platform::irq::HYPERVISOR_TIMER_IRQ_NUM;
+
 /// Number of milliseconds in a second.
 pub const MILLIS_PER_SEC: u64 = 1_000;
 /// Number of microseconds in a second.

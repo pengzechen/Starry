@@ -15,7 +15,12 @@ use aarch64_config::*;
 use libax::{
     hv::{
         self, GuestPageTable, GuestPageTableTrait, HyperCraftHalImpl, PerCpu,
-        Result, VCpu, VmCpus, VM, VcpusArray, VM_ARRAY, VM_MAX_NUM, is_vcpu_init_ok, is_vcpu_primary_ok, init_vm_vcpu, add_vm, add_vm_vcpu, print_vm, run_vm_vcpu, 
+        Result, VCpu, VmCpus, VM, VcpusArray, 
+        VM_ARRAY, VM_MAX_NUM,
+        add_vm, add_vm_vcpu, get_vm, print_vm,
+        init_vm_vcpu, init_vm_emu_device, init_vm_passthrough_device, 
+        is_vcpu_init_ok, is_vcpu_primary_ok,
+        run_vm_vcpu, 
     },
     info,
 };
@@ -70,19 +75,21 @@ fn main(hart_id: usize) {
     }
     #[cfg(target_arch = "aarch64")]
     {
+        let vm1_kernel_entry = 0x7020_0000;
+        let vm1_dtb = 0x7000_0000;
+
         // boot cpu
-        PerCpu::<HyperCraftHalImpl>::init(0);   // change to pub const CPU_STACK_SIZE: usize = PAGE_SIZE * 128?
+        PerCpu::<HyperCraftHalImpl>::init(0); 
         // get current percpu
         let percpu = PerCpu::<HyperCraftHalImpl>::ptr_for_cpu(hart_id);
         // create vcpu, need to change addr for aarch64!
-        let gpt = setup_gpm(0x7000_0000, 0x7020_0000).unwrap();  
+        let gpt = setup_gpm(vm1_dtb, vm1_kernel_entry).unwrap();  
         let vcpu = percpu.create_vcpu(0, 0).unwrap();
         percpu.set_active_vcpu(Some(vcpu.clone()));
 
         let vcpus = VcpusArray::new();
 
         // add vcpu into vm
-        // vcpus.add_vcpu(vcpu).unwrap();
         let mut vm: VM<HyperCraftHalImpl, GuestPageTable> = VM::new(vcpus, gpt, 0).unwrap();
         unsafe {
             let mut vm_array = Vec::with_capacity(VM_MAX_NUM);
@@ -92,11 +99,13 @@ fn main(hart_id: usize) {
             VM_ARRAY.init_by(vm_array);
             debug!("this is VM_ARRAY: {:p}", &VM_ARRAY as *const _);
         }
+
         add_vm(0, vm);
-        // init_vm_vcpu(0, vcpu, 0x7020_0000, 0x7000_0000);
         let vcpu_id = vcpu.vcpu_id;
         add_vm_vcpu(0, vcpu);
-        init_vm_vcpu(0, vcpu_id, 0x7020_0000, 0x7000_0000);
+        init_vm_vcpu(0, vcpu_id, vm1_kernel_entry, vm1_dtb);
+        init_vm_emu_device(0);
+        init_vm_passthrough_device(0);
 
         run_vm_vcpu(0, 0);
     }
@@ -126,29 +135,7 @@ fn main(hart_id: usize) {
         panic!("Other arch is not supported yet!")
     }
 }
-/* 
-#[cfg(target_arch = "aarch64")]
-#[no_mangle]
-pub extern "C" fn secondary_main_hv(cpu_id: usize) {
-    // info!("before sleep cpu {}", cpu_id);
-    // thread::sleep(Duration::from_millis(1000));
-    info!("Hello World from cpu {}", cpu_id);
-    while !is_vcpu_primary_ok() {
-        core::hint::spin_loop();
-    }
-    PerCpu::<HyperCraftHalImpl>::setup_this_cpu(cpu_id);
-    let percpu = PerCpu::<HyperCraftHalImpl>::this_cpu();
-    let vcpu = percpu.create_vcpu(0, 1).unwrap();
-    percpu.set_active_vcpu(Some(vcpu.clone()));
-    add_vm_vcpu(0, vcpu);
-    while !is_vcpu_init_ok() {
-        core::hint::spin_loop();
-    }
-    info!("vcpu {} init ok", cpu_id);
-    // run_vm_vcpu(0, 1);
-    // print_vm(0);
-}
-*/
+
 #[cfg(target_arch = "riscv64")]
 pub fn setup_gpm(dtb: usize) -> Result<GuestPageTable> {
     let mut gpt = GuestPageTable::new()?;
@@ -223,6 +210,35 @@ pub fn setup_gpm(dtb: usize) -> Result<GuestPageTable> {
 }
 
 #[cfg(target_arch = "aarch64")]
+#[no_mangle]
+pub extern "C" fn secondary_vm(cpu_id: usize) ->! {
+    while !is_vcpu_primary_ok() {
+        core::hint::spin_loop();
+    }
+    let vm2_kernel_entry = 0x5020_0000;
+    let vm2_dtb = 0x5000_0000;
+    
+    PerCpu::<HyperCraftHalImpl>::setup_this_cpu(cpu_id);
+    let percpu = PerCpu::<HyperCraftHalImpl>::this_cpu();
+    let vcpu = percpu.create_vcpu(1, 0).unwrap();
+    // create vcpu, need to change addr for aarch64!
+    let gpt = setup_gpm(vm2_dtb, vm2_kernel_entry).unwrap();  
+    percpu.set_active_vcpu(Some(vcpu.clone()));
+    let vcpus = VcpusArray::new();
+    // add vcpu into vm
+    // vcpus.add_vcpu(vcpu).unwrap();
+    let mut vm: VM<HyperCraftHalImpl, GuestPageTable> = VM::new(vcpus, gpt, 1).unwrap();
+
+    add_vm(1, vm);
+    let vcpu_id = vcpu.vcpu_id;
+    add_vm_vcpu(1, vcpu);
+    init_vm_vcpu(1, vcpu_id, vm2_kernel_entry, vm2_dtb);
+    init_vm_emu_device(1);
+    init_vm_passthrough_device(1);
+
+    run_vm_vcpu(1, 0);
+}
+#[cfg(target_arch = "aarch64")]
 pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
     let mut gpt = GuestPageTable::new()?;
     let meta = MachineMeta::parse(dtb);
@@ -244,7 +260,8 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
         0x4000,
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
     )?;
-    
+    debug!("map virtio");
+
     if let Some(pl011) = meta.pl011 {
         gpt.map_region(
             pl011.base_address,
@@ -253,6 +270,7 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
             MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
         )?;
     }
+    debug!("map pl011");
 
     if let Some(pl031) = meta.pl031 {
         gpt.map_region(
@@ -262,7 +280,7 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
             MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
         )?;
     }
-
+    debug!("map pl031");
     if let Some(pl061) = meta.pl061 {
         gpt.map_region(
             pl061.base_address,
@@ -271,7 +289,9 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
             MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
         )?;
     }
-    
+    debug!("map pl061");
+
+    /* 
     for intc in meta.intc.iter() {
         gpt.map_region(
             intc.base_address,
@@ -280,7 +300,21 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
             MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
         )?;
     }
+    */
+    // map gicc to gicv. the address is qemu setting, it is different from real hardware
+    gpt.map_region(
+        0x8010000,
+        0x8040000,
+        0x2000,
+        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
+    )?;
 
+    gpt.map_region(
+        0x8020000,
+        0x8020000,
+        0x10000,
+        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
+    )?;
     if let Some(pcie) = meta.pcie {
         gpt.map_region(
             pcie.base_address,
@@ -289,6 +323,7 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
             MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
         )?;
     }
+    debug!("map pcie");
 
     for flash in meta.flash.iter() {
         gpt.map_region(
@@ -298,29 +333,31 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
             MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
         )?;
     }
+    debug!("map flash");
 
     info!(
         "physical memory: [{:#x}: {:#x})",
         meta.physical_memory_offset,
         meta.physical_memory_offset + meta.physical_memory_size
     );
-
     gpt.map_region(
         meta.physical_memory_offset,
         meta.physical_memory_offset,
         meta.physical_memory_size,
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE | MappingFlags::USER,
     )?;
-    let vaddr = 0x8000000014;
+    debug!("map physical memeory");
+
+    let vaddr = 0x8010000;
     let hpa = gpt.translate(vaddr)?;
     debug!("translate vaddr: {:#x}, hpa: {:#x}", vaddr, hpa);
-/* 
+
     gpt.map_region(
         NIMBOS_KERNEL_BASE_VADDR,
         kernel_entry,
         meta.physical_memory_size,
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE | MappingFlags::USER,
     )?;
-*/
+
     Ok(gpt)
 }

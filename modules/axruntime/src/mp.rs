@@ -63,6 +63,14 @@ pub extern "C" fn rust_main_secondary(cpu_id: usize) -> ! {
     #[cfg(feature = "irq")]
     axhal::arch::enable_irqs();
 
+    // run multi vm, this will not return
+    // todo: add more feature for multi vm
+    #[cfg(feature = "hv")]
+    /* 
+    unsafe {
+        secondary_vm(cpu_id);
+    }
+    */ 
     #[cfg(feature = "multitask")]
     {
         debug!("secondary CPU {} enter idle loop", cpu_id);
@@ -75,7 +83,11 @@ pub extern "C" fn rust_main_secondary(cpu_id: usize) -> ! {
         #[cfg(feature = "hv")]
         {
             debug!("after wfi!!!!!!!!!!!");
-            crate::hv::secondary_main_hv(cpu_id);
+            // crate::hv::secondary_main_hv(cpu_id);
         }
     }
+}
+
+extern "C" {
+    fn secondary_vm(cpu_id: usize) -> !;
 }

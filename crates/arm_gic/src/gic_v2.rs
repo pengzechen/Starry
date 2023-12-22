@@ -4,7 +4,9 @@
 
 use core::ptr::NonNull;
 
-use crate::{TriggerMode, GIC_MAX_IRQ, SPI_RANGE, SGI_RANGE, GIC_LIST_REGS_NUM, GIC_CONFIG_BITS};
+use crate::{TriggerMode, GIC_CONFIG_BITS, GIC_LIST_REGS_NUM, GIC_MAX_IRQ, SGI_RANGE, SPI_RANGE,
+GIC_PRIVATE_INT_NUM, GIC_SGIS_NUM,
+};
 use tock_registers::interfaces::{Readable, Writeable};
 use tock_registers::register_structs;
 use tock_registers::registers::{ReadOnly, ReadWrite, WriteOnly};
@@ -80,7 +82,7 @@ register_structs! {
 }
 
 // #[cfg(feature = "hv")]
-/*register_structs! {
+register_structs! {
     /// GIC Hypervisor Interface registers
     #[allow(non_snake_case)]
     GicHypervisorInterfaceRegs {
@@ -88,54 +90,56 @@ register_structs! {
         (0x0000 => HCR: ReadWrite<u32>),
         /// Virtual Type Register
         (0x0004 => VTR: ReadOnly<u32>),
-        (0x0008 => _reserved_1),
-        /// Maintenance Interrupt Status Register
-        (0x0010 => MISR: ReadOnly<u32>),
-        (0x0014 => reserve1),
-        /// End Interrupt Status Register
-        (0x0020 => EISR: [ReadOnly<u32>; GIC_LIST_REGS_NUM / 32]),
-        (0x0028 => reserve2),
-        /// Empty List Register Status Register
-        (0x0030 => ELRSR: [ReadOnly<u32>; GIC_LIST_REGS_NUM / 32]),
-        (0x0038 => reserve3),
-        /// Active Priorities Registers
-        (0x00f0 => APR: ReadWrite<u32>),
-        (0x00f4 => reserve4),
-        /// List Registers
-        (0x0100 => LR: [ReadWrite<u32>; GIC_LIST_REGS_NUM]),
-        (0x0200 => reserve5),
-        (0x1000 => @END),
-    }
-}*/
-register_structs! {
-    #[allow(non_snake_case)]
-    GicHypervisorInterfaceRegs {
-        /// Hypervisor Control Register.
-        (0x0000 => HCR: ReadWrite<u32>),
-        /// VGIC Type Register.
-        (0x0004 => VTR: ReadOnly<u32>),
-        /// Virtual Machine Control Register.
+        /// Virtual Machine Control Register
         (0x0008 => VMCR: ReadWrite<u32>),
         (0x000c => _reserved_0),
-        // Maintenance Interrupt Status Register.
+        /// Maintenance Interrupt Status Register
         (0x0010 => MISR: ReadOnly<u32>),
         (0x0014 => _reserved_1),
-        // End of Interrupt Status Registers 0 and 1.
-        (0x0020 => EISR0: ReadOnly<u32>),
-        (0x0024 => EISR1: ReadOnly<u32>),
+        /// End Interrupt Status Register
+        (0x0020 => EISR: [ReadOnly<u32>; GIC_LIST_REGS_NUM / 32]),
         (0x0028 => _reserved_2),
-        // Empty List Register Status Registers 0 and 1.
-        (0x0030 => ELSR0: ReadOnly<u32>),
-        (0x0034 => ELSR1: ReadOnly<u32>),
+        /// Empty List Register Status Register
+        (0x0030 => ELRSR: [ReadOnly<u32>; GIC_LIST_REGS_NUM / 32]),
         (0x0038 => _reserved_3),
-        // Active Priorities Register.
+        /// Active Priorities Registers
         (0x00f0 => APR: ReadWrite<u32>),
         (0x00f4 => _reserved_4),
-        // List Registers 0-63.
-        (0x0100 => LR: [ReadWrite<u32>; 0x40]),
-        (0x0200 => @END),
+        /// List Registers
+        (0x0100 => LR: [ReadWrite<u32>; GIC_LIST_REGS_NUM]),
+        (0x0200 => _reserved_5),
+        (0x1000 => @END),
     }
 }
+
+// for debug usage
+register_structs! {
+    #[allow(non_snake_case)]
+    GicVcpuInterfaceRegs {
+        /// CPU Interface Control Register.
+        (0x0000 => CTLR: ReadWrite<u32>),
+        /// Interrupt Priority Mask Register.
+        (0x0004 => PMR: ReadWrite<u32>),
+        /// Binary Point Register.
+        (0x0008 => BPR: ReadWrite<u32>),
+        /// Interrupt Acknowledge Register.
+        (0x000c => IAR: ReadOnly<u32>),
+        /// End of Interrupt Register.
+        (0x0010 => EOIR: WriteOnly<u32>),
+        /// Running Priority Register.
+        (0x0014 => RPR: ReadOnly<u32>),
+        /// Highest Priority Pending Interrupt Register.
+        (0x0018 => HPPIR: ReadOnly<u32>),
+        (0x001c => _reserved_1),
+        /// CPU Interface Identification Register.
+        (0x00fc => IIDR: ReadOnly<u32>),
+        (0x0100 => _reserved_2),
+        /// Deactivate Interrupt Register.
+        (0x1000 => DIR: WriteOnly<u32>),
+        (0x1004 => @END),
+    }
+}
+
 /// The GIC distributor.
 ///
 /// The Distributor block performs interrupt prioritization and distribution
@@ -196,6 +200,11 @@ pub struct GicHypervisorInterface {
     base: NonNull<GicHypervisorInterfaceRegs>,
 }
 
+#[derive(Debug, Clone)]
+pub struct GicVcpuInterface {
+    base: NonNull<GicVcpuInterfaceRegs>,
+}
+
 unsafe impl Send for GicDistributor {}
 unsafe impl Sync for GicDistributor {}
 
@@ -204,6 +213,9 @@ unsafe impl Sync for GicCpuInterface {}
 
 unsafe impl Send for GicHypervisorInterface {}
 unsafe impl Sync for GicHypervisorInterface {}
+
+unsafe impl Send for GicVcpuInterface {}
+unsafe impl Sync for GicVcpuInterface {}
 
 impl GicDistributor {
     /// Construct a new GIC distributor instance from the base address.
@@ -260,16 +272,22 @@ impl GicDistributor {
             self.regs().ICENABLER[reg].set(mask);
         }
     }
+    /// Enables or disables the given interrupt.
+    pub fn get_enable(&mut self, vector: usize) -> bool {
+        let reg = vector / 32;
+        let mask = 1 << (vector % 32);
+        self.regs().ISENABLER[reg].get() & mask != 0
+    }
 
     /// Set SGIR for sgi int id and target cpu.
-    /* 
+    /*
     pub fn set_sgi(&self, cpu_interface: usize, sgi_num: usize) {
         debug!("set sgi!!!!");
         let int_id = (sgi_num & 0b1111) as u32;
         let cpu_targetlist = 1 << (16 + cpu_interface);
         self.regs().SGIR.set(cpu_targetlist | int_id);
     }
-    
+
 
     pub fn send_sgi(&mut self, cpu_if: usize, sgi_num: usize) {
         debug!("send ipi to cpu {}", cpu_if);
@@ -277,7 +295,12 @@ impl GicDistributor {
     }
     */
     pub fn send_sgi(&mut self, cpu_if: usize, sgi_num: usize) {
-        debug!("send sgi {} with priority {:#x} to cpu {}", sgi_num, self.get_priority(sgi_num), cpu_if);
+        debug!(
+            "send sgi {} with priority {:#x} to cpu {}",
+            sgi_num,
+            self.get_priority(sgi_num),
+            cpu_if
+        );
         // debug!("send sgi 2 with priority {:#x} to cpu {}", self.get_priority(2), cpu_if);
         let sgir = ((1 << (16 + cpu_if)) | (sgi_num & 0b1111)) as u32;
         debug!("this is sgir value: {:#x}", sgir);
@@ -328,7 +351,8 @@ impl GicDistributor {
             let reg_idx = int_id / 4;
             let offset = (int_id % 4) * 8;
             if is_pend {
-                self.regs().SPENDSGIR[reg_idx].set(1 << (offset + current_cpu_id)); // get current cpu todo()
+                self.regs().SPENDSGIR[reg_idx].set(1 << (offset + current_cpu_id));
+            // get current cpu todo()
             } else {
                 self.regs().CPENDSGIR[reg_idx].set(0xff << offset);
             }
@@ -389,7 +413,6 @@ impl GicDistributor {
         self.regs().ICFGR[reg_ind].set((icfgr & !mask) | (((cfg as u32) << off) & mask));
     }
 
-
     /// Provides information about the configuration of this Redistributor.
     /// Get typer register.
     pub fn get_typer(&self) -> u32 {
@@ -401,19 +424,24 @@ impl GicDistributor {
         self.regs().IIDR.get()
     }
 
-    /// Initializes the GIC distributor.
+    pub fn print_prio(&self) {
+        for i in 0..256 {
+            debug!("prio {} is {:#x}", i, self.regs().IPRIORITYR[i].get());
+        }
+    }
+    /// Initializes the GIC distributor globally.
     ///
     /// It disables all interrupts, sets the target of all SPIs to CPU 0,
     /// configures all SPIs to be edge-triggered, and finally enables the GICD.
     ///
     /// This function should be called only once.
-    pub fn init(&mut self) {
+    pub fn global_init(&mut self) {
         let max_irqs = self.max_irqs();
         assert!(max_irqs <= GIC_MAX_IRQ);
         self.max_irqs = max_irqs;
 
         // Disable all interrupts
-        for i in (0..max_irqs).step_by(32) {
+        for i in (GIC_PRIVATE_INT_NUM..max_irqs).step_by(32) {
             self.regs().ICENABLER[i / 32].set(u32::MAX);
             self.regs().ICPENDR[i / 32].set(u32::MAX);
             self.regs().ICACTIVER[i / 32].set(u32::MAX);
@@ -421,10 +449,12 @@ impl GicDistributor {
         if self.cpu_num() > 1 {
             for i in (SPI_RANGE.start..max_irqs).step_by(4) {
                 // Set external interrupts to target cpu 0
+                #[cfg(feature = "hv")]
                 self.regs().IPRIORITYR[i / 4].set(u32::MAX);
                 self.regs().ITARGETSR[i / 4].set(0x01_01_01_01);
             }
         }
+        #[cfg(not(feature = "hv"))]
         // Initialize all the SPIs to edge triggered
         for i in SPI_RANGE.start..max_irqs {
             self.configure_interrupt(i, TriggerMode::Edge);
@@ -432,7 +462,36 @@ impl GicDistributor {
 
         // enable GIC0
         let prev = self.regs().CTLR.get();
-        self.regs().CTLR.set( prev | 1 );
+        self.regs().CTLR.set(prev | 1);
+    }
+
+    /// Initializes the GIC distributor locally.
+    ///
+    /// It disables and clear all sgi interrupts
+    /// configures all interrupts have lowest priority possible by default
+    ///
+    /// This function should be called every cpu init.
+    pub fn local_init(&mut self) {
+        let max_irqs = self.max_irqs();
+        assert!(max_irqs <= GIC_MAX_IRQ);
+        self.max_irqs = max_irqs;
+
+        // Disable all interrupts
+        for i in (0..GIC_PRIVATE_INT_NUM).step_by(32) {
+            self.regs().ICENABLER[i / 32].set(u32::MAX);
+            self.regs().ICPENDR[i / 32].set(u32::MAX);
+            self.regs().ICACTIVER[i / 32].set(u32::MAX);
+        }
+        // the corresponding GICD_CPENDSGIR register number, n, is given by n = x DIV 4
+        // the SGI Clear-pending field offset, y, is given by y = x MOD 4
+        for i in (0..GIC_SGIS_NUM).step_by(4) {
+            self.regs().CPENDSGIR[i / 4].set(u32::MAX);
+        }
+        
+        for i in (0..GIC_PRIVATE_INT_NUM).step_by(4) {
+            self.regs().IPRIORITYR[i / 4].set(u32::MAX);
+        }
+        
     }
 }
 
@@ -448,12 +507,12 @@ impl GicCpuInterface {
         unsafe { self.base.as_ref() }
     }
 
-    // When interrupt priority drop is separated from interrupt deactivation, 
+    // When interrupt priority drop is separated from interrupt deactivation,
     // a write to this register deactivates the specified interrupt.
     pub fn set_dir(&self, dir: u32) {
         self.regs().DIR.set(dir);
     }
-    
+
     /// Returns the interrupt ID of the highest priority pending interrupt for
     /// the CPU interface. (read GICC_IAR)
     ///
@@ -471,11 +530,11 @@ impl GicCpuInterface {
     pub fn set_eoi(&self, iar: u32) {
         self.regs().EOIR.set(iar);
     }
-    
-    /// Controls the CPU interface, including enabling of interrupt groups, 
-    /// interrupt signal bypass, binary point registers used, and separation 
+
+    /// Controls the CPU interface, including enabling of interrupt groups,
+    /// interrupt signal bypass, binary point registers used, and separation
     /// of priority drop and interrupt deactivation.
-    /// Get or set CTLR. 
+    /// Get or set CTLR.
     pub fn get_ctlr(&self) -> u32 {
         self.regs().CTLR.get()
     }
@@ -515,10 +574,12 @@ impl GicCpuInterface {
         // enable GIC0
         #[cfg(not(feature = "hv"))]
         self.regs().CTLR.set(1);
-        #[cfg(feature = "hv")]
-        // set EOImodeNS and EN bit for hypervisor
-        self.regs().CTLR.set(1);
-        //self.regs().CTLR.set(1| 0x200);
+        #[cfg(feature = "hv")] {
+            // EOImodeNS, bit [9] Controls the behavior of Non-secure accesses to GICC_EOIR GICC_AEOIR, and GICC_DIR
+            // EnableGrp0, bit [0] Enables the signaling of Group 0 interrupts by the CPU interface to a target PE:
+            self.regs().CTLR.set(1| 1 << 9);
+        }
+        
         // unmask interrupts at all priority levels
         self.regs().PMR.set(0xff);
     }
@@ -545,15 +606,13 @@ impl GicHypervisorInterface {
         self.regs().HCR.set(hcr);
     }
 
-    // ELSR1
-    pub fn get_elsr1(&self) -> u32 {
-        self.regs().ELSR1.get()
+    // Enables the hypervisor to save and restore the virtual machine view of the GIC state.
+    pub fn get_vmcr(&self) -> u32 {
+        self.regs().VMCR.get()
     }
-    // ELSR0
-    pub fn get_elsr0(&self) -> u32 {
-        self.regs().ELSR0.get()
+    pub fn set_vmcr(&self, vmcr:u32) {
+        self.regs().VMCR.set(vmcr);
     }
-
     // VTR: Indicates the number of implemented virtual priority bits and List registers.
     // VTR ListRegs, bits [4:0]: The number of implemented List registers, minus one.
     // Get ListRegs number.
@@ -578,9 +637,9 @@ impl GicHypervisorInterface {
         self.regs().MISR.get()
     }
 
-    // APR: These registers track which preemption levels are active in the virtual CPU interface, 
-    //      and indicate the current active priority. Corresponding bits are set to 1 in this register 
-    //      when an interrupt is acknowledged, based on GICH_LR<n>.Priority, and the least significant 
+    // APR: These registers track which preemption levels are active in the virtual CPU interface,
+    //      and indicate the current active priority. Corresponding bits are set to 1 in this register
+    //      when an interrupt is acknowledged, based on GICH_LR<n>.Priority, and the least significant
     //      bit set is cleared on EOI.
     // Get or set APR.
     pub fn get_apr(&self) -> u32 {
@@ -590,13 +649,70 @@ impl GicHypervisorInterface {
         self.regs().APR.set(apr);
     }
 
+    pub fn get_eisr_by_idx(&self, eisr_idx: usize) -> u32 {
+        self.regs().EISR[eisr_idx].get()
+    }
+
+    pub fn get_elrsr_by_idx(&self, elsr_idx: usize) -> u32 {
+        self.regs().ELRSR[elsr_idx].get()
+    }
+
     pub fn init(&self) {
         for i in 0..self.get_lrs_num() {
             self.set_lr_by_idx(i, 0);
         }
-        // LRENPIE, bit [2]: List Register Entry Not Present Interrupt Enable.
-        // When it set to 1, maintenance interrupt signaled while GICH_HCR.EOICount is not 0.
-        let hcr_prev = self.get_hcr();
-        self.set_hcr(hcr_prev | (1 << 2) as u32);
+        // [9] VEM Alias of GICV_CTLR.EOImode.
+        self.set_vmcr(1 | 1 << 9);
+        // LRENPIE, bit [2]: List Register Entry Not Present Interrupt Enable. When it set to 1, maintenance interrupt signaled while GICH_HCR.EOICount is not 0.
+        let hcr_prev: u32 = self.get_hcr();
+        self.set_hcr(hcr_prev | 1 as u32 | (1 << 2) as u32);    // need to set bit 0????? [0] enable maintenance interrupt
+    }
+}
+
+impl GicVcpuInterface {
+    /// Construct a new GIC VCPU interface instance from the base address.
+    pub const fn new(base: *mut u8) -> Self {
+        Self {
+            base: NonNull::new(base).unwrap().cast(),
+        }
+    }
+
+    const fn regs(&self) -> &GicVcpuInterfaceRegs {
+        unsafe { self.base.as_ref() }
+    }
+
+    // When interrupt priority drop is separated from interrupt deactivation,
+    // a write to this register deactivates the specified interrupt.
+    pub fn set_dir(&self, dir: u32) {
+        self.regs().DIR.set(dir);
+    }
+
+    /// Returns the interrupt ID of the highest priority pending interrupt for
+    /// the CPU interface. (read GICC_IAR)
+    ///
+    /// The read returns a spurious interrupt ID of `1023` if the distributor
+    /// or the CPU interface are disabled, or there is no pending interrupt on
+    /// the CPU interface.
+    pub fn get_iar(&self) -> u32 {
+        self.regs().IAR.get()
+    }
+
+    /// Informs the CPU interface that it has completed the processing of the
+    /// specified interrupt. (write GICC_EOIR)
+    ///
+    /// The value written must be the value returns from [`Self::iar`].
+    pub fn set_eoi(&self, iar: u32) {
+        self.regs().EOIR.set(iar);
+    }
+    
+    /// Controls the CPU interface, including enabling of interrupt groups,
+    /// interrupt signal bypass, binary point registers used, and separation
+    /// of priority drop and interrupt deactivation.
+    /// Get or set CTLR.
+    pub fn get_ctlr(&self) -> u32 {
+        self.regs().CTLR.get()
+    }
+    pub fn set_ctlr(&self, ctlr: u32) {
+        self.regs().CTLR.set(ctlr);
     }
 }

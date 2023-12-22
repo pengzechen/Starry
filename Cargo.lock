@@ -330,7 +330,6 @@ dependencies = [
  "raw-cpuid 11.0.1",
  "riscv 0.10.1",
  "sbi-rt",
- "smccc",
  "spin 0.9.8",
  "spinlock",
  "static_assertions",
@@ -380,6 +379,7 @@ name = "axruntime"
 version = "0.1.0"
 dependencies = [
  "aarch64-cpu",
+ "arm_gic",
  "axalloc",
  "axconfig",
  "axdisplay",
@@ -400,6 +400,7 @@ dependencies = [
  "page_table_entry",
  "percpu",
  "raw-cpuid 11.0.1",
+ "smccc",
  "spin 0.9.8",
  "spinlock",
  "tock-registers",

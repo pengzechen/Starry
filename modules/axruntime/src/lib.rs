@@ -44,13 +44,19 @@ pub use hv::HyperCraftHalImpl;
 
 #[cfg(all(target_arch = "aarch64", feature = "hv"))]
 pub use hv::{
-    VM_ARRAY, VM_MAX_NUM, 
-    is_vcpu_init_ok, is_vcpu_primary_ok, init_vm_vcpu, add_vm, add_vm_vcpu, print_vm, run_vm_vcpu
+    VM_ARRAY, VM_MAX_NUM,
+    add_vm, add_vm_vcpu, get_vm, print_vm,
+    init_vm_vcpu, init_vm_emu_device, init_vm_passthrough_device, 
+    is_vcpu_init_ok, is_vcpu_primary_ok,
+    run_vm_vcpu, 
 };
 #[cfg(all(target_arch = "aarch64", feature = "hv"))]
-use axhal::IPI_IRQ_NUM;
+use axhal::{IPI_IRQ_NUM, MAINTENANCE_IRQ_NUM};
 #[cfg(all(target_arch = "aarch64", feature = "hv"))]
-use crate::hv::kernel::{ipi_irq_handler, init_ipi};
+use crate::hv::kernel::{
+    ipi_irq_handler, init_ipi, cpu_int_list_init,
+    gic_maintenance_handler
+};
 
 const LOGO: &str = r#"
        d8888                            .d88888b.   .d8888b.
@@ -316,15 +322,50 @@ fn init_interrupt() {
             axtask::on_timer_tick();
         });
 
-    }    
+    }
 
-    // Setup IPI interrupt handler for hv
+    // Setup interrupt handler for hv
     #[cfg(all(target_arch = "aarch64", feature = "hv"))]
     {
+        // IPI interrupt handler
         debug!("init ipi interrupt handler");
         axhal::irq::register_handler(IPI_IRQ_NUM, ipi_irq_handler);
-        axhal::arch::hv::ipi::cpu_int_list_init();
+        cpu_int_list_init();
         init_ipi();
+
+        // Maintenance interrupt handler
+        debug!("init maintenance interrupt handler");
+        axhal::irq::register_handler(axhal::MAINTENANCE_IRQ_NUM, gic_maintenance_handler);
+
+        
+        axhal::GICD.lock().print_prio();
+/* 
+        debug!("init hypervisor timer interrupt handler");
+        use axhal::time::HYPERVISOR_TIMER_IRQ_NUM;
+        // Setup timer interrupt handler
+        const PERIODIC_INTERVAL_NANOS: u64 =
+            axhal::time::NANOS_PER_SEC / axconfig::TICKS_PER_SEC as u64;
+
+        #[percpu::def_percpu]
+        static NEXT_DEADLINE: u64 = 0;
+
+        fn update_timer() {
+            let now_ns = axhal::time::current_time_nanos();
+            // Safety: we have disabled preemption in IRQ handler.
+            let mut deadline = unsafe { NEXT_DEADLINE.read_current_raw() };
+            if now_ns >= deadline {
+                deadline = now_ns + PERIODIC_INTERVAL_NANOS;
+            }
+            unsafe { NEXT_DEADLINE.write_current_raw(deadline + PERIODIC_INTERVAL_NANOS) };
+            axhal::time::set_oneshot_timer(deadline);
+        }
+        
+        axhal::irq::register_handler(HYPERVISOR_TIMER_IRQ_NUM, || {
+            update_timer();
+            #[cfg(feature = "multitask")]
+            axtask::on_timer_tick();
+        });
+*/
     }
     
     // Enable IRQs before starting app

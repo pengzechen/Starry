@@ -8,19 +8,32 @@
 // MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 // See the Mulan PSL v2 for more details.
 
-use hypercraft::arch::ContextFrame;
-use hypercraft::arch::ContextFrameTrait;
+use hypercraft::arch::{ContextFrame, ContextFrameTrait};
 use hypercraft::arch::vcpu::VmCpuRegisters;
 use hypercraft::arch::hvc::{HVC_SYS, HVC_SYS_BOOT, hvc_guest_handler};
+use hypercraft::arch::emu::EmuContext;
+
+use axhal::arch::hv::exception_utils::*;
+use axhal::{gic_is_priv, gic_lrs, GICD, GICH, GICV, GICC};
 
 use super::guest_psci::smc_guest_handler;
-use super::exception::*;
+use super::current_cpu;
+use super::emu::emu_handler;
+use super::interrupt::handle_virtual_interrupt;
 
 const HVC_RETURN_REG: usize = 0;
 const SMC_RETURN_REG: usize = 0;
 
-pub fn data_abort_handler(ctx: &mut ContextFrame) {
-    /* 
+#[no_mangle]
+pub extern "C" fn data_abort_handler(ctx: &mut ContextFrame) {
+    current_cpu().set_ctx(ctx);
+
+    let prio25 = GICD.lock().get_priority(25);
+    let prio27 = GICD.lock().get_priority(27);
+    let prio1 = GICD.lock().get_priority(1);
+    // let state = GICD.lock().get_enable(25);
+    debug!("[data_abort_handler] prio25:{:#x}, prio27:{:#x} prio1:{:#x}", prio25, prio27, prio1);
+
     let emu_ctx = EmuContext {
         address: exception_fault_addr(),
         width: exception_data_abort_access_width(),
@@ -29,14 +42,16 @@ pub fn data_abort_handler(ctx: &mut ContextFrame) {
         reg: exception_data_abort_access_reg(),
         reg_width: exception_data_abort_access_reg_width(),
     };
-    */
-    debug!("data fault addr 0x{:x}, esr: 0x{:x}",
-        exception_fault_addr(), exception_esr());
+    // if ctx.exception_pc() == 0xffffa23d3a94fc6c {
+        // read_timer_regs();
+    // }
+    debug!("data fault addr 0x{:#x}, esr: 0x{:#x}, elr:{:#x}",
+        exception_fault_addr(), exception_esr(), ctx.exception_pc());
     let elr = ctx.exception_pc();
 
     if !exception_data_abort_handleable() {
         panic!(
-            "Data abort not handleable 0x{:x}, esr 0x{:x}",
+            "Data abort not handleable 0x{:#x}, esr 0x{:#x}",
             exception_fault_addr(),
             exception_esr()
         );
@@ -49,9 +64,9 @@ pub fn data_abort_handler(ctx: &mut ContextFrame) {
             exception_fault_addr(), ctx
         );           
     }
-    /* 
+
     if !emu_handler(&emu_ctx) {
-        active_vm().unwrap().show_pagetable(emu_ctx.address);
+        // active_vm().unwrap().show_pagetable(emu_ctx.address);
         info!(
             "write {}, width {}, reg width {}, addr {:x}, iss {:x}, reg idx {}, reg val 0x{:x}, esr 0x{:x}",
             exception_data_abort_access_is_write(),
@@ -60,7 +75,7 @@ pub fn data_abort_handler(ctx: &mut ContextFrame) {
             emu_ctx.address,
             exception_iss(),
             emu_ctx.reg,
-            ctx.get_gpr(emu_ctx.reg),
+            ctx.gpr(emu_ctx.reg),
             exception_esr()
         );
         panic!(
@@ -68,13 +83,15 @@ pub fn data_abort_handler(ctx: &mut ContextFrame) {
             emu_ctx.address, elr
         );
     }
-    */
+
     let val = elr + exception_next_instruction_step();
     ctx.set_exception_pc(val);
+
+    current_cpu().clear_ctx();
 }
 
-#[inline(never)]
-pub fn hvc_handler(ctx: &mut ContextFrame) {
+#[no_mangle]
+pub extern "C" fn hvc_handler(ctx: &mut ContextFrame) {
     let x0 = ctx.gpr(0);
     let x1 = ctx.gpr(1);
     let x2 = ctx.gpr(2);
@@ -87,6 +104,37 @@ pub fn hvc_handler(ctx: &mut ContextFrame) {
     let hvc_type = (mode >> 8) & 0xff;
     let event = mode & 0xff;
 
+    current_cpu().set_ctx(ctx);
+/* 
+    let misr = GICH.get_misr();
+    let hcr = GICH.get_hcr();
+    let gicv_ctlr = GICV.get_ctlr();
+    let eisr0 = GICH.get_eisr_by_idx(0);
+    let lr0 = GICH.get_lr_by_idx(0);
+    let gicc_ctl = GICC.get_ctlr();
+    debug!("[hvc_handler] why!!!!!!!!!!!!!!! misr: {:#x} eisr0:{:#x} lr0:{:#x} hcr:{:#x} gicv_ctlr:{:#x} gicc_ctl:{:#x}", misr, eisr0,lr0, hcr, gicv_ctlr, gicc_ctl);
+
+    debug!("this is x0: {}", x0);
+    let prio25 = GICD.lock().get_priority(25);
+    let prio27 = GICD.lock().get_priority(27);
+    let state = GICD.lock().get_enable(25);
+    debug!("[hvc_handler] 25 enabled:{} prio25 {:#x} prio27 {:#x}", state, prio25, prio27);
+    //axhal::gicc_clear_current_irq(x0, false);
+    // axhal::gicv_clear_current_irq(x0, false);
+*/    
+    ctx.set_gpr(HVC_RETURN_REG, 0);
+
+    // handle_virtual_interrupt(79, 0);
+/*  let misr = GICH.get_misr();
+    let hcr = GICH.get_hcr();
+    let gicv_eoi = GICV.get_ctlr();
+    let gicv_iar = GICV.get_iar();
+    let eisr0 = GICH.get_eisr_by_idx(0);
+    let lr0 = GICH.get_lr_by_idx(0);
+    let gicc_iar = GICC.get_iar();
+    debug!("after inject misr: {:#x} eisr0:{:#x} lr0:{:#x} hcr:{:#x} gicv_ctlr:{:#x} gicv_iar:{:#x} gicc_iar:{:#x}", misr, eisr0,lr0, hcr, gicv_eoi, gicv_iar, gicc_iar);
+*/
+ /*
     match hvc_guest_handler(hvc_type, event, x0, x1, x2, x3, x4, x5, x6) {
         Ok(val) => {
             ctx.set_gpr(HVC_RETURN_REG, val);
@@ -96,6 +144,7 @@ pub fn hvc_handler(ctx: &mut ContextFrame) {
             ctx.set_gpr(HVC_RETURN_REG, usize::MAX);
         }
     }
+   
     if hvc_type==HVC_SYS && event== HVC_SYS_BOOT {
         unsafe {
             let regs: &mut VmCpuRegisters = core::mem::transmute(x1);   // x1 is the vm regs context
@@ -111,13 +160,18 @@ pub fn hvc_handler(ctx: &mut ContextFrame) {
             ctx.spsr = regs.guest_trap_context_regs.spsr;
         }
     }
+     */
+    current_cpu().clear_ctx();
 }
 
-pub fn smc_handler(ctx: &mut ContextFrame) {
+#[no_mangle]
+pub extern "C" fn smc_handler(ctx: &mut ContextFrame) {
     let fid = ctx.gpr(0);
     let x1 = ctx.gpr(1);
     let x2 = ctx.gpr(2);
     let x3 = ctx.gpr(3);
+
+    current_cpu().set_ctx(ctx);
 
     match smc_guest_handler(fid, x1, x2, x3) {
         Ok(val) => {
@@ -132,4 +186,6 @@ pub fn smc_handler(ctx: &mut ContextFrame) {
     let elr = ctx.exception_pc();
     let val = elr + exception_next_instruction_step();
     ctx.set_exception_pc(val);
+
+    current_cpu().clear_ctx();
 }

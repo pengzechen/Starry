@@ -2,6 +2,9 @@
 
 use crate_interface::{call_interface, def_interface};
 
+#[cfg(all(feature = "hv", target_arch = "aarch64"))]
+use hypercraft::arch::ContextFrame;
+
 /// Trap handler interface.
 ///
 /// This trait is defined with the [`#[def_interface]`][1] attribute. Users
@@ -15,12 +18,13 @@ pub trait TrapHandler {
     fn handle_irq(irq_num: usize);
     #[cfg(all(feature = "hv", target_arch = "aarch64"))]
     /// Handles interrupt requests for the given IRQ number for route to el2.
-    fn handle_irq_hv(irq_num: usize, src: usize);
+    fn handle_irq_hv(irq_num: usize, src: usize, ctx: &mut ContextFrame);
     // more e.g.: handle_page_fault();
 }
 
 /// Call the external IRQ handler.
 #[allow(dead_code)]
+// #[cfg(not(all(feature = "hv", target_arch = "aarch64")))]
 pub(crate) fn handle_irq_extern(irq_num: usize) {
     call_interface!(TrapHandler::handle_irq, irq_num);
 }
@@ -28,7 +32,7 @@ pub(crate) fn handle_irq_extern(irq_num: usize) {
 /// Call the external IRQ handler.
 #[allow(dead_code)]
 #[cfg(all(feature = "hv", target_arch = "aarch64"))]
-pub fn handle_irq_extern_hv(irq_num: usize, src: usize) {
+pub fn handle_irq_extern_hv(irq_num: usize, src: usize, ctx: &mut ContextFrame) {
     debug!("in handle_irq_extern_hv: irq_num {}, src {}", irq_num, src);
-    call_interface!(TrapHandler::handle_irq_hv, irq_num, src);
+    call_interface!(TrapHandler::handle_irq_hv, irq_num, src, ctx);
 }

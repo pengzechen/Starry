@@ -11,7 +11,7 @@ pub mod kernel;
 #[cfg(target_arch = "aarch64")]
 pub use kernel::{
     VM_ARRAY, VM_MAX_NUM, 
-    is_vcpu_init_ok, is_vcpu_primary_ok, init_vm_vcpu, add_vm, add_vm_vcpu, print_vm, run_vm_vcpu
+    is_vcpu_init_ok, is_vcpu_primary_ok, get_vm, init_vm_vcpu, init_vm_emu_device, init_vm_passthrough_device, add_vm, add_vm_vcpu, print_vm, run_vm_vcpu
 };
 
 #[cfg(target_arch = "aarch64")]

@@ -1,8 +1,11 @@
 use spin::Mutex;
+use super::current_cpu;
+use super::guest_psci::psci_ipi_handler;
+
 extern crate alloc;
 use alloc::vec::Vec;
 
-use crate::platform::aarch64_common::gic::*;
+use axhal::{interrupt_cpu_ipi_send, IPI_IRQ_NUM};
 
 pub static IPI_HANDLER_LIST: Mutex<Vec<IpiHandler>> = Mutex::new(Vec::new());
 
@@ -95,9 +98,7 @@ pub fn ipi_register(ipi_type: IpiType, handler: IpiHandlerFunc) -> bool {
     true
 }
 
-#[no_mangle]
 pub fn ipi_send_msg(target_id: usize, ipi_type: IpiType, ipi_message: IpiInnerMsg) -> bool {
-    // push msg to cpu int list
     /* 
     let ipi_handler_list = IPI_HANDLER_LIST.lock();
     debug!("[ipi_send_msg] !!!!!!!!!!!!!!!!!!!!!!!!!!!Address of ipi_handler_list: {:p}", &*ipi_handler_list as *const _);
@@ -105,6 +106,7 @@ pub fn ipi_send_msg(target_id: usize, ipi_type: IpiType, ipi_message: IpiInnerMs
     debug!("[ipi_send_msg] 111111111111 ipi_send_msg handler: {:#?}", ipi_handler_list[0].handler as *const());
     drop(ipi_handler_list);
     */
+    // push msg to cpu int list
     let msg = IpiMessage { ipi_type, ipi_message };
     let mut cpu_int_list = CPU_INT_LIST.lock();
     cpu_int_list[target_id].msg_queue.push(msg);
@@ -113,8 +115,40 @@ pub fn ipi_send_msg(target_id: usize, ipi_type: IpiType, ipi_message: IpiInnerMs
     ipi_send(target_id)
 }
 
-#[no_mangle]
 fn ipi_send(target_id: usize) -> bool {
     interrupt_cpu_ipi_send(target_id, IPI_IRQ_NUM);
     true
+}
+
+pub fn init_ipi() {
+    if !ipi_register(IpiType::Power, psci_ipi_handler) {
+        panic!("power_arch_init: failed to register ipi IpiTPower");
+    }
+}
+
+pub fn ipi_irq_handler() {
+    debug!("ipi handler");
+    let cpu_id = current_cpu().cpu_id;
+    let mut cpu_if_list = CPU_INT_LIST.lock();
+    let mut msg: Option<IpiMessage> = cpu_if_list[cpu_id].pop();
+    drop(cpu_if_list);
+
+    while !msg.is_none() {
+        let ipi_msg = msg.unwrap();
+        let ipi_type = ipi_msg.ipi_type as usize;
+
+        let ipi_handler_list = IPI_HANDLER_LIST.lock();
+        let len = ipi_handler_list.len();
+        let handler = ipi_handler_list[ipi_type].handler.clone();
+        drop(ipi_handler_list);
+
+        if len <= ipi_type {
+            debug!("illegal ipi type {}", ipi_type)
+        } else {
+            debug!("!!!!!!!!! this is handler: {:#?}", handler as *const());
+            handler(&ipi_msg);
+        }
+        let mut cpu_int_list = CPU_INT_LIST.lock();
+        msg = cpu_int_list[cpu_id].pop();
+    }
 }

@@ -1,5 +1,8 @@
-// #[cfg(all(feature = "hv", target_arch = "aarch64"))]
-// use crate::hv::aarch64_kernel::handle_virtual_interrupt;
+#[cfg(all(feature = "hv", target_arch = "aarch64"))]
+use hypercraft::arch::{ContextFrame, ContextFrameTrait};
+#[cfg(all(feature = "hv", target_arch = "aarch64"))]
+use crate::hv::kernel::{handle_virtual_interrupt, current_cpu};
+
 struct TrapHandlerImpl;
 
 #[crate_interface::impl_interface]
@@ -13,13 +16,24 @@ impl axhal::trap::TrapHandler for TrapHandlerImpl {
         }
     }
     #[cfg(all(feature = "hv", target_arch = "aarch64"))]
-    fn handle_irq_hv(irq_num: usize, src: usize) {
-        // if axhal::irq::irq_num_exist(irq_num) {
+    fn handle_irq_hv(irq_num: usize, src: usize, ctx: &mut ContextFrame) {
+        current_cpu().set_ctx(ctx);
+        if axhal::irq::irq_num_exist(irq_num) {
             let guard = kernel_guard::NoPreempt::new();
             axhal::irq::dispatch_irq(irq_num);
             drop(guard);
-        // }else {  // sgi
-        //    handle_virtual_interrupt(irq_num, src);
-        // }
+        }else {
+            handle_virtual_interrupt(irq_num, src);
+        }
+        
+        debug!("[handle_irq_hv] before deactivate irq {} ", irq_num);
+        
+        if irq_num==axhal::IPI_IRQ_NUM || irq_num==axhal::MAINTENANCE_IRQ_NUM || irq_num==axhal::time::HYPERVISOR_TIMER_IRQ_NUM {
+            axhal::gicc_clear_current_irq(irq_num, true);
+        }  else {
+            axhal::gicc_clear_current_irq(irq_num, false);
+        }
+
+        current_cpu().clear_ctx();
     }
 }
