@@ -338,7 +338,7 @@ fn init_interrupt() {
         axhal::irq::register_handler(axhal::MAINTENANCE_IRQ_NUM, gic_maintenance_handler);
 
         
-        axhal::GICD.lock().print_prio();
+        // axhal::GICD.lock().print_prio();
 /* 
         debug!("init hypervisor timer interrupt handler");
         use axhal::time::HYPERVISOR_TIMER_IRQ_NUM;

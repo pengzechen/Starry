@@ -261,7 +261,7 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
     )?;
     debug!("map virtio");
-
+    /* 
     if let Some(pl011) = meta.pl011 {
         gpt.map_region(
             pl011.base_address,
@@ -271,7 +271,7 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
         )?;
     }
     debug!("map pl011");
-
+    */
     if let Some(pl031) = meta.pl031 {
         gpt.map_region(
             pl031.base_address,

@@ -49,6 +49,8 @@ pub use platform::aarch64_common::gic::{
     GICH, GICD, GICV, GICC, GICD_BASE, GIC_SPI_MAX,
     IPI_IRQ_NUM, MAINTENANCE_IRQ_NUM,
 };
+#[cfg(all(target_arch = "aarch64", feature = "hv"))]
+pub use platform::aarch64_common::pl011::UART;
 
 pub mod arch;
 pub mod cpu;

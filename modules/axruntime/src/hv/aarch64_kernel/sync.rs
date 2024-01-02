@@ -28,12 +28,6 @@ const SMC_RETURN_REG: usize = 0;
 pub extern "C" fn data_abort_handler(ctx: &mut ContextFrame) {
     current_cpu().set_ctx(ctx);
 
-    let prio25 = GICD.lock().get_priority(25);
-    let prio27 = GICD.lock().get_priority(27);
-    let prio1 = GICD.lock().get_priority(1);
-    // let state = GICD.lock().get_enable(25);
-    debug!("[data_abort_handler] prio25:{:#x}, prio27:{:#x} prio1:{:#x}", prio25, prio27, prio1);
-
     let emu_ctx = EmuContext {
         address: exception_fault_addr(),
         width: exception_data_abort_access_width(),
@@ -45,8 +39,8 @@ pub extern "C" fn data_abort_handler(ctx: &mut ContextFrame) {
     // if ctx.exception_pc() == 0xffffa23d3a94fc6c {
         // read_timer_regs();
     // }
-    debug!("data fault addr 0x{:#x}, esr: 0x{:#x}, elr:{:#x}",
-        exception_fault_addr(), exception_esr(), ctx.exception_pc());
+    debug!("[data_abort_handler] data fault addr {:#x}, esr: {:#x}, elr:{:#x} is_write:{}",
+        exception_fault_addr(), exception_esr(), ctx.exception_pc(), emu_ctx.write);
     let elr = ctx.exception_pc();
 
     if !exception_data_abort_handleable() {
@@ -68,7 +62,7 @@ pub extern "C" fn data_abort_handler(ctx: &mut ContextFrame) {
     if !emu_handler(&emu_ctx) {
         // active_vm().unwrap().show_pagetable(emu_ctx.address);
         info!(
-            "write {}, width {}, reg width {}, addr {:x}, iss {:x}, reg idx {}, reg val 0x{:x}, esr 0x{:x}",
+            "[data_abort_handler] write {}, width {}, reg width {}, addr {:x}, iss {:x}, reg idx {}, reg val 0x{:x}, esr 0x{:x}",
             exception_data_abort_access_is_write(),
             emu_ctx.width,
             emu_ctx.reg_width,
@@ -100,7 +94,7 @@ pub extern "C" fn hvc_handler(ctx: &mut ContextFrame) {
     let x5 = ctx.gpr(5);
     let x6 = ctx.gpr(6);
     let mode = ctx.gpr(7);
-    debug!("hvc_handler: mode:{}", mode);
+    debug!("[hvc_handler]: mode:{}", mode);
     let hvc_type = (mode >> 8) & 0xff;
     let event = mode & 0xff;
 

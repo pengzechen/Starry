@@ -66,11 +66,11 @@ pub extern "C" fn rust_main_secondary(cpu_id: usize) -> ! {
     // run multi vm, this will not return
     // todo: add more feature for multi vm
     #[cfg(feature = "hv")]
-    /* 
+    
     unsafe {
         secondary_vm(cpu_id);
     }
-    */ 
+    
     #[cfg(feature = "multitask")]
     {
         debug!("secondary CPU {} enter idle loop", cpu_id);

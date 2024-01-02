@@ -10,6 +10,7 @@ use axhal::cpu::this_cpu_id;
 
 use super::emu::emu_register_dev;
 use super::emuintc_handler::{emu_intc_handler, emu_intc_init};
+use super::emuuart_handler::{emu_uart_handler, emu_uart_init};
 use super::interrupt::interrupt_vm_register;
 use crate::{GuestPageTable, HyperCraftHalImpl};
 
@@ -31,7 +32,6 @@ pub fn add_vm_vcpu(vm_id: usize, vcpu: VCpu<HyperCraftHalImpl>) {
             }
         }
     }
-    INITED_VCPUS.fetch_add(1, Ordering::Relaxed);
 }
 
 /// Init vm vcpu by index
@@ -69,6 +69,18 @@ pub fn init_vm_emu_device(vm_id: usize) {
                     emu_intc_handler,
                 );
                 emu_intc_init(vm, idx);
+
+                // init emu uart
+                let idx = 1;
+                emu_register_dev(
+                    EmuDeviceType::EmuDeviceTConsole,
+                    vm.vm_id,
+                    idx,
+                    0x9000000, // emu_dev.base_ipa,
+                    0x1000,    // emu_dev.length,
+                    emu_uart_handler,
+                );
+                emu_uart_init(vm, idx);
             }
         }
     }
@@ -91,11 +103,11 @@ pub fn init_vm_passthrough_device(vm_id: usize) {
                 irqs.push(32 + 0x29);
                 irqs.push(0x3e + 0x11);  // what interrupt????
                 for irq in irqs {
-                    debug!("this is irq: {:#x}", irq);
+                    // debug!("this is irq: {:#x}", irq);
                     if !interrupt_vm_register(vm, irq) {
                         warn!("vm{} register irq{} failed", vm_id, irq);
                     }
-                    debug!("after register for vm irq: {:#x}", irq);
+                    // debug!("after register for vm irq: {:#x}", irq);
                 }
             }
         }
@@ -142,6 +154,7 @@ pub fn get_vm(vm_id: usize) -> Option<&'static mut VM<HyperCraftHalImpl, GuestPa
 
 /// Run vm by id
 pub fn run_vm_vcpu(vm_id: usize, vcpu_id: usize) ->! {
+    INITED_VCPUS.fetch_add(1, Ordering::Relaxed);
     unsafe {
         debug!("current pcpu id: {} vcpu id:{}", this_cpu_id(), vcpu_id);
         if let Some(vm_option) = VM_ARRAY.get_mut(vm_id) {

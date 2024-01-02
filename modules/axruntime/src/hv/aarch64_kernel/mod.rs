@@ -1,10 +1,12 @@
 mod emu;
 mod emuintc_handler;
+mod emuuart_handler;
 mod guest_psci;
 mod interrupt;
 mod ipi;
 mod sync;
 mod vgic;
+mod vuart;
 pub mod vm_array;
 
 pub use vm_array::{
@@ -35,7 +37,6 @@ pub fn active_vm() -> &'static mut VM<HyperCraftHalImpl, GuestPageTable> {
     let cpu_id = axhal::cpu::this_cpu_id();
     let percpu = PerCpu::<HyperCraftHalImpl>::ptr_for_cpu(cpu_id);
     let vm_id = percpu.get_active_vcpu().unwrap().vm_id;
-    let vm_id = 0; // Replace this with your actual logic to get the active VM ID
     match get_vm(vm_id) {
         Some(vm) => vm,
         None => panic!("No active VM found"),

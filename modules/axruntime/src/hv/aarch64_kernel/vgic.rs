@@ -887,7 +887,7 @@ pub fn vgic_inject(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<Hy
 
 /// access emulated ctlr
 pub fn emu_ctrl_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx: &EmuContext) {
-    debug!("this is emu_ctrl_access");
+    debug!("[emu_ctrl_access] this is emu_ctrl_access");
     if emu_ctx.write {
         let prev_ctlr = vgic.vgicd_ctlr();
         let idx = emu_ctx.reg;
@@ -925,7 +925,7 @@ pub fn emu_ctrl_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx: 
 
 /// access emulated typer
 pub fn emu_typer_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx: &EmuContext) {
-    debug!("this is emu_typer_access");
+    debug!("[emu_typer_access] this is emu_typer_access");
     if !emu_ctx.write {
         let idx = emu_ctx.reg;
         let val = vgic.vgicd_typer() as usize;
@@ -937,13 +937,13 @@ pub fn emu_typer_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx:
 
 /// access emulated iidr
 pub fn emu_iidr_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx: &EmuContext) {
-    debug!("this is emu_iidr_access");
+    debug!("[emu_iidr_access] this is emu_iidr_access");
     if !emu_ctx.write {
         let idx = emu_ctx.reg;
         let val = vgic.vgicd_iidr() as usize;
         current_cpu().set_gpr(idx, val);
     } else {
-        debug!("emu_iidr_access: can't write to RO reg");
+        debug!("[emu_iidr_access]: can't write to RO reg");
     }
 }
 
@@ -1007,13 +1007,13 @@ pub fn emu_isenabler_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_
 
 /// access emulated gicd icenabler
 pub fn emu_icenabler_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx: &EmuContext) {
-    debug!("this is emu_icenabler_access");
+    debug!("[emu_icenabler_access] this is emu_icenabler_access");
     emu_enabler_access(vgic, emu_ctx, false);
 }
 
 /// access emulated gicd pend group
 pub fn emu_pendr_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx: &EmuContext, set: bool) {
-    debug!("this is emu_pendr_access");
+    debug!("[emu_pendr_access] this is emu_pendr_access");
     // the offset of the required GICD_IxPENDR<n> is (reg base + (4*n))
     // reg_idx is <n>
     let reg_idx = (emu_ctx.address & 0b1111111) / 4;
@@ -1037,7 +1037,7 @@ pub fn emu_pendr_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx:
         }
     }
     if first_int >= 16 && !vm_has_interrupt_flag {
-        warn!(
+        debug!(
             "emu_pendr_access: vm[{}] does not have interrupt {}",
             vm_id, first_int
         );
@@ -1068,19 +1068,19 @@ pub fn emu_pendr_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx:
 
 /// access emulated gicd ispendr
 pub fn emu_ispendr_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx: &EmuContext) {
-    debug!("this is emu_ispendr_access");
+    debug!("[emu_ispendr_access] this is emu_ispendr_access");
     emu_pendr_access(vgic, emu_ctx, true);
 }
 
 /// access emulated gicd icpendr
 pub fn emu_icpendr_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx: &EmuContext) {
-    debug!("this is emu_icpendr_access");
+    debug!("[emu_icpendr_access] this is emu_icpendr_access");
     emu_pendr_access(vgic, emu_ctx, false);
 }
 
 /// access emulated gicd active group
 pub fn emu_activer_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx: &EmuContext, set: bool) {
-    debug!("this is emu_activer_access");
+    debug!("[emu_activer_access] this is emu_activer_access");
     // the offset of the required GICD_IxACTIVER<n> is (reg base + (4*n))
     // reg_idx is <n>
     let reg_idx = (emu_ctx.address & 0b111_1111) / 4;
@@ -1104,7 +1104,7 @@ pub fn emu_activer_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ct
         }
     }
     if first_int >= 16 && !vm_has_interrupt_flag {
-        warn!(
+        debug!(
             "emu_activer_access: vm[{}] does not have interrupt {}",
             vm_id, first_int
         );
@@ -1135,19 +1135,19 @@ pub fn emu_activer_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ct
 
 /// access emulated gicd isactiver
 pub fn emu_isactiver_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx: &EmuContext) {
-    debug!("this is emu_isactiver_access");
+    debug!("[emu_isactiver_access] this is emu_isactiver_access");
     emu_activer_access(vgic, emu_ctx, true);
 }
 
 /// access emulated gicd icactiver
 pub fn emu_icactiver_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx: &EmuContext) {
-    debug!("this is emu_icactiver_access");
+    debug!("[emu_icactiver_access] this is emu_icactiver_access");
     emu_activer_access(vgic, emu_ctx, false);
 }
 
 /// access emulated gicd icfgr
 pub fn emu_icfgr_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx: &EmuContext) {
-    debug!("this is emu_icfgr_access");
+    debug!("[emu_icfgr_access] this is emu_icfgr_access");
     let first_int = (32 / GIC_CONFIG_BITS) * bit_extract(emu_ctx.address, 0, 9) / 4;
     let vm_id = active_vm().vm_id;
     let vm = active_vm();
@@ -1161,8 +1161,8 @@ pub fn emu_icfgr_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx:
             }
         }
         if first_int >= 16 && !vm_has_interrupt_flag {
-            warn!(
-                "emu_icfgr_access: vm[{}] does not have interrupt {}",
+            debug!(
+                "[emu_icfgr_access]: vm[{}] does not have interrupt {}",
                 vm_id, first_int
             );
             return;
@@ -1258,7 +1258,7 @@ pub fn emu_sgiregs_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ct
         }
     } else {
         // TODO: CPENDSGIR and SPENDSGIR access
-        warn!("unimplemented: CPENDSGIR and SPENDSGIR access");
+        debug!("unimplemented: CPENDSGIR and SPENDSGIR access");
     }
 }
 
@@ -1284,7 +1284,7 @@ pub fn emu_ipriorityr_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu
             }
         }
         if first_int >= 16 && !vm_has_interrupt_flag {
-            warn!(
+            debug!(
                 "emu_ipriorityr_access: vm[{}] does not have interrupt {}",
                 vm_id, first_int
             );
