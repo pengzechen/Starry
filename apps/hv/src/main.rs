@@ -75,13 +75,18 @@ fn main(hart_id: usize) {
         // create vcpu, need to change addr for aarch64!
         let gpt = setup_gpm(0x7000_0000, 0x7020_0000).unwrap();  
         
-        let vcpu = pcpu.create_vcpu(0).unwrap();
+        let vcpu0 = pcpu.create_vcpu(0).unwrap();
+        let vcpu1 = pcpu.create_vcpu(1).unwrap();
+
         let mut vcpus = VmCpus::new();
 
         // add vcpu into vm
-        vcpus.add_vcpu(vcpu).unwrap();
+        vcpus.add_vcpu(vcpu0).unwrap();
+        vcpus.add_vcpu(vcpu1).unwrap();
+
         let mut vm: VM<HyperCraftHalImpl, GuestPageTable> = VM::new(vcpus, gpt, 0).unwrap();
         vm.init_vm_vcpu(0, 0x7020_0000, 0x7000_0000);
+        vm.init_vm_vcpu(1, 0x9020_0000, 0x9000_0000);
 
         info!("vm run cpu{}", hart_id);
         // suppose hart_id to be 0
@@ -187,8 +192,7 @@ pub fn setup_gpm(dtb: usize) -> Result<GuestPageTable> {
     Ok(gpt)
 }
 
-#[cfg(target_arch = "aarch64")]
-pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
+#[cfg(target_arch = "aarch64")] pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
     let mut gpt = GuestPageTable::new()?;
     let meta = MachineMeta::parse(dtb);
     /* 
