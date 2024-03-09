@@ -57,8 +57,7 @@ impl axlog::LogIf for LogIfImpl {
         } else {
             None
         }
-        #[cfg(not(feature = "smp"))]
-        Some(0)
+        #[cfg(not(feature = "smp"))] Some(0)
     }
 
     fn current_task_id() -> Option<u64> {
@@ -67,8 +66,7 @@ impl axlog::LogIf for LogIfImpl {
             {
                 axtask::current_may_uninit().map(|curr| curr.id().as_u64())
             }
-            #[cfg(not(feature = "multitask"))]
-            None
+            #[cfg(not(feature = "multitask"))] None
         } else {
             None
         }
@@ -119,8 +117,7 @@ const LOGO: &str = r#"arceos"#;
         info!("  [{:x?}, {:x?}) {} ({:?})",r.paddr,r.paddr + r.size,r.name,r.flags );
     }
 
-    #[cfg(feature = "alloc")]
-    {
+    #[cfg(feature = "alloc")] {
         info!("Initialize global memory allocator...");
         init_allocator();
     }

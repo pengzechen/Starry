@@ -50,7 +50,7 @@ impl GuestPageTableTrait for GuestPageTable {
                     page_table::PageSize::Size4K,
                     flags,
                 )
-                .map_err(|paging_err| {
+                .map_err(|paging_err: page_table::PagingError| {
                     error!("paging error: {:?}", paging_err);
                     HyperError::Internal
                 })?;
@@ -139,6 +139,7 @@ impl GuestPageTableTrait for GuestPageTable {
             todo!()
         }
     }
+
 }
 
 impl GuestPageTable {

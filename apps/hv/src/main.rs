@@ -292,4 +292,5 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
     let paddr = gpt.translate(gaddr).unwrap();
     debug!("this is paddr for 0x{:X}: 0x{:X}", gaddr, paddr);
     Ok(gpt)
+    
 }
