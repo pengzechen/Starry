@@ -2,7 +2,7 @@ use axalloc::global_allocator;
 use axhal::mem::PAGE_SIZE_4K;
 use hypercraft::{
     HostVirtAddr, 
-    HyperCraftHal, 
+    HyperCraftHalTrait, 
 };
 
 /// An empty struct to implementate of `HyperCraftHal`
@@ -22,7 +22,7 @@ pub struct HyperCraftHalImpl;
 
 #[cfg(target_arch = "x86_64")] mod vmx;
 
-#[cfg(target_arch = "x86_64")] impl HyperCraftHal for HyperCraftHalImpl {
+#[cfg(target_arch = "x86_64")] impl HyperCraftHalTrait for HyperCraftHalImpl {
 
     fn alloc_pages(num_pages: usize) -> Option<hypercraft::HostVirtAddr> {
         global_allocator()
@@ -54,13 +54,15 @@ pub struct HyperCraftHalImpl;
 }
 
 
-#[cfg(not(target_arch = "x86_64"))] impl HyperCraftHal for HyperCraftHalImpl {
+#[cfg(not(target_arch = "x86_64"))] impl HyperCraftHalTrait for HyperCraftHalImpl {
 
     fn alloc_pages(num_pages: usize) -> Option<hypercraft::HostVirtAddr> {
+
         global_allocator()
-            .alloc_pages(num_pages, PAGE_SIZE_4K)
-            .map(|pa| pa as HostVirtAddr)
-            .ok()
+        .alloc_pages(num_pages, PAGE_SIZE_4K)
+        .map(|pa| pa as HostVirtAddr)
+        .ok()
+
     }
 
     fn dealloc_pages(pa: HostVirtAddr, num_pages: usize) {

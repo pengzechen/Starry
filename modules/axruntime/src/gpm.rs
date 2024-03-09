@@ -6,7 +6,7 @@ use page_table_entry::MappingFlags;
 
 pub type GuestPagingIfImpl = axhal::paging::PagingIfImpl;
 
-/// Guest Page Table struct\
+/// Guest Page Table struct
 pub struct GuestPageTable(NestedPageTable<GuestPagingIfImpl>);
 
 impl GuestPageTable {
