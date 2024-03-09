@@ -177,7 +177,7 @@ const LOGO: &str = r#"arceos"#;
 
 }
 
-#[cfg(feature = "alloc")] fn init_allocator() {
+#[cfg(feature = "alloc")]  fn init_allocator() {
     use axhal::mem::{memory_regions, phys_to_virt, MemRegionFlags};
 
     let mut max_region_size = 0;
@@ -202,8 +202,8 @@ const LOGO: &str = r#"arceos"#;
     }
 }
 
-#[cfg(feature = "paging")] fn remap_kernel_memory() -> 
-Result<(), axhal::paging::PagingError> {
+#[cfg(feature = "paging")] fn remap_kernel_memory() 
+-> Result<(), axhal::paging::PagingError> {
     use axhal::mem::{memory_regions, phys_to_virt};
     use axhal::paging::PageTable;
     use lazy_init::LazyInit;

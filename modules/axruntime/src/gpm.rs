@@ -9,7 +9,14 @@ pub type GuestPagingIfImpl = axhal::paging::PagingIfImpl;
 /// Guest Page Table struct\
 pub struct GuestPageTable(NestedPageTable<GuestPagingIfImpl>);
 
+impl GuestPageTable {
+    pub fn root_paddr(&self) -> PhysAddr {
+        self.0.root_paddr()
+    }
+}
+
 impl GuestPageTableTrait for GuestPageTable {
+
     fn new() -> HyperResult<Self> {
         #[cfg(target_arch = "riscv64")]
         {
@@ -142,8 +149,4 @@ impl GuestPageTableTrait for GuestPageTable {
 
 }
 
-impl GuestPageTable {
-    pub fn root_paddr(&self) -> PhysAddr {
-        self.0.root_paddr()
-    }
-}
+

@@ -1,6 +1,13 @@
 mod device_emu;
 
-use hypercraft::{VmxExitReason, VCpu as HVCpu, HyperResult, HyperError, VmxExitInfo};
+use hypercraft::{
+    VmxExitReason, 
+    VCpu as HVCpu, 
+    HyperResult, 
+    HyperError, 
+    VmxExitInfo
+};
+
 use device_emu::VirtLocalApic;
 
 type VCpu = HVCpu<super::HyperCraftHalImpl>;
