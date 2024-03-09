@@ -5,11 +5,9 @@ use memory_addr::PhysAddr;
 use spinlock::SpinNoIrq;
 
 use crate::mem::phys_to_virt;
-
 const UART_BASE: PhysAddr = PhysAddr::from(axconfig::UART_PADDR);
 
-static UART: SpinNoIrq<Pl011Uart> =
-    SpinNoIrq::new(Pl011Uart::new(phys_to_virt(UART_BASE).as_mut_ptr()));
+static UART: SpinNoIrq<Pl011Uart> = SpinNoIrq::new(Pl011Uart::new(phys_to_virt(UART_BASE).as_mut_ptr()));
 
 /// Writes a byte to the console.
 pub fn putchar(c: u8) {

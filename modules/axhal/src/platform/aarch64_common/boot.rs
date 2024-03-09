@@ -164,9 +164,7 @@ extern "C" {
 }
 
 /// The earliest entry point for the primary CPU.
-#[naked]
-#[no_mangle]
-#[link_section = ".text.boot"]
+#[naked] #[no_mangle] #[link_section = ".text.boot"]
 unsafe extern "C" fn _start() -> ! {
     // PC = 0x8_0000
     // X0 = dtb
@@ -247,10 +245,7 @@ unsafe extern "C" fn _start() -> ! {
 }
 
 /// The earliest entry point for the secondary CPUs.
-#[cfg(feature = "smp")]
-#[naked]
-#[no_mangle]
-#[link_section = ".text.boot"]
+#[cfg(feature = "smp")] #[naked] #[no_mangle] #[link_section = ".text.boot"]
 unsafe extern "C" fn _start_secondary() -> ! {
     core::arch::asm!("
         mrs     x19, mpidr_el1

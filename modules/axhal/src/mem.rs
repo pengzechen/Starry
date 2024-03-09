@@ -3,22 +3,20 @@
 use core::fmt;
 
 #[doc(no_inline)]
-pub use memory_addr::{PhysAddr, VirtAddr, PAGE_SIZE_4K};
+pub use memory_addr::{
+    PhysAddr, 
+    VirtAddr, 
+    PAGE_SIZE_4K
+};
 
 bitflags::bitflags! {
     /// The flags of a physical memory region.
     pub struct MemRegionFlags: usize {
-        /// Readable.
         const READ          = 1 << 0;
-        /// Writable.
         const WRITE         = 1 << 1;
-        /// Executable.
         const EXECUTE       = 1 << 2;
-        /// Device memory.
-        const DEVICE        = 1 << 4;
-        /// Reserved memory, do not use for allocation.
-        const RESERVED      = 1 << 5;
-        /// Free memory for allocation.
+        const DEVICE        = 1 << 4; /// Device memory.
+        const RESERVED      = 1 << 5; /// Reserved memory, do not use for allocation.
         const FREE          = 1 << 6;
     }
 }

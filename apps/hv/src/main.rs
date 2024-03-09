@@ -7,18 +7,6 @@ extern crate libax;
 
 #[cfg(target_arch = "riscv64")]
 use dtb_riscv64::MachineMeta;
-#[cfg(target_arch = "aarch64")]
-use dtb_aarch64::MachineMeta;
-#[cfg(target_arch = "aarch64")]
-use aarch64_config::GUEST_KERNEL_BASE_VADDR;
-#[cfg(target_arch = "aarch64")]
-use libax::{
-    hv::{
-        self, GuestPageTable, GuestPageTableTrait, HyperCraftHalImpl, PerCpu,
-        Result, VCpu, VmCpus, VM,
-    },
-    info,
-};
 #[cfg(not(target_arch = "aarch64"))]
 use libax::{
     hv::{
@@ -27,6 +15,21 @@ use libax::{
     },
     info,
 };
+
+#[cfg(target_arch = "aarch64")]
+use dtb_aarch64::MachineMeta;
+#[cfg(target_arch = "aarch64")]
+use aarch64_config::GUEST_KERNEL_BASE_VADDR;
+#[cfg(target_arch = "aarch64")]
+use libax::{
+    hv::{
+        // self, VCpu,
+        GuestPageTable, GuestPageTableTrait, HyperCraftHalImpl, PerCpu,
+        Result,  VmCpus, VM,
+    },
+    info,
+};
+
 
 use page_table_entry::MappingFlags;
 
@@ -69,7 +72,7 @@ fn main(hart_id: usize) {
     #[cfg(target_arch = "aarch64")]
     {
         // boot cpu
-        PerCpu::<HyperCraftHalImpl>::init(0, 0x4000);   // change to pub const CPU_STACK_SIZE: usize = PAGE_SIZE * 128?
+        PerCpu::<HyperCraftHalImpl>::init(0, 0x4000).unwrap();   // change to pub const CPU_STACK_SIZE: usize = PAGE_SIZE * 128?
 
         // get current percpu
         let pcpu = PerCpu::<HyperCraftHalImpl>::this_cpu();

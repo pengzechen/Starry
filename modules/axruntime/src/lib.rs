@@ -22,49 +22,26 @@
 #[macro_use]
 extern crate axlog;
 
-#[cfg(all(target_os = "none", not(test)))]
-mod lang_items;
+#[cfg(all(target_os = "none", not(test)))] mod lang_items;
+
+#[cfg(feature = "smp")] mod mp;
+#[cfg(feature = "smp")] pub use self::mp::rust_main_secondary;
+
+#[cfg(feature = "hv")] mod gpm;
+#[cfg(feature = "hv")] mod hv;
+#[cfg(feature = "hv")] pub use gpm::GuestPageTable;
+#[cfg(feature = "hv")] pub use hv::HyperCraftHalImpl;
+
 mod trap;
 
-#[cfg(feature = "smp")]
-mod mp;
-
-#[cfg(feature = "smp")]
-pub use self::mp::rust_main_secondary;
-
-#[cfg(feature = "hv")]
-mod gpm;
-#[cfg(feature = "hv")]
-mod hv;
-
-#[cfg(feature = "hv")]
-pub use gpm::GuestPageTable;
-#[cfg(feature = "hv")]
-pub use hv::HyperCraftHalImpl;
-
-
-const LOGO: &str = r#"
-       d8888                            .d88888b.   .d8888b.
-      d88888                           d88P" "Y88b d88P  Y88b
-     d88P888                           888     888 Y88b.
-    d88P 888 888d888  .d8888b  .d88b.  888     888  "Y888b.
-   d88P  888 888P"   d88P"    d8P  Y8b 888     888     "Y88b.
-  d88P   888 888     888      88888888 888     888       "888
- d8888888888 888     Y88b.    Y8b.     Y88b. .d88P Y88b  d88P
-d88P     888 888      "Y8888P  "Y8888   "Y88888P"   "Y8888P"
-"#;
-
-extern "C" {
-    #[cfg(feature = "hv")]
-    fn main(cpu_id: usize);
-    #[cfg(not(feature = "hv"))]
-    fn main();
-}
+#[cfg(feature = "hv")] extern "C" { fn main(cpu_id: usize); }
+#[cfg(not(feature = "hv"))] extern "C" { fn main(); }
 
 struct LogIfImpl;
 
 #[crate_interface::impl_interface]
 impl axlog::LogIf for LogIfImpl {
+
     fn console_write_str(s: &str) {
         axhal::console::write_bytes(s.as_bytes());
     }
@@ -98,25 +75,22 @@ impl axlog::LogIf for LogIfImpl {
     }
 }
 
-use core::sync::atomic::{AtomicUsize, Ordering};
 
+use core::sync::atomic::{
+    AtomicUsize, 
+    Ordering
+};
 static INITED_CPUS: AtomicUsize = AtomicUsize::new(0);
-
 fn is_init_ok() -> bool {
     INITED_CPUS.load(Ordering::Acquire) == axconfig::SMP
 }
 
-/// The main entry point of the ArceOS runtime.
-///
-/// It is called from the bootstrapping code in [axhal]. `cpu_id` is the ID of
-/// the current CPU, and `dtb` is the address of the device tree blob. It
-/// finally calls the application's `main` function after all initialization
-/// work is done.
-///
+const LOGO: &str = r#"arceos"#;
+
 /// In multi-core environment, this function is called on the primary CPU,
 /// and the secondary CPUs call [`rust_main_secondary`].
-#[cfg_attr(not(test), no_mangle)]
-pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
+
+#[cfg_attr(not(test), no_mangle)] pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
     ax_println!("{}", LOGO);
     ax_println!(
         "\
@@ -138,18 +112,11 @@ pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
     info!("Logging is enabled.");
     info!("Primary CPU {} started, dtb = {:#x}.", cpu_id, dtb);
 
-    #[cfg(all(feature = "hv", target_arch = "riscv64"))]
-    hypercraft::init_hv_runtime();
+    #[cfg(all(feature = "hv", target_arch = "riscv64"))] hypercraft::init_hv_runtime();
 
     info!("Found physcial memory regions:");
     for r in axhal::mem::memory_regions() {
-        info!(
-            "  [{:x?}, {:x?}) {} ({:?})",
-            r.paddr,
-            r.paddr + r.size,
-            r.name,
-            r.flags
-        );
+        info!("  [{:x?}, {:x?}) {} ({:?})",r.paddr,r.paddr + r.size,r.name,r.flags );
     }
 
     #[cfg(feature = "alloc")]
@@ -173,6 +140,7 @@ pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
     #[cfg(feature = "multitask")]
     axtask::init_scheduler();
 
+    
     #[cfg(any(feature = "fs", feature = "net", feature = "display"))]
     {
         #[allow(unused_variables)]
@@ -188,31 +156,18 @@ pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
         axdisplay::init_display(all_devices.display);
     }
 
-    #[cfg(feature = "smp")]
-    self::mp::start_secondary_cpus(cpu_id);
+    #[cfg(feature = "smp")] self::mp::start_secondary_cpus(cpu_id);
 
-    #[cfg(feature = "irq")]
-    {
-        info!("Initialize interrupt handlers...");
-        init_interrupt();
-    }
+    #[cfg(feature = "irq")] { info!("init interrupt handlers..."); init_interrupt(); }
+    
 
     info!("Primary CPU {} init OK.", cpu_id);
     INITED_CPUS.fetch_add(1, Ordering::Relaxed);
 
-    while !is_init_ok() {
-        core::hint::spin_loop();
-    }
+    while !is_init_ok() { core::hint::spin_loop(); }
 
-    #[cfg(feature = "hv")]
-    unsafe {
-        main(cpu_id)
-    };
-
-    #[cfg(not(feature = "hv"))]
-    unsafe {
-        main()
-    };
+    #[cfg(feature = "hv")] unsafe { main(cpu_id) };
+    #[cfg(not(feature = "hv"))] unsafe { main() };
 
     #[cfg(feature = "multitask")]
     axtask::exit(0);
@@ -221,10 +176,11 @@ pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
         debug!("main task exited: exit_code={}", 0);
         axhal::misc::terminate();
     }
+    
+
 }
 
-#[cfg(feature = "alloc")]
-fn init_allocator() {
+#[cfg(feature = "alloc")] fn init_allocator() {
     use axhal::mem::{memory_regions, phys_to_virt, MemRegionFlags};
 
     let mut max_region_size = 0;
@@ -249,8 +205,8 @@ fn init_allocator() {
     }
 }
 
-#[cfg(feature = "paging")]
-fn remap_kernel_memory() -> Result<(), axhal::paging::PagingError> {
+#[cfg(feature = "paging")] fn remap_kernel_memory() -> 
+Result<(), axhal::paging::PagingError> {
     use axhal::mem::{memory_regions, phys_to_virt};
     use axhal::paging::PageTable;
     use lazy_init::LazyInit;
@@ -275,8 +231,7 @@ fn remap_kernel_memory() -> Result<(), axhal::paging::PagingError> {
     Ok(())
 }
 
-#[cfg(feature = "irq")]
-fn init_interrupt() {
+#[cfg(feature = "irq")] fn init_interrupt() {
     use axhal::time::TIMER_IRQ_NUM;
 
     // Setup timer interrupt handler
@@ -312,3 +267,12 @@ fn init_interrupt() {
     // Enable IRQs before starting app
     axhal::arch::enable_irqs();
 }
+
+/*
+qemu-system-aarch64 -m 3G -smp 1 -cpu cortex-a72 -machine virt                          \
+-kernel apps/hv/hv_qemu-virt-aarch64.bin                                                \
+-device loader,file=apps/hv/guest/linux/linux-aarch64.dtb,addr=0x70000000,force-raw=on  \
+-device loader,file=apps/hv/guest/linux/linux-aarch64.bin,addr=0x70200000,force-raw=on  \
+-machine virtualization=on,gic-version=2 -drive if=none,file=apps/hv/guest/linux/rootfs-aarch64.img,format=raw,id=hd0 \
+-device virtio-blk-device,drive=hd0  -nographic
+*/

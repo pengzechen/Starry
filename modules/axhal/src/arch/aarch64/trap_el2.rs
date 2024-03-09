@@ -1,9 +1,9 @@
 use core::arch::global_asm;
 
-use aarch64_cpu::registers::{ESR_EL1, FAR_EL1};
-use tock_registers::interfaces::Readable;
+// use aarch64_cpu::registers::{ESR_EL1, FAR_EL1};
+// use tock_registers::interfaces::Readable;
 
-use hypercraft::lower_aarch64_synchronous;
+// use hypercraft::lower_aarch64_synchronous;
 
 use super::TrapFrame;
 

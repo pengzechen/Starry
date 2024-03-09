@@ -3,10 +3,22 @@
 use axalloc::global_allocator;
 use page_table::PagingIf;
 
-use crate::mem::{phys_to_virt, virt_to_phys, MemRegionFlags, PhysAddr, VirtAddr, PAGE_SIZE_4K};
+use crate::mem::{
+    phys_to_virt, 
+    virt_to_phys, 
+    MemRegionFlags, 
+    PhysAddr, 
+    VirtAddr, 
+    PAGE_SIZE_4K
+};
 
 #[doc(no_inline)]
-pub use page_table::{MappingFlags, PageSize, PagingError, PagingResult};
+pub use page_table::{
+    MappingFlags, 
+    PageSize, 
+    PagingError, 
+    PagingResult
+};
 
 impl From<MemRegionFlags> for MappingFlags {
     fn from(f: MemRegionFlags) -> Self {
@@ -56,10 +68,11 @@ impl PagingIf for PagingIfImpl {
         global_allocator().dealloc_pages(phys_to_virt(paddr).as_usize(), page_nums)
     }
 
-    #[inline]
-    fn phys_to_virt(paddr: PhysAddr) -> VirtAddr {
+    
+    #[inline] fn phys_to_virt(paddr: PhysAddr) -> VirtAddr {
         phys_to_virt(paddr)
     }
+
 }
 
 cfg_if::cfg_if! {

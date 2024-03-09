@@ -1,18 +1,19 @@
 //! Interrupt management.
 
 use handler_table::HandlerTable;
-
 use crate::platform::irq::MAX_IRQ_COUNT;
-
-pub use crate::platform::irq::{dispatch_irq, register_handler, set_enable};
+pub use crate::platform::irq::{
+    dispatch_irq, 
+    register_handler, 
+    set_enable
+};
 
 /// The type if an IRQ handler.
 pub type IrqHandler = handler_table::Handler;
-
 static IRQ_HANDLER_TABLE: HandlerTable<MAX_IRQ_COUNT> = HandlerTable::new();
 
-/// Platform-independent IRQ dispatching.
-#[allow(dead_code)]
+
+#[allow(dead_code)] /// Platform-independent IRQ dispatching.
 pub(crate) fn dispatch_irq_common(irq_num: usize) {
     trace!("IRQ {}", irq_num);
     if !IRQ_HANDLER_TABLE.handle(irq_num) {

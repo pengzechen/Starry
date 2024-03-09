@@ -1,23 +1,15 @@
 //! CPU-related operations.
 
-#[percpu::def_percpu]
-static CPU_ID: usize = 0;
+#[percpu::def_percpu] static CPU_ID: usize = 0;
+#[percpu::def_percpu] static IS_BSP: bool = false;
+#[percpu::def_percpu] static CURRENT_TASK_PTR: usize = 0;
 
-#[percpu::def_percpu]
-static IS_BSP: bool = false;
-
-#[percpu::def_percpu]
-static CURRENT_TASK_PTR: usize = 0;
-
-/// Returns the ID of the current CPU.
-#[inline]
+#[inline] /// Returns the ID of the current CPU.
 pub fn this_cpu_id() -> usize {
     CPU_ID.read_current()
 }
 
-/// Returns whether the current CPU is the primary CPU (aka the bootstrap
-/// processor or BSP)
-#[inline]
+#[inline] /// Returns whether the current CPU is the primary CPU (aka the bootstrap processor or BSP
 pub fn this_cpu_is_bsp() -> bool {
     IS_BSP.read_current()
 }
