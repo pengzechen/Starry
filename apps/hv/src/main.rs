@@ -47,8 +47,7 @@ use alloc::vec::Vec;
 #[cfg(target_arch = "x86_64")]
 mod x64;
 
-#[no_mangle]
-fn main(hart_id: usize) {
+#[no_mangle] fn main(hart_id: usize) {
     println!("Hello, hv!");
 
     #[cfg(target_arch = "riscv64")]
@@ -136,8 +135,9 @@ fn main(hart_id: usize) {
     }
 }
 
-#[cfg(target_arch = "riscv64")]
-pub fn setup_gpm(dtb: usize) -> Result<GuestPageTable> {
+
+/*
+#[cfg(target_arch = "riscv64")] pub fn setup_gpm(dtb: usize) -> Result<GuestPageTable> {
     let mut gpt = GuestPageTable::new()?;
     let meta = MachineMeta::parse(dtb);
     if let Some(test) = meta.test_finisher_address {
@@ -208,10 +208,33 @@ pub fn setup_gpm(dtb: usize) -> Result<GuestPageTable> {
 
     Ok(gpt)
 }
+*/
 
-#[cfg(target_arch = "aarch64")]
-#[no_mangle]
-pub extern "C" fn secondary_vm(cpu_id: usize) ->! {
+/*
+qemu-system-aarch64 -m 3G -smp 2 -cpu cortex-a72 -machine virt -nographic   \
+-machine virtualization=on,gic-version=2                                    \
+-kernel apps/hv/hv_qemu-virt-aarch64.bin                                    \
+-device loader,file=apps/hv/guest/linux/linux-aarch64.dtb,addr=0x70000000,force-raw=on \
+-device loader,file=apps/hv/guest/linux/linux-aarch64.bin,addr=0x70200000,force-raw=on \
+-drive if=none,file=apps/hv/guest/linux/rootfs-aarch64.img,format=raw,id=hd0           \
+-device virtio-blk-device,drive=hd0                                                    \
+-device loader,file=apps/hv/guest/linux/linux-aarch64-1.dtb,addr=0x50000000,force-raw=on \
+-device loader,file=apps/hv/guest/linux/linux-aarch64-1.bin,addr=0x50200000,force-raw=on \
+-drive if=none,file=apps/hv/guest/linux/rootfs-aarch64-1.img,format=raw,id=hd1           \
+-device virtio-blk-device,drive=hd1                                                     
+*/
+
+/*
+qemu-system-aarch64 -m 3G -smp 2 -cpu cortex-a72 -machine virt -nographic   \
+-machine virtualization=on,gic-version=2                                    \
+-kernel apps/hv/hv_qemu-virt-aarch64.bin                                    \
+-device loader,file=apps/hv/guest/nimbos/nimbos-aarch64_1.dtb,addr=0x70000000,force-raw=on    \
+-device loader,file=apps/hv/guest/nimbos/nimbos-aarch64_1.bin,addr=0x70200000,force-raw=on    \
+-device loader,file=apps/hv/guest/nimbos/nimbos-aarch64.dtb,addr=0x50000000,force-raw=on      \
+-device loader,file=apps/hv/guest/nimbos/nimbos-aarch64.bin,addr=0x50200000,force-raw=on 
+*/
+
+#[cfg(target_arch = "aarch64")] #[no_mangle] pub extern "C" fn secondary_vm(cpu_id: usize) ->! {
     while !is_vcpu_primary_ok() {
         core::hint::spin_loop();
     }
@@ -238,8 +261,8 @@ pub extern "C" fn secondary_vm(cpu_id: usize) ->! {
 
     run_vm_vcpu(1, 0);
 }
-#[cfg(target_arch = "aarch64")]
-pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
+
+#[cfg(target_arch = "aarch64")] pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
     let mut gpt = GuestPageTable::new()?;
     let meta = MachineMeta::parse(dtb);
     /* 
