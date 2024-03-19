@@ -12,13 +12,7 @@ pub struct GuestPageTable(NestedPageTable<GuestPagingIfImpl>);
 
 impl GuestPageTableTrait for GuestPageTable {
     fn new() -> HyperResult<Self> {
-        #[cfg(target_arch = "riscv64")]
-        {
-            let npt = NestedPageTable::<GuestPagingIfImpl>::try_new_gpt()
-                .map_err(|_| HyperError::NoMemory)?;
-            Ok(GuestPageTable(npt))
-        }
-        #[cfg(target_arch = "aarch64")]
+        
         {
             let agpt = NestedPageTable::<GuestPagingIfImpl>::try_new().unwrap();
             if usize::from(agpt.root_paddr()) & (1<<12) != 0 {
@@ -30,16 +24,6 @@ impl GuestPageTableTrait for GuestPageTable {
             }else {
                 Ok(GuestPageTable(agpt))
             }
-        }
-        #[cfg(target_arch = "x86_64")]
-        {
-            let npt = NestedPageTable::<GuestPagingIfImpl>::try_new()
-                .map_err(|_| HyperError::NoMemory)?;
-            Ok(GuestPageTable(npt))
-        }
-        #[cfg(not(any(target_arch = "riscv64", target_arch = "x86_64", target_arch = "aarch64")))]
-        {
-            todo!()
         }
     }
 
@@ -64,10 +48,6 @@ impl GuestPageTableTrait for GuestPageTable {
                 })?;
             Ok(())
         }
-        #[cfg(not(any(target_arch = "riscv64", target_arch = "x86_64", target_arch = "aarch64")))]
-        {
-            todo!()
-        }
     }
 
     fn map_region(
@@ -77,7 +57,7 @@ impl GuestPageTableTrait for GuestPageTable {
         size: usize,
         flags: MappingFlags,
     ) -> HyperResult<()> {
-        #[cfg(any(target_arch = "riscv64", target_arch = "x86_64"))]
+        
         {
             self.0
                 .map_region(VirtAddr::from(gpa), PhysAddr::from(hpa), size, flags, true)
@@ -86,20 +66,6 @@ impl GuestPageTableTrait for GuestPageTable {
                     HyperError::Internal
                 })?;
             Ok(())
-        }
-        #[cfg(target_arch = "aarch64")]
-        {
-            self.0
-                .map_region(VirtAddr::from(gpa), PhysAddr::from(hpa), size, flags, true)
-                .map_err(|err| {
-                    error!("paging error: {:?}", err);
-                    HyperError::Internal
-                })?;
-            Ok(())
-        }
-        #[cfg(not(any(target_arch = "riscv64", target_arch = "x86_64", target_arch = "aarch64")))]
-        {
-            todo!()
         }
     }
 
