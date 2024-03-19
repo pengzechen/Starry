@@ -90,7 +90,7 @@ pub fn emu_uarticr_access(vuart: &mut Vuart, emu_ctx: &EmuContext) {
     } else {
         panic!("write only register");
     };
-    info!("[emu_uarticr_access] write val: {:#x} ", val);
+    debug!("[emu_uarticr_access] write val: {:#x} ", val);
     // write to icr
     if emu_ctx.write {
         vuart.icr = val as u32;

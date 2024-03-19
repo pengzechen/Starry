@@ -70,17 +70,20 @@ pub fn init_vm_emu_device(vm_id: usize) {
                 );
                 emu_intc_init(vm, idx);
 
-                // init emu uart
-                let idx = 1;
-                emu_register_dev(
-                    EmuDeviceType::EmuDeviceTConsole,
-                    vm.vm_id,
-                    idx,
-                    0x9000000, // emu_dev.base_ipa,
-                    0x1000,    // emu_dev.length,
-                    emu_uart_handler,
-                );
-                emu_uart_init(vm, idx);
+                if vm_id!=0 {
+                    // init emu uart
+                    let idx = 1;
+                    emu_register_dev(
+                        EmuDeviceType::EmuDeviceTConsole,
+                        vm.vm_id,
+                        idx,
+                        0x9000000, // emu_dev.base_ipa,
+                        0x1000,    // emu_dev.length,
+                        emu_uart_handler,
+                    );
+                    emu_uart_init(vm, idx);
+                }
+
             }
         }
     }

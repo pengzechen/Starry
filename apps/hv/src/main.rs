@@ -261,17 +261,19 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
     )?;
     debug!("map virtio");
-    /* 
-    if let Some(pl011) = meta.pl011 {
-        gpt.map_region(
-            pl011.base_address,
-            pl011.base_address,
-            pl011.size,
-            MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-        )?;
+    
+    if kernel_entry == 0x7020_0000 {
+        if let Some(pl011) = meta.pl011 {
+            gpt.map_region(
+                pl011.base_address,
+                pl011.base_address,
+                pl011.size,
+                MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
+            )?;
+        }
+        debug!("map pl011");
     }
-    debug!("map pl011");
-    */
+    
     if let Some(pl031) = meta.pl031 {
         gpt.map_region(
             pl031.base_address,
