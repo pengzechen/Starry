@@ -2,7 +2,7 @@
 
 use crate_interface::{call_interface, def_interface};
 
-#[cfg(all(feature = "hv", target_arch = "aarch64"))]
+#[cfg(feature = "hv")]
 use hypercraft::arch::ContextFrame;
 
 /// Trap handler interface.

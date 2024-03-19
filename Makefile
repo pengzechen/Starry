@@ -4,7 +4,7 @@ SMP ?= 1
 MODE ?= release
 LOG ?= warn
 
-A ?= apps/helloworld
+A ?= apps/hv
 APP ?= $(A)
 APP_FEATURES ?=
 DISK_IMG ?= disk.img

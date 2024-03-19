@@ -26,23 +26,15 @@ extern crate axlog;
 mod lang_items;
 mod trap;
 
-#[cfg(feature = "smp")]
-mod mp;
+#[cfg(feature = "smp")] mod mp;
+#[cfg(feature = "smp")] pub use self::mp::rust_main_secondary;
 
-#[cfg(feature = "smp")]
-pub use self::mp::rust_main_secondary;
+#[cfg(feature = "hv")] mod gpm;
+#[cfg(feature = "hv")] mod hv;
+#[cfg(feature = "hv")] pub use gpm::GuestPageTable;
+#[cfg(feature = "hv")] pub use hv::HyperCraftHalImpl;
 
-#[cfg(feature = "hv")]
-mod gpm;
-#[cfg(feature = "hv")]
-mod hv;
-
-#[cfg(feature = "hv")]
-pub use gpm::GuestPageTable;
-#[cfg(feature = "hv")]
-pub use hv::HyperCraftHalImpl;
-
-#[cfg(all(target_arch = "aarch64", feature = "hv"))]
+#[cfg(all(feature = "hv"))]
 pub use hv::{
     VM_ARRAY, VM_MAX_NUM,
     add_vm, add_vm_vcpu, get_vm, print_vm,
@@ -50,9 +42,11 @@ pub use hv::{
     is_vcpu_init_ok, is_vcpu_primary_ok,
     run_vm_vcpu, 
 };
-#[cfg(all(target_arch = "aarch64", feature = "hv"))]
+
+#[cfg(all(feature = "hv"))]
 use axhal::{IPI_IRQ_NUM, MAINTENANCE_IRQ_NUM};
-#[cfg(all(target_arch = "aarch64", feature = "hv"))]
+
+#[cfg(all(feature = "hv"))]
 use crate::hv::kernel::{
     ipi_irq_handler, init_ipi, cpu_int_list_init,
     gic_maintenance_handler
@@ -70,10 +64,7 @@ d88P     888 888      "Y8888P  "Y8888   "Y88888P"   "Y8888P"
 "#;
 
 extern "C" {
-    #[cfg(feature = "hv")]
-    fn main(cpu_id: usize);
-    #[cfg(not(feature = "hv"))]
-    fn main();
+    #[cfg(feature = "hv")]     fn main(cpu_id: usize);
 }
 
 struct LogIfImpl;
@@ -115,13 +106,7 @@ impl axlog::LogIf for LogIfImpl {
     }
 }
 
-use core::sync::atomic::{AtomicUsize, Ordering};
 
-static INITED_CPUS: AtomicUsize = AtomicUsize::new(0);
-
-fn is_init_ok() -> bool {
-    INITED_CPUS.load(Ordering::Acquire) == axconfig::SMP
-}
 
 /// The main entry point of the ArceOS runtime.
 ///
@@ -132,6 +117,14 @@ fn is_init_ok() -> bool {
 ///
 /// In multi-core environment, this function is called on the primary CPU,
 /// and the secondary CPUs call [`rust_main_secondary`].
+
+use core::sync::atomic::{AtomicUsize, Ordering};
+static INITED_CPUS: AtomicUsize = AtomicUsize::new(0);
+fn is_init_ok() -> bool {
+    INITED_CPUS.load(Ordering::Acquire) == axconfig::SMP
+}
+
+
 #[cfg_attr(not(test), no_mangle)]
 pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
     ax_println!("{}", LOGO);
@@ -154,10 +147,6 @@ pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
     axlog::set_max_level(option_env!("LOG").unwrap_or("")); // no effect if set `log-level-*` features
     info!("Logging is enabled.");
     info!("Primary CPU {} started, dtb = {:#x}.", cpu_id, dtb);
-
-    #[cfg(all(feature = "hv", target_arch = "riscv64"))]
-    hypercraft::init_hv_runtime();
-
     info!("Found physcial memory regions:");
     for r in axhal::mem::memory_regions() {
         info!(
@@ -221,15 +210,7 @@ pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
         core::hint::spin_loop();
     }
 
-    #[cfg(feature = "hv")]
-    unsafe {
-        main(cpu_id)
-    };
-
-    #[cfg(not(feature = "hv"))]
-    unsafe {
-        main()
-    };
+    #[cfg(feature = "hv")] unsafe { main(cpu_id) };
 
     #[cfg(feature = "multitask")]
     axtask::exit(0);

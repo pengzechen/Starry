@@ -1,5 +1,0 @@
-default
-paging
-alloc
-multitask
-irq

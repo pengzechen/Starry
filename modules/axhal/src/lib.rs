@@ -36,20 +36,18 @@
 #[macro_use]
 extern crate log;
 
-#[cfg(all(target_arch = "aarch64", feature = "hv"))]
-#[macro_use]
-extern crate hypercraft;
+#[cfg(all(feature = "hv"))] #[macro_use] extern crate hypercraft;
 
 mod platform;
 
-#[cfg(all(target_arch = "aarch64", feature = "hv"))]
+#[cfg(all(feature = "hv"))]
 pub use platform::aarch64_common::gic::{
     gicc_get_current_irq, deactivate_irq, interrupt_cpu_ipi_send, 
     gic_is_priv, gic_lrs, gicc_clear_current_irq, gicv_clear_current_irq,
     GICH, GICD, GICV, GICC, GICD_BASE, GIC_SPI_MAX,
     IPI_IRQ_NUM, MAINTENANCE_IRQ_NUM,
 };
-#[cfg(all(target_arch = "aarch64", feature = "hv"))]
+#[cfg(all(feature = "hv"))]
 pub use platform::aarch64_common::pl011::UART;
 
 pub mod arch;

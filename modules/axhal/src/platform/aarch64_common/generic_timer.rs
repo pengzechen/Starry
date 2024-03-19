@@ -77,6 +77,5 @@ pub(crate) fn init_percpu() {
         msr!(CNTHP_CTL_EL2, ctl);
         msr!(CNTHP_TVAL_EL2, tval);
         // crate::platform::irq::set_enable(crate::platform::irq::HYPERVISOR_TIMER_IRQ_NUM, true);
-
     }
 }
