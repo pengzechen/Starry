@@ -129,7 +129,7 @@ fn gic_local_init() {
 pub fn gicc_get_current_irq() -> (usize, usize) {
     let iar = GICC.get_iar();
     let irq = iar as usize;
-    debug!("this is iar:{:#x}", iar);
+    // debug!("this is iar:{:#x}", iar);
     // current_cpu().current_irq = irq;
     let irq = bit_extract(irq, 0, 10);
     let src = bit_extract(irq, 10, 3);
@@ -177,7 +177,7 @@ pub fn set_gic_lrs(lrs: usize) {
 
 #[cfg(feature = "hv")]
 pub fn gicc_clear_current_irq(irq:usize, for_hypervisor: bool) {
-    debug!("gicc_clear_current_irq: irq {}, for_hypervisor {}", irq, for_hypervisor);
+    //debug!("gicc_clear_current_irq: irq {}, for_hypervisor {}", irq, for_hypervisor);
     if irq == 0 {
         return;
     }

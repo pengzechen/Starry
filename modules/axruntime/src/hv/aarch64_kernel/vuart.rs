@@ -10,8 +10,8 @@ pub fn emu_uartdr_access(vuart: &mut Vuart,  emu_ctx: &EmuContext) {
     } else {
         0
     };
-    debug!("[emu_uartdr_access] address: {:#x} is write:{} width:{}, reg:{}", emu_ctx.address, emu_ctx.write, emu_ctx.width, emu_ctx.reg);
-    debug!("[emu_uartdr_access] write val: {:#x} ", val);
+    // debug!("[emu_uartdr_access] address: {:#x} is write:{} width:{}, reg:{}", emu_ctx.address, emu_ctx.write, emu_ctx.width, emu_ctx.reg);
+    //debug!("[emu_uartdr_access] write val: {:#x} ", val);
     // write to dr (output)
     if emu_ctx.write {
         let ch: u8 = (val & 0b1111_1111) as u8;
@@ -54,20 +54,20 @@ pub fn emu_uartdr_access(vuart: &mut Vuart,  emu_ctx: &EmuContext) {
             }
         }
     }
-    debug!("[emu_uartdr_access] finish");
+    //debug!("[emu_uartdr_access] finish");
 }
 
 pub fn emu_uartfr_access(vuart: &Vuart,  emu_ctx: &EmuContext) {
-    debug!("[emu_uartfr_access] vuart id {}", vuart.id);
-    debug!("[emu_uartfr_access] address: {:#x} is write:{} width:{}, reg:{}", emu_ctx.address, emu_ctx.write, emu_ctx.width, emu_ctx.reg);
+    //debug!("[emu_uartfr_access] vuart id {}", vuart.id);
+    //debug!("[emu_uartfr_access] address: {:#x} is write:{} width:{}, reg:{}", emu_ctx.address, emu_ctx.write, emu_ctx.width, emu_ctx.reg);
     let mut val: usize = 0;
-    debug!("!!!!!!!!!!!!!!!!!!!!!!!!![new vuart] receive_fifio empty:{}", vuart.receive_fifo.is_empty());
+    //debug!("!!!!!!!!!!!!!!!!!!!!!!!!![new vuart] receive_fifio empty:{}", vuart.receive_fifo.is_empty());
     if vuart.receive_fifo.is_empty() {
         val |= 1 << 4;
     } if vuart.transmit_fifo.is_empty()  {
         val |= 1 << 7;
     };
-    debug!("[emu_uartfr_access] write val: {:#x} ", val);
+    // debug!("[emu_uartfr_access] write val: {:#x} ", val);
     let idx = emu_ctx.reg;
     current_cpu().set_gpr(idx, val as usize);
 }
@@ -83,19 +83,19 @@ pub fn emu_uartris_access(vuart: &Vuart,  emu_ctx: &EmuContext) {
 }
 
 pub fn emu_uarticr_access(vuart: &mut Vuart, emu_ctx: &EmuContext) {
-    debug!("[emu_uarticr_access] address: {:#x} is write:{} width:{}, reg:{}", emu_ctx.address, emu_ctx.write, emu_ctx.width, emu_ctx.reg);
+    //debug!("[emu_uarticr_access] address: {:#x} is write:{} width:{}, reg:{}", emu_ctx.address, emu_ctx.write, emu_ctx.width, emu_ctx.reg);
     let idx = emu_ctx.reg;
     let val = if emu_ctx.write {
         current_cpu().get_gpr(idx)
     } else {
         panic!("write only register");
     };
-    debug!("[emu_uarticr_access] write val: {:#x} ", val);
+    //debug!("[emu_uarticr_access] write val: {:#x} ", val);
     // write to icr
     if emu_ctx.write {
         vuart.icr = val as u32;
     }
-    debug!("[emu_uarticr_access] end of emu_uarticr_access");
+    //debug!("[emu_uarticr_access] end of emu_uarticr_access");
 }
 
 pub fn emu_uarthardcode_access(vuart: &mut Vuart, emu_ctx: &EmuContext) {

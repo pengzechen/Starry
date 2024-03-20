@@ -16,7 +16,7 @@ use hypercraft::arch::ContextFrame;
 pub trait TrapHandler {
     /// Handles interrupt requests for the given IRQ number.
     fn handle_irq(irq_num: usize);
-    #[cfg(all(feature = "hv", target_arch = "aarch64"))]
+    #[cfg(all(feature = "hv"))]
     /// Handles interrupt requests for the given IRQ number for route to el2.
     fn handle_irq_hv(irq_num: usize, src: usize, ctx: &mut ContextFrame);
     // more e.g.: handle_page_fault();
@@ -31,8 +31,10 @@ pub(crate) fn handle_irq_extern(irq_num: usize) {
 
 /// Call the external IRQ handler.
 #[allow(dead_code)]
-#[cfg(all(feature = "hv", target_arch = "aarch64"))]
+#[cfg(all(feature = "hv"))]
 pub fn handle_irq_extern_hv(irq_num: usize, src: usize, ctx: &mut ContextFrame) {
-    debug!("in handle_irq_extern_hv: irq_num {}, src {}", irq_num, src);
+    if irq_num != 27 {
+        debug!("in handle_irq_extern_hv: irq_num {}, src {}", irq_num, src);
+    }
     call_interface!(TrapHandler::handle_irq_hv, irq_num, src, ctx);
 }

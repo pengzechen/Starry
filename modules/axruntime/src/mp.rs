@@ -70,7 +70,7 @@ pub extern "C" fn rust_main_secondary(cpu_id: usize) -> ! {
     unsafe {
         secondary_vm(cpu_id);
     }
-    
+    info!("Secondary CPU {} ---=---", cpu_id);
     #[cfg(feature = "multitask")]
     {
         debug!("secondary CPU {} enter idle loop", cpu_id);

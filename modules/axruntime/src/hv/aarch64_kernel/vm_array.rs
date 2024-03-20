@@ -17,8 +17,7 @@ use crate::{GuestPageTable, HyperCraftHalImpl};
 const VCPU_CNT: usize = 2;
 static INITED_VCPUS: AtomicUsize = AtomicUsize::new(0);
 pub const VM_MAX_NUM: usize = 8;
-pub static mut VM_ARRAY: LazyInit<Vec<Option<VM<HyperCraftHalImpl, GuestPageTable>>>> =
-    LazyInit::new();
+pub static mut VM_ARRAY: LazyInit<Vec<Option<VM<HyperCraftHalImpl, GuestPageTable>>>> = LazyInit::new();
 
 /// Add vm vcpu by index
 pub fn add_vm_vcpu(vm_id: usize, vcpu: VCpu<HyperCraftHalImpl>) {
@@ -55,37 +54,37 @@ pub fn init_vm_emu_device(vm_id: usize) {
         panic!("vm_id {} out of bound", vm_id);
     }
     unsafe {
-        if let Some(vm_option) = VM_ARRAY.get_mut(vm_id) {
-            if let Some(vm) = vm_option {
-                // init emu intc
-                let idx = 0;
-                vm.set_intc_dev_id(idx);
+    if let Some(vm_option) = VM_ARRAY.get_mut(vm_id) {
+        if let Some(vm) = vm_option {
+            // init emu intc
+            let idx = 0;
+            vm.set_intc_dev_id(idx);
+            emu_register_dev(
+                EmuDeviceType::EmuDeviceTGicd,
+                vm.vm_id,
+                idx,
+                0x8000000, // emu_dev.base_ipa,
+                0x1000,    // emu_dev.length,
+                emu_intc_handler,
+            );
+            emu_intc_init(vm, idx);
+
+            if vm_id!=0 {
+                // init emu uart
+                let idx = 1;
                 emu_register_dev(
-                    EmuDeviceType::EmuDeviceTGicd,
+                    EmuDeviceType::EmuDeviceTConsole,
                     vm.vm_id,
                     idx,
-                    0x8000000, // emu_dev.base_ipa,
+                    0x9000000, // emu_dev.base_ipa,
                     0x1000,    // emu_dev.length,
-                    emu_intc_handler,
+                    emu_uart_handler,
                 );
-                emu_intc_init(vm, idx);
-
-                if vm_id!=0 {
-                    // init emu uart
-                    let idx = 1;
-                    emu_register_dev(
-                        EmuDeviceType::EmuDeviceTConsole,
-                        vm.vm_id,
-                        idx,
-                        0x9000000, // emu_dev.base_ipa,
-                        0x1000,    // emu_dev.length,
-                        emu_uart_handler,
-                    );
-                    emu_uart_init(vm, idx);
-                }
-
+                emu_uart_init(vm, idx);
             }
+
         }
+    }
     }
 }
 
@@ -95,25 +94,25 @@ pub fn init_vm_passthrough_device(vm_id: usize) {
         panic!("vm_id {} out of bound", vm_id);
     }
     unsafe {
-        if let Some(vm_option) = VM_ARRAY.get_mut(vm_id) {
-            if let Some(vm) = vm_option {
-                // hard code for qemu vm
-                let mut irqs = Vec::new();
-                irqs.push(33);  
-                irqs.push(27);  // virtual timer
-                // irqs.push(30);
-                irqs.push(32 + 0x28);
-                irqs.push(32 + 0x29);
-                irqs.push(0x3e + 0x11);  // what interrupt????
-                for irq in irqs {
-                    // debug!("this is irq: {:#x}", irq);
-                    if !interrupt_vm_register(vm, irq) {
-                        warn!("vm{} register irq{} failed", vm_id, irq);
-                    }
-                    // debug!("after register for vm irq: {:#x}", irq);
+    if let Some(vm_option) = VM_ARRAY.get_mut(vm_id) {
+        if let Some(vm) = vm_option {
+            // hard code for qemu vm
+            let mut irqs = Vec::new();
+            irqs.push(33);  
+            irqs.push(27);  // virtual timer
+            // irqs.push(30);
+            irqs.push(32 + 0x28);
+            irqs.push(32 + 0x29);
+            irqs.push(0x3e + 0x11);  // what interrupt????
+            for irq in irqs {
+                // debug!("this is irq: {:#x}", irq);
+                if !interrupt_vm_register(vm, irq) {
+                    warn!("vm{} register irq{} failed", vm_id, irq);
                 }
+                // debug!("after register for vm irq: {:#x}", irq);
             }
         }
+    }
     }
 }
 

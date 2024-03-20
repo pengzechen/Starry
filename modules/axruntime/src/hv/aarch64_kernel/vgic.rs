@@ -174,20 +174,20 @@ fn remove_lr(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCra
 fn add_lr(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftHalImpl>, interrupt: VgicInt<HyperCraftHalImpl, GuestPageTable>) -> bool {
     // Check if the interrupt is enabled and not already in the List Register.
     // If either condition is not met, return false.
-    debug!("[add_lr] irq:{}, target {}", interrupt.id(), interrupt.targets());
+    //debug!("[add_lr] irq:{}, target {}", interrupt.id(), interrupt.targets());
     if !interrupt.enabled() || interrupt.in_lr() {
         return false;
     }
 
     // Get the number of List Registers.
     let gic_lrs = gic_lrs();
-    debug!("[add_lr]  this is gic_lr number {}", gic_lrs);
+    //debug!("[add_lr]  this is gic_lr number {}", gic_lrs);
     let mut lr_idx = None;
     // Find an empty slot in the List Registers.
     // elrsr: The corresponding List register does not contain a valid interrupt.
 
     let elrsr0 = GICH.get_elrsr_by_idx(0);
-    debug!("[add_lr] elrsr0: {:#x}", elrsr0);
+    //debug!("[add_lr] elrsr0: {:#x}", elrsr0);
 
     for i in 0..gic_lrs {
         if (GICH.get_elrsr_by_idx(i / 32) & (1 << (i % 32))) != 0 {
@@ -195,7 +195,7 @@ fn add_lr(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftH
             break;
         }
     }
-    debug!("[add_lr] this is lr_idx {:?}", lr_idx);
+    //debug!("[add_lr] this is lr_idx {:?}", lr_idx);
     // If no empty slot was found, we need to spill an existing interrupt.
     if lr_idx.is_none() {
         // Initialize variables to keep track of the interrupt with the lowest priority.
@@ -282,10 +282,10 @@ fn write_lr(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraf
     let vcpu_id = vcpu.vcpu_id;
     let int_id = interrupt.id() as usize;
     let int_prio = interrupt.get_priority();
-    debug!("write lr: lr_idx {} vcpu_id:{}, int_id:{}, int_prio:{}", lr_idx, vcpu_id, int_id, int_prio);
+    //debug!("write lr: lr_idx {} vcpu_id:{}, int_id:{}, int_prio:{}", lr_idx, vcpu_id, int_id, int_prio);
     // Get the ID of the interrupt that is currently in the List Register.
     let prev_int_id = vgic.cpu_priv_curr_lrs(vcpu_id, lr_idx) as usize;
-    debug!("write lr: prev_int_id {}", prev_int_id);
+    //debug!("write lr: prev_int_id {}", prev_int_id);
     // If the current interrupt is not the same as the interrupt we're trying to add,
     // we need to remove the current interrupt from the List Register.
     // This may happen if there is no empty slot in the List Registers and we need to spill an existing interrupt.
@@ -308,12 +308,12 @@ fn write_lr(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraf
 
     // Get the state of the interrupt and initialize the List Register value.
     let state = vgic_get_state(interrupt.clone());
-    debug!("write lr: interrupt state {}", state);
+    //debug!("write lr: interrupt state {}", state);
     let mut lr = (int_id & 0b11_1111_1111) | (((int_prio as usize >> 3) & 0b1_1111) << 23);
 
     // If the interrupt is a hardware interrupt, set the appropriate bits in the List Register.
     if vgic_int_is_hw(interrupt.clone()) {
-        debug!("write lr: this is hw interrupt");
+        //debug!("write lr: this is hw interrupt");
         // [31] HW Indicates whether this virtual interrupt is a hardware interrupt meaning that it corresponds to a physical interrupt.
         lr |= 1 << 31;
         // When GICH_LR.HW is set to 1, this field indicates the physical interrupt ID that the hypervisor forwards to the Distributor.
@@ -372,15 +372,15 @@ fn write_lr(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraf
     interrupt.set_in_lr(true);
     interrupt.set_lr(lr_idx as u16);
     vgic.set_cpu_priv_curr_lrs(vcpu_id, lr_idx, int_id as u16);
-    debug!("write lr: lr value {:#x}", lr);
+    //debug!("write lr: lr value {:#x}", lr);
     GICH.set_lr_by_idx(lr_idx, lr as u32);
 
     update_int_list(vgic, vcpu, interrupt);
-    debug!("write lr: end");
+    //debug!("write lr: end");
 }
 
 fn route(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftHalImpl>, interrupt: VgicInt<HyperCraftHalImpl, GuestPageTable>) {
-    debug!("[route]");
+    //debug!("[route]");
     let cpu_id = current_cpu().cpu_id;
     if let IrqState::IrqSInactive = interrupt.state() {
         return;
@@ -392,7 +392,7 @@ fn route(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftHa
 
     let int_targets = interrupt.targets();
     // not consider ipi in multi core
-    debug!("route: int_targets {:#x}, irq: {}", int_targets, interrupt.id());
+    //debug!("route: int_targets {:#x}, irq: {}", int_targets, interrupt.id());
     add_lr(vgic, vcpu.clone(), interrupt.clone());
     /*if (int_targets & (1 << cpu_id)) != 0 {
         // debug!("vm{} route addr lr for int {}", vcpu.vm_id(), interrupt.id());
@@ -867,11 +867,11 @@ fn get_target(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCr
 
 /// inject interrupt to vgic
 pub fn vgic_inject(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftHalImpl>, int_id: usize) {
-    debug!("[vgic_inject] Core {} inject int {} to vm{}", current_cpu().cpu_id, int_id, vcpu.vm_id);
+    //debug!("[vgic_inject] Core {} inject int {} to vm{}", current_cpu().cpu_id, int_id, vcpu.vm_id);
     let interrupt_option = get_int(vgic, vcpu.clone(), bit_extract(int_id, 0, 10));
     if let Some(interrupt) = interrupt_option {
         if interrupt.hw() {
-            debug!("[vgic_inject] interrupt is hw");
+            //debug!("[vgic_inject] interrupt is hw");
             let interrupt_lock = interrupt.lock.lock();
             interrupt.set_owner(vcpu.clone());
             interrupt.set_state(IrqState::IrqSPend);

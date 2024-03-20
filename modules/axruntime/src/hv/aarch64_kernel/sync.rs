@@ -39,8 +39,8 @@ pub extern "C" fn data_abort_handler(ctx: &mut ContextFrame) {
     // if ctx.exception_pc() == 0xffffa23d3a94fc6c {
         // read_timer_regs();
     // }
-    debug!("[data_abort_handler] data fault addr {:#x}, esr: {:#x}, elr:{:#x} is_write:{}",
-        exception_fault_addr(), exception_esr(), ctx.exception_pc(), emu_ctx.write);
+    //debug!("[data_abort_handler] data fault addr {:#x}, esr: {:#x}, elr:{:#x} is_write:{}",
+    //    exception_fault_addr(), exception_esr(), ctx.exception_pc(), emu_ctx.write);
     let elr = ctx.exception_pc();
 
     if !exception_data_abort_handleable() {
