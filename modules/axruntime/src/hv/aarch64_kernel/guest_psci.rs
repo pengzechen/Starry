@@ -5,7 +5,8 @@ use hypercraft::VCpu;
 
 use super::ipi::{
     ipi_send_msg, 
-    IpiType, IpiInnerMsg, IpiMessage, PowerEvent, IpiPowerMessage
+    IpiType, IpiInnerMsg, IpiMessage, 
+    PowerEvent, IpiPowerMessage
 };
 use super::current_cpu;
 use super::vm_array::{init_vm_vcpu, run_vm_vcpu};

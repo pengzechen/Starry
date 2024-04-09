@@ -26,9 +26,6 @@ ifneq ($(wildcard $(in_feat)),)	# check if features.txt contains "fp_simd"
   fp_simd := $(shell grep "fp_simd" < $(in_feat))
 endif
 
-ifeq ($(ARCH), riscv64)
-  CFLAGS += -march=rv64gc -mabi=lp64d -mcmodel=medany
-endif
 
 ifeq ($(fp_simd),)
   ifeq ($(ARCH), x86_64)

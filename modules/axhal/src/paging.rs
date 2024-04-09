@@ -40,22 +40,10 @@ impl PagingIf for PagingIfImpl {
             .ok()
     }
 
-    #[cfg(target_arch = "riscv64")]
-    fn alloc_frames(page_nums: usize) -> Option<PhysAddr> {
-        global_allocator()
-            .alloc_pages(page_nums, PAGE_SIZE_4K * page_nums)
-            .map(|vaddr| virt_to_phys(vaddr.into()))
-            .ok()
-    }
-
     fn dealloc_frame(paddr: PhysAddr) {
         global_allocator().dealloc_pages(phys_to_virt(paddr).as_usize(), 1)
     }
 
-    #[cfg(target_arch = "riscv64")]
-    fn dealloc_frames(paddr: PhysAddr, page_nums: usize) {
-        global_allocator().dealloc_pages(phys_to_virt(paddr).as_usize(), page_nums)
-    }
 
     #[inline]
     fn phys_to_virt(paddr: PhysAddr) -> VirtAddr {
@@ -63,15 +51,6 @@ impl PagingIf for PagingIfImpl {
     }
 }
 
-cfg_if::cfg_if! {
-    if #[cfg(target_arch = "x86_64")] {
-        /// The architecture-specific page table.
-        pub type PageTable = page_table::x86_64::X64PageTable<PagingIfImpl>;
-    } else if #[cfg(any(target_arch = "riscv32", target_arch = "riscv64"))] {
-        /// The architecture-specific page table.
-        pub type PageTable = page_table::riscv::Sv39PageTable<PagingIfImpl>;
-    } else if #[cfg(target_arch = "aarch64")]{
-        /// The architecture-specific page table.
-        pub type PageTable = page_table::aarch64::A64PageTable<PagingIfImpl>;
-    }
-}
+
+/// The architecture-specific page table.
+pub type PageTable = page_table::aarch64::A64PageTable<PagingIfImpl>;

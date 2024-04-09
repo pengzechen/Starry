@@ -7,12 +7,12 @@ use dtb_aarch64::MachineMeta;
 use aarch64_config::*;
 use libax::{
     hv::{
-        self, GuestPageTable, GuestPageTableTrait, HyperCraftHalImpl, PerCpu,
-        Result, VCpu, VmCpus, VM, VcpusArray, 
+        GuestPageTable, GuestPageTableTrait, HyperCraftHalImpl, PerCpu,
+        Result, VM, VcpusArray, 
         VM_ARRAY, VM_MAX_NUM,
-        add_vm, add_vm_vcpu, get_vm, print_vm,
+        add_vm, add_vm_vcpu, 
         init_vm_vcpu, init_vm_emu_device, init_vm_passthrough_device, 
-        is_vcpu_init_ok, is_vcpu_primary_ok,
+        is_vcpu_primary_ok,
         run_vm_vcpu, 
     },
     info,
@@ -30,7 +30,7 @@ use page_table_entry::MappingFlags;
         let vm1_dtb = 0x7000_0000;
 
         // boot cpu
-        PerCpu::<HyperCraftHalImpl>::init(0); 
+        PerCpu::<HyperCraftHalImpl>::init(0).unwrap(); 
         // get current percpu
         let percpu = PerCpu::<HyperCraftHalImpl>::ptr_for_cpu(hart_id);
         // create vcpu, need to change addr for aarch64!
@@ -41,7 +41,7 @@ use page_table_entry::MappingFlags;
         let vcpus = VcpusArray::new();
 
         // add vcpu into vm
-        let mut vm: VM<HyperCraftHalImpl, GuestPageTable> = VM::new(vcpus, gpt, 0).unwrap();
+        let vm: VM<HyperCraftHalImpl, GuestPageTable> = VM::new(vcpus, gpt, 0).unwrap();
         unsafe {
             let mut vm_array = Vec::with_capacity(VM_MAX_NUM);
             for _ in 0..VM_MAX_NUM {
@@ -69,14 +69,14 @@ use page_table_entry::MappingFlags;
     let vm2_kernel_entry = 0x5020_0000;
     let vm2_dtb = 0x5000_0000;
     
-    PerCpu::<HyperCraftHalImpl>::setup_this_cpu(cpu_id);
+    PerCpu::<HyperCraftHalImpl>::setup_this_cpu(cpu_id).unwrap();
     let percpu = PerCpu::<HyperCraftHalImpl>::this_cpu();
     let virt_cpu = percpu.create_vcpu(1, 0).unwrap();
     percpu.set_active_vcpu(Some(virt_cpu.clone()));
     let vcpus = VcpusArray::new();
 
     let gpt = setup_gpm(vm2_dtb, vm2_kernel_entry).unwrap(); 
-    let mut vm: VM<HyperCraftHalImpl, GuestPageTable> = VM::new(vcpus, gpt, 1).unwrap();
+    let vm: VM<HyperCraftHalImpl, GuestPageTable> = VM::new(vcpus, gpt, 1).unwrap();
 
     add_vm(1, vm);
     let vcpu_id = virt_cpu.vcpu_id;

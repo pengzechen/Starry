@@ -29,21 +29,12 @@ else
 endif
 
 # Platform
-ifeq ($(ARCH), x86_64)
-  ACCEL ?= y
-  PLATFORM ?= pc-x86
-  TARGET := x86_64-unknown-none
-  BUS := pci
-else ifeq ($(ARCH), riscv64)
-  ACCEL ?= n
-  PLATFORM ?= qemu-virt-riscv
-  TARGET := riscv64gc-unknown-none-elf
-else ifeq ($(ARCH), aarch64)
+ifeq ($(ARCH), aarch64)
   ACCEL ?= n
   PLATFORM ?= qemu-virt-aarch64
   TARGET := aarch64-unknown-none-softfloat
 else
-  $(error "ARCH" must be one of "x86_64", "riscv64", or "aarch64")
+  $(error "ARCH" must be "aarch64")
 endif
 
 export ARCH

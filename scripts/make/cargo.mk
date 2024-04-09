@@ -17,9 +17,6 @@ features-$(NET) += libax/net
 features-$(GRAPHIC) += libax/display
 features-$(HV) += libax/hv 
 
-ifeq ($(ARCH), x86_64)
-  features-$(HV) += libax/irq
-endif
 
 ifeq ($(ARCH), aarch64)
   features-$(HV) += libax/irq

@@ -8,11 +8,10 @@ pub mod kernel;
 
 pub use kernel::{
     VM_ARRAY, VM_MAX_NUM, 
-    is_vcpu_init_ok, is_vcpu_primary_ok, get_vm, init_vm_vcpu, init_vm_emu_device, init_vm_passthrough_device, add_vm, add_vm_vcpu, print_vm, run_vm_vcpu
+    is_vcpu_init_ok, is_vcpu_primary_ok, get_vm, init_vm_vcpu, 
+    init_vm_emu_device, init_vm_passthrough_device, add_vm, add_vm_vcpu, print_vm, run_vm_vcpu, secondary_main_hv
 };
 
-
-pub use kernel::secondary_main_hv;
 
 /// An empty struct to implementate of `HyperCraftHal`
 #[derive(Clone, Debug)]

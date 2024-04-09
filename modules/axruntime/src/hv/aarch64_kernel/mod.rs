@@ -7,6 +7,7 @@ mod ipi;
 mod sync;
 mod vgic;
 mod vuart;
+
 pub mod vm_array;
 
 pub use vm_array::{
@@ -56,7 +57,7 @@ pub fn secondary_main_hv(cpu_id: usize) {
     while !is_vcpu_primary_ok() {
         core::hint::spin_loop();
     }
-    PerCpu::<HyperCraftHalImpl>::setup_this_cpu(cpu_id);
+    PerCpu::<HyperCraftHalImpl>::setup_this_cpu(cpu_id).unwrap();
     let percpu = PerCpu::<HyperCraftHalImpl>::this_cpu();
     let vcpu = percpu.create_vcpu(0, 1).unwrap();
     percpu.set_active_vcpu(Some(vcpu.clone()));

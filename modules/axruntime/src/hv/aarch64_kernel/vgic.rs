@@ -680,7 +680,7 @@ fn get_icfgr(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCra
     }
 }
 
-fn sgi_set_pend(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftHalImpl>, int_id: usize, pend: bool) {
+pub fn sgi_set_pend(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftHalImpl>, int_id: usize, pend: bool) {
     // let begin = time_current_us();
     if bit_extract(int_id, 0, 10) > GIC_SGIS_NUM {
         return;
