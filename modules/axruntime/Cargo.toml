@@ -10,19 +10,19 @@ repository = "https://github.com/rcore-os/arceos/tree/main/modules/axruntime"
 documentation = "https://rcore-os.github.io/arceos/axruntime/index.html"
 
 [features]
-alloc = ["dep:axalloc"]
-paging = ["alloc", "axhal/paging", "dep:lazy_init"]
-irq = ["axhal/irq", "axtask?/irq"]
-multitask = ["alloc", "axtask/multitask"]
-smp = ["axhal/smp", "spinlock/smp"]
+alloc       = ["dep:axalloc"]
+paging      = ["alloc", "axhal/paging", "dep:lazy_init"]
+irq         = ["axhal/irq", "axtask?/irq"]
+multitask   = ["alloc", "axtask/multitask"]
+smp         = ["axhal/smp", "spinlock/smp"]
 
-fs = ["alloc", "paging", "axdriver/virtio-blk", "dep:axfs"] # TODO: remove "paging"
-net = ["alloc", "paging", "axdriver/virtio-net", "dep:axnet"]
-display = ["alloc", "paging", "axdriver/virtio-gpu", "dep:axdisplay"]
+fs          = ["alloc", "paging", "axdriver/virtio-blk", "dep:axfs"]   # TODO: remove "paging"
+net         = ["alloc", "paging", "axdriver/virtio-net", "dep:axnet"]
+display     = ["alloc", "paging", "axdriver/virtio-gpu", "dep:axdisplay"]
+hv          = ["alloc", "dep:hypercraft", "axhal/hv", "dep:page_table", "dep:page_table_entry", "dep:lazy_init", "dep:arm_gic"]
 
-default = ["axtask?/default"]
+default     = ["axtask?/default"]
 
-hv = ["alloc", "dep:hypercraft", "axhal/hv", "dep:page_table", "dep:page_table_entry", "dep:lazy_init", "dep:arm_gic"]
 
 [dependencies]
 spin = "0.9"

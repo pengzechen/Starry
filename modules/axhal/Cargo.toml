@@ -10,18 +10,26 @@ repository = "https://github.com/rcore-os/arceos/tree/main/modules/axhal"
 documentation = "https://rcore-os.github.io/arceos/axhal/index.html"
 
 [features]
-smp = []
+smp     = []
 fp_simd = []
-paging = ["axalloc", "page_table"]
-irq = []
-
+irq     = []
+paging  = ["axalloc", "page_table"]
+hv      = [
+    "paging", 
+    "platform-qemu-virt-aarch64", 
+    "axconfig/hv", 
+    "percpu/hv", 
+    "arm_gic/hv"
+]
 platform-qemu-virt-aarch64 = [
     "axconfig/platform-qemu-virt-aarch64",
     "dep:page_table_entry", "dep:ratio",
 ]
 
+
+
 default = []
-hv = ["paging", "platform-qemu-virt-aarch64", "axconfig/hv", "percpu/hv", "arm_gic/hv"]
+
 
 [dependencies]
 log = "0.4"
@@ -31,6 +39,8 @@ static_assertions = "1.1.0"
 axlog = { path = "../axlog" }
 axconfig = { path = "../axconfig" }
 axalloc = { path = "../axalloc", optional = true }
+
+
 kernel_guard = { path = "../../crates/kernel_guard" }
 spinlock = { path = "../../crates/spinlock" }
 ratio = { path = "../../crates/ratio", optional = true }
@@ -43,12 +53,15 @@ handler_table = { path = "../../crates/handler_table" }
 crate_interface = { path = "../../crates/crate_interface" }
 hypercraft = { path = "../../crates/hypercraft" }
 
-aarch64-cpu = "9.3"
-tock-registers = "0.8"
+
 arm_gic = { path = "../../crates/arm_gic" }
 arm_pl011 = { path = "../../crates/arm_pl011" }
+
+
 cortex-a = "8.1.1"
 spin = "0.9"
+aarch64-cpu = "9.3"
+tock-registers = "0.8"
 
 [build-dependencies]
 axconfig = { path = "../axconfig" }

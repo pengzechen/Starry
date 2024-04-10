@@ -122,7 +122,7 @@ fn gic_local_init() {
     #[cfg(feature = "hv")]
     GICH.init();
 
-    let ctlr = GICC.get_ctlr();
+    // let ctlr = GICC.get_ctlr();
 }
 
 #[cfg(feature = "hv")]
@@ -145,17 +145,17 @@ pub fn interrupt_cpu_ipi_send(cpu_id: usize, ipi_id: usize) {
     }
 }
 
-#[cfg(feature = "hv")]
-pub fn pending_irq() -> Option<usize> {
-    let iar = GICC.get_iar();
-    debug!("this is iar:{:#x}", iar);
-    if iar >= 0x3fe {
-        // spurious
-        None
-    } else {
-        Some(iar as _)
-    }
-}
+// #[cfg(feature = "hv")]
+// pub fn pending_irq() -> Option<usize> {
+//     let iar = GICC.get_iar();
+//     debug!("this is iar:{:#x}", iar);
+//     if iar >= 0x3fe {
+//         // spurious
+//         None
+//     } else {
+//         Some(iar as _)
+//     }
+// }
 
 #[cfg(feature = "hv")]
 pub fn deactivate_irq(iar: usize) {

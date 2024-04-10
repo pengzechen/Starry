@@ -2,7 +2,8 @@ extern crate alloc;
 use alloc::vec::Vec;
 use core::sync::atomic::{AtomicUsize, Ordering};
 
-use hypercraft::{PerCpu, VCpu, VM};
+use hypercraft::{VCpu, VM};
+// use hypercraft::{PerCpu, VCpu, VM};
 use hypercraft::arch::emu::EmuDeviceType;
 use lazy_init::LazyInit;
 

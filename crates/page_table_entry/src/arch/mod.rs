@@ -4,5 +4,5 @@
 #[doc(cfg(target_arch = "aarch64"))]
 pub mod aarch64;
 
-#[doc(cfg(target_arch = "aarch64", feature = "hv"))]
+#[doc(cfg(feature = "hv"))]
 pub mod aarch64_hv;

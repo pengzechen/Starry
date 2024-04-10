@@ -1,4 +1,5 @@
-use super::ipi::*;
+// use super::ipi::*;
+
 use super::{current_cpu, active_vm};
 use hypercraft::{VM, VCpu};
 use super::vgic::vgic_inject;

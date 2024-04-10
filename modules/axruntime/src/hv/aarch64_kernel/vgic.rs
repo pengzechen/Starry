@@ -2,14 +2,17 @@ use arm_gic::{
     GIC_CONFIG_BITS, GIC_PRIO_BITS, GIC_PRIVATE_INT_NUM, GIC_SGIS_NUM, GIC_TARGETS_MAX,
     GIC_TARGET_BITS,
 };
-use axhal::{gic_is_priv, gic_lrs, GICD, GICH, GICV};
+use axhal::{gic_is_priv, gic_lrs, GICD, GICH};
+// use axhal::{gic_is_priv, gic_lrs, GICD, GICH, GICV};
 use hypercraft::arch::emu::EmuContext;
 use hypercraft::arch::utils::*;
-use hypercraft::arch::vgic::{Vgic, VgicInt, VgicIntInner};
+use hypercraft::arch::vgic::{Vgic, VgicInt};
+// use hypercraft::arch::vgic::{Vgic, VgicInt, VgicIntInner};
 use hypercraft::{IrqState, VCpu, VM};
 
 use crate::{GuestPageTable, HyperCraftHalImpl};
-use hypercraft::{GuestPageTableTrait, HyperCraftHal};
+use hypercraft::{GuestPageTableTrait};
+// use hypercraft::{GuestPageTableTrait, HyperCraftHal};
 
 use super::vm_array::get_vm;
 use super::{active_vm, current_cpu};

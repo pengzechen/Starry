@@ -5,8 +5,8 @@ extern crate alloc;
 
 use dtb_aarch64::MachineMeta;
 use aarch64_config::*;
-use libax::{
-    hv::{
+use libax::info;
+use libax::hv::{
         GuestPageTable, GuestPageTableTrait, HyperCraftHalImpl, PerCpu,
         Result, VM, VcpusArray, 
         VM_ARRAY, VM_MAX_NUM,
@@ -14,8 +14,6 @@ use libax::{
         init_vm_vcpu, init_vm_emu_device, init_vm_passthrough_device, 
         is_vcpu_primary_ok,
         run_vm_vcpu, 
-    },
-    info,
 };
 mod dtb_aarch64;
 mod aarch64_config;

@@ -2,8 +2,8 @@ use axconfig::{SMP, TASK_STACK_SIZE};
 use axhal::mem::{virt_to_phys, VirtAddr};
 use core::sync::atomic::{AtomicUsize, Ordering};
 
-use aarch64_cpu::{asm, asm::barrier, registers::*};
-use tock_registers::interfaces::{ReadWriteable, Readable, Writeable};
+// use aarch64_cpu::{asm, asm::barrier, registers::*};
+// use tock_registers::interfaces::{ReadWriteable, Readable, Writeable};
 
 #[link_section = ".bss.stack"]
 static mut SECONDARY_BOOT_STACK: [[u8; TASK_STACK_SIZE]; SMP - 1] = [[0; TASK_STACK_SIZE]; SMP - 1];

@@ -44,7 +44,8 @@ pub use hv::{
 };
 
 #[cfg(all(feature = "hv"))]
-use axhal::{IPI_IRQ_NUM, MAINTENANCE_IRQ_NUM};
+use axhal::{IPI_IRQ_NUM};
+// use axhal::{IPI_IRQ_NUM, MAINTENANCE_IRQ_NUM};
 
 #[cfg(all(feature = "hv"))]
 use crate::hv::kernel::{

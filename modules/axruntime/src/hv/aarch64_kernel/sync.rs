@@ -9,17 +9,17 @@
 // See the Mulan PSL v2 for more details.
 
 use hypercraft::arch::{ContextFrame, ContextFrameTrait};
-use hypercraft::arch::vcpu::VmCpuRegisters;
-use hypercraft::arch::hvc::{HVC_SYS, HVC_SYS_BOOT, hvc_guest_handler};
+// use hypercraft::arch::vcpu::VmCpuRegisters;
+// use hypercraft::arch::hvc::{HVC_SYS, HVC_SYS_BOOT, hvc_guest_handler};
 use hypercraft::arch::emu::EmuContext;
 
 use axhal::arch::hv::exception_utils::*;
-use axhal::{gic_is_priv, gic_lrs, GICD, GICH, GICV, GICC};
+// use axhal::{gic_is_priv, gic_lrs, GICD, GICH, GICV, GICC};
 
 use super::guest_psci::smc_guest_handler;
 use super::current_cpu;
 use super::emu::emu_handler;
-use super::interrupt::handle_virtual_interrupt;
+// use super::interrupt::handle_virtual_interrupt;
 
 const HVC_RETURN_REG: usize = 0;
 const SMC_RETURN_REG: usize = 0;
