@@ -28,7 +28,7 @@ use tock_registers::interfaces::{Readable, Writeable};
 /// - a mechanism for software to set or clear the pending state of a peripheral
 ///   interrupt.
 #[derive(Debug, Copy, Clone)]
-struct GicDistributor {
+pub struct GicDistributor {
     base: NonNull<GicDistributorRegs>,
     support_irqs: usize,
     #[allow(dead_code)]
@@ -137,7 +137,7 @@ impl GicDistributor {
 /// - defining the preemption policy for the processor
 /// - determining the highest priority pending interrupt for the processor.
 #[derive(Debug, Copy, Clone)]
-struct GicCpuInterface {
+pub struct GicCpuInterface {
     base: NonNull<GicCpuInterfaceRegs>,
 }
 
@@ -258,5 +258,131 @@ impl GenericArmGic for GicV2 {
     /// This drops the interrupt priority and deactivates the interrupt.
     fn end_interrupt(&self, intid: IntId) {
         self.gicc.regs().EOIR.set(intid.0 as u32);
+    }
+}
+
+// pzc add 5.1
+
+use tock_registers::register_structs;
+use tock_registers::registers::{ReadOnly, ReadWrite};
+
+pub const GIC_LIST_REGS_NUM: usize = 64;
+
+register_structs! {
+    /// GIC Hypervisor Interface registers
+    #[allow(non_snake_case)]
+    GicHypervisorInterfaceRegs {
+        /// Hypervisor Control Register
+        (0x0000 => HCR: ReadWrite<u32>),
+        /// Virtual Type Register
+        (0x0004 => VTR: ReadOnly<u32>),
+        /// Virtual Machine Control Register
+        (0x0008 => VMCR: ReadWrite<u32>),
+        (0x000c => _reserved_0),
+        /// Maintenance Interrupt Status Register
+        (0x0010 => MISR: ReadOnly<u32>),
+        (0x0014 => _reserved_1),
+        /// End Interrupt Status Register
+        (0x0020 => EISR: [ReadOnly<u32>; GIC_LIST_REGS_NUM / 32]),
+        (0x0028 => _reserved_2),
+        /// Empty List Register Status Register
+        (0x0030 => ELRSR: [ReadOnly<u32>; GIC_LIST_REGS_NUM / 32]),
+        (0x0038 => _reserved_3),
+        /// Active Priorities Registers
+        (0x00f0 => APR: ReadWrite<u32>),
+        (0x00f4 => _reserved_4),
+        /// List Registers
+        (0x0100 => LR: [ReadWrite<u32>; GIC_LIST_REGS_NUM]),
+        (0x0200 => _reserved_5),
+        (0x1000 => @END),
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct GicHypervisorInterface {
+    base: NonNull<GicHypervisorInterfaceRegs>,
+}
+
+impl GicHypervisorInterface {
+    /// Construct a new GIC hypervisor interface instance from the base address.
+    pub const fn new(base: *mut u8) -> Self {
+        Self {
+            base: NonNull::new(base).unwrap().cast(),
+        }
+    }
+
+    const fn regs(&self) -> &GicHypervisorInterfaceRegs {
+        unsafe { self.base.as_ref() }
+    }
+
+    // HCR: Controls the virtual CPU interface.
+    // Get or set HCR.
+    pub fn get_hcr(&self) -> u32 {
+        self.regs().HCR.get()
+    }
+    pub fn set_hcr(&self, hcr: u32) {
+        self.regs().HCR.set(hcr);
+    }
+
+    // Enables the hypervisor to save and restore the virtual machine view of the GIC state.
+    pub fn get_vmcr(&self) -> u32 {
+        self.regs().VMCR.get()
+    }
+    pub fn set_vmcr(&self, vmcr:u32) {
+        self.regs().VMCR.set(vmcr);
+    }
+    // VTR: Indicates the number of implemented virtual priority bits and List registers.
+    // VTR ListRegs, bits [4:0]: The number of implemented List registers, minus one.
+    // Get ListRegs number.
+    #[inline(always)]
+    pub fn get_lrs_num(&self) -> usize {
+        let vtr = self.regs().VTR.get();
+        ((vtr & 0b11111) + 1) as usize
+    }
+
+    // LR<n>: These registers provide context information for the virtual CPU interface.
+    // Get or set LR by index.
+    pub fn get_lr_by_idx(&self, lr_idx: usize) -> u32 {
+        self.regs().LR[lr_idx].get()
+    }
+    pub fn set_lr_by_idx(&self, lr_idx: usize, val: u32) {
+        self.regs().LR[lr_idx].set(val)
+    }
+
+    // MISR: Indicates which maintenance interrupts are asserted.
+    // Get MISR.
+    pub fn get_misr(&self) -> u32 {
+        self.regs().MISR.get()
+    }
+
+    // APR: These registers track which preemption levels are active in the virtual CPU interface,
+    //      and indicate the current active priority. Corresponding bits are set to 1 in this register
+    //      when an interrupt is acknowledged, based on GICH_LR<n>.Priority, and the least significant
+    //      bit set is cleared on EOI.
+    // Get or set APR.
+    pub fn get_apr(&self) -> u32 {
+        self.regs().APR.get()
+    }
+    pub fn set_apr(&self, apr: u32) {
+        self.regs().APR.set(apr);
+    }
+
+    pub fn get_eisr_by_idx(&self, eisr_idx: usize) -> u32 {
+        self.regs().EISR[eisr_idx].get()
+    }
+
+    pub fn get_elrsr_by_idx(&self, elsr_idx: usize) -> u32 {
+        self.regs().ELRSR[elsr_idx].get()
+    }
+
+    pub fn init(&self) {
+        for i in 0..self.get_lrs_num() {
+            self.set_lr_by_idx(i, 0);
+        }
+        // [9] VEM Alias of GICV_CTLR.EOImode.
+        self.set_vmcr(1 | 1 << 9);
+        // LRENPIE, bit [2]: List Register Entry Not Present Interrupt Enable. When it set to 1, maintenance interrupt signaled while GICH_HCR.EOICount is not 0.
+        let hcr_prev: u32 = self.get_hcr();
+        self.set_hcr(hcr_prev | 1 as u32 | (1 << 2) as u32);    // need to set bit 0????? [0] enable maintenance interrupt
     }
 }

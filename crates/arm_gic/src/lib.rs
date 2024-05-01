@@ -18,7 +18,7 @@
 use core::fmt;
 use core::fmt::{Debug, Formatter};
 
-mod gic_v2;
+pub mod gic_v2;
 mod gic_v3;
 mod sysregs;
 
@@ -26,6 +26,16 @@ pub(crate) mod registers;
 
 pub use crate::gic_v2::GicV2;
 pub use crate::gic_v3::GicV3;
+
+// pzc add 5.1
+pub use crate::gic_v2::GicHypervisorInterface;
+pub use crate::gic_v2::GicDistributor;
+use core::ops::Range;
+pub const GIC_PPI_NUM: usize = 16;
+pub const GIC_SGIS_NUM: usize = 16;
+pub const GIC_LIST_REGS_NUM: usize = 64;
+pub const GIC_PRIVATE_INT_RANGE: Range<usize> = 0..32;
+pub const GIC_PRIVATE_INT_NUM: usize = GIC_SGIS_NUM + GIC_PPI_NUM;
 
 /// An interrupt ID.
 #[derive(Copy, Clone, Eq, Ord, PartialOrd, PartialEq)]

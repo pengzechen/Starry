@@ -232,6 +232,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "arrayvec"
+version = "0.7.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "96d30a06541fbafbc7f82ed10c06164cfbd2c401138f6addd8404629c4b16711"
+
+[[package]]
 name = "atomic-polyfill"
 version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -390,6 +396,7 @@ dependencies = [
  "dw_apb_uart",
  "either",
  "handler_table",
+ "hypercraft",
  "kernel_guard",
  "lazy_init",
  "log",
@@ -867,6 +874,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f8f80099a98041a3d1622845c271458a2d73e688351bf3cb999266764b81d48"
 
 [[package]]
+name = "cortex-a"
+version = "8.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8256fd5103e10027467cc7a97c9ff27fcc4547ea24864da0aff2e7aef6e18e28"
+dependencies = [
+ "tock-registers",
+]
+
+[[package]]
 name = "crate_interface"
 version = "0.1.1"
 dependencies = [
@@ -1235,6 +1251,26 @@ name = "hermit-abi"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "443144c8cdadd93ebf52ddb4056d257f5b52c04d3c804e657d19eb73fc33668b"
+
+[[package]]
+name = "hypercraft"
+version = "0.1.0"
+dependencies = [
+ "aarch64-cpu",
+ "arm_gic",
+ "arrayvec",
+ "cortex-a",
+ "lazy_init",
+ "log",
+ "memoffset",
+ "memory_addr",
+ "page_table",
+ "page_table_entry",
+ "smccc",
+ "spin 0.9.8",
+ "spinlock",
+ "tock-registers",
+]
 
 [[package]]
 name = "iana-time-zone"
@@ -1919,6 +1955,12 @@ version = "0.3.1"
 dependencies = [
  "buddy_system_allocator",
 ]
+
+[[package]]
+name = "smccc"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "617d17f088ec733e5a6b86da6ce4cce1414e6e856d6061c16dda51cceae6f68c"
 
 [[package]]
 name = "smoltcp"

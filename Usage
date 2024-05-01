@@ -1,0 +1,1 @@
+./build_img.sh -m aarch64 -fs fat32 -file aarch64/sbin

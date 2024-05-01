@@ -40,6 +40,9 @@ handler_table = { path = "../../crates/handler_table" }
 crate_interface = { path = "../../crates/crate_interface" }
 axfs_ramfs = { path = "../../crates/axfs_ramfs", optional = true }
 riscv = "0.10"
+hypercraft = { path = "../../crates/hypercraft" }
+
+
 [target.'cfg(target_arch = "x86_64")'.dependencies]
 x86 = "0.52"
 x86_64 = "0.14"

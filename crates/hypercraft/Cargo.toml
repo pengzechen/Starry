@@ -1,0 +1,29 @@
+[package]
+name = "hypercraft"
+version = "0.1.0"
+edition = "2021"
+authors = ["KuangjuX <kuangjux@outlook.com>"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+
+[dependencies]
+log = "0.4.17"
+memoffset = { version = ">=0.6.5", features = ["unstable_const"] }
+arrayvec = { version = "0.7.2", default-features = false }
+spin = { version = "0.9", features = ["once", "rwlock", "spin_mutex"] }
+tock-registers = "0.8.1"
+
+# arceos crates
+page_table = { path = "../page_table" }
+page_table_entry = { path = "../page_table_entry" }
+spinlock = { path = "../spinlock" }
+lazy_init = { path = "../lazy_init" }
+
+memory_addr = { path = "../memory_addr" }
+
+
+cortex-a = "8.1.1"
+aarch64-cpu = "9.3"
+arm_gic = { path = "../arm_gic" }
+smccc = "0.1.1"
