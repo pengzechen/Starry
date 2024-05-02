@@ -1,4 +1,5 @@
 use tock_registers::interfaces::*;
+use hypercraft::mrs;
 
 #[inline(always)]
 pub fn exception_esr() -> usize {

@@ -489,4 +489,15 @@ impl GenericArmGic for GicV3 {
         // SAFETY: Writing to this system register doesn't access memory in any way.
         unsafe { write_sysreg!(icc_eoir1_el1, intid.0 as u64) }
     }
+
+
+    /// Returns the interrupt ID of the highest priority pending interrupt for
+    /// the CPU interface. (read GICC_IAR)
+    ///
+    /// The read returns a spurious interrupt ID of `1023` if the distributor
+    /// or the CPU interface are disabled, or there is no pending interrupt on
+    /// the CPU interface.
+    fn get_iar(&self) -> u32 {
+        0
+    }
 }

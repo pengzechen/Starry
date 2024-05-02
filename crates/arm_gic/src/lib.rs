@@ -209,4 +209,6 @@ pub trait GenericArmGic: Debug + Clone + Copy + Sync + Send + Sized {
     /// Informs the interrupt controller that the CPU has completed processing the given interrupt.
     /// This drops the interrupt priority and deactivates the interrupt.
     fn end_interrupt(&self, intid: IntId);
+
+    fn get_iar(&self) -> u32;
 }

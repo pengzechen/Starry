@@ -9,7 +9,7 @@ pub mod psci;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "irq")] {
-        mod gic;
+        pub mod gic;
         pub mod irq {
             pub use super::gic::*;
         }

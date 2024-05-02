@@ -259,6 +259,16 @@ impl GenericArmGic for GicV2 {
     fn end_interrupt(&self, intid: IntId) {
         self.gicc.regs().EOIR.set(intid.0 as u32);
     }
+
+    /// Returns the interrupt ID of the highest priority pending interrupt for
+    /// the CPU interface. (read GICC_IAR)
+    ///
+    /// The read returns a spurious interrupt ID of `1023` if the distributor
+    /// or the CPU interface are disabled, or there is no pending interrupt on
+    /// the CPU interface.
+    fn get_iar(&self) -> u32 {
+        self.gicc.regs().IAR.get()
+    }
 }
 
 // pzc add 5.1

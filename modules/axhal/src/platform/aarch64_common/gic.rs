@@ -80,3 +80,16 @@ pub(crate) fn init_secondary() {
     // per cpu handle, no need lock
     unsafe { GIC.get_mut().per_cpu_init() };
 }
+
+use hypercraft::arch::utils::bit_extract;
+
+pub fn gicc_get_current_irq() -> (usize, usize) {
+    let iar;
+    unsafe { iar = GIC.lock().get_iar(); }
+    let irq = iar as usize;
+    // debug!("this is iar:{:#x}", iar);
+    // current_cpu().current_irq = irq;
+    let irq = bit_extract(irq, 0, 10);
+    let src = bit_extract(irq, 10, 3);
+    (irq, src)
+}

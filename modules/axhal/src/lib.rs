@@ -86,3 +86,6 @@ pub use self::platform::set_tss_stack_top;
 
 #[cfg(feature = "smp")]
 pub use self::platform::platform_init_secondary;
+
+
+pub use platform::aarch64_common::gic::gicc_get_current_irq;

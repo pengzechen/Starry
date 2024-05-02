@@ -170,9 +170,9 @@ impl GenericPTE for A64PTEHV {
         self.0 = 0
     }
 
-    fn set_paddr(&mut self, paddr: PhysAddr) {
+    fn set_paddr(&mut self, _paddr: PhysAddr) {
     }
-    fn set_flags(&mut self, flags: MappingFlags, is_huge: bool) {
+    fn set_flags(&mut self, _flags: MappingFlags, _is_huge: bool) {
     }
 }
 
