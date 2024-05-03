@@ -211,4 +211,21 @@ pub trait GenericArmGic: Debug + Clone + Copy + Sync + Send + Sized {
     fn end_interrupt(&self, intid: IntId);
 
     fn get_iar(&self) -> u32;
+
+    fn set_eoi(&self, iar: u32);
+
+    fn set_dir(&self, irq: u32);
+
+    fn send_sgi(&mut self, cpu_if: usize, sgi_num: usize);
+
+    fn get_priority(&self, int_id: usize) -> usize;
 }
+
+
+/* HV */
+pub const GIC_TARGET_BITS: usize = 8;
+pub const GIC_TARGETS_MAX: usize = GIC_TARGET_BITS;
+pub const GIC_CONFIG_BITS: usize = 2;
+pub const GIC_PRIO_BITS: usize = 8;
+pub const GICD_TYPER_CPUNUM_MSK: usize = 0b11111;
+pub const GICD_TYPER_CPUNUM_OFF: usize = 5;

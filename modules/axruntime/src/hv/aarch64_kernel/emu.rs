@@ -52,7 +52,8 @@ pub fn emu_register_dev(
         if in_range(address, emu_dev.ipa, emu_dev.size - 1)
             || in_range(emu_dev.ipa, address, size - 1)
         {
-            panic!("emu_register_dev: duplicated emul address region: prev address 0x{:x} size 0x{:x}, next address 0x{:x} size 0x{:x}", emu_dev.ipa, emu_dev.size, address, size);
+            panic!("emu_register_dev: duplicated emul address region: prev address 0x{:x} size 0x{:x}, 
+                next address 0x{:x} size 0x{:x}", emu_dev.ipa, emu_dev.size, address, size);
         }
     }
 

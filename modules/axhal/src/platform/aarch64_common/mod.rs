@@ -28,7 +28,7 @@ cfg_if::cfg_if! {
             pub use super::dw_apb_uart::*;
         }
     } else if #[cfg(any(platform_family = "aarch64-raspi", platform_family = "aarch64-qemu-virt"))] {
-        mod pl011;
+        pub mod pl011;
         pub mod console {
             pub use super::pl011::*;
         }

@@ -18,7 +18,7 @@ irq = []
 tls = ["alloc"]
 signal = []
 monolithic = ["paging", "dep:axfs_ramfs"]
-hv = []
+# hv = []
 default = []
 
 [dependencies]
@@ -44,6 +44,7 @@ riscv = "0.10"
 
 hypercraft = { path = "../../crates/hypercraft" }
 cortex-a = "8.1.1"
+spin = "0.9"
 
 [target.'cfg(target_arch = "x86_64")'.dependencies]
 x86 = "0.52"

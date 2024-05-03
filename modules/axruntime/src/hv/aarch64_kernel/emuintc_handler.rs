@@ -1,15 +1,10 @@
 extern crate alloc;
 
-use arm_gic::{
-    GICD_TYPER_CPUNUM_MSK, GICD_TYPER_CPUNUM_OFF, GIC_PRIVATE_INT_NUM, GIC_SGIS_NUM
-};
-use axhal::GIC_SPI_MAX;
 use alloc::sync::Arc;
 use hypercraft::VM;
 use hypercraft::arch::emu::{EmuContext, EmuDevs};
 use hypercraft::arch::vgic::{Vgic, VgicInt, VgicCpuPriv};
 use super::{active_vm, current_cpu};
-use axhal::{GICH, GICD};
 use crate::{HyperCraftHalImpl, GuestPageTable};
 use super::vgic::*;
 
@@ -135,6 +130,15 @@ pub fn vgicd_emu_access_is_vaild(emu_ctx: &EmuContext) -> bool {
     true
 }
 
+
+
+use arm_gic::{
+    GICD_TYPER_CPUNUM_MSK, GICD_TYPER_CPUNUM_OFF, 
+    GIC_PRIVATE_INT_NUM, GIC_SGIS_NUM
+};
+
+use axhal::{GICH, GICD, GIC_SPI_MAX};
+// 以下函数用到了 gicd gich
 pub fn emu_intc_init(vm: &mut VM<HyperCraftHalImpl, GuestPageTable>, emu_dev_id: usize) {
     // let vgic_cpu_num = vm.config().cpu_num();
     // vm.init_intc_mode(true);

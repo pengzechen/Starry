@@ -184,6 +184,9 @@ unsafe impl Sync for GicDistributor {}
 unsafe impl Send for GicCpuInterface {}
 unsafe impl Sync for GicCpuInterface {}
 
+unsafe impl Send for GicHypervisorInterface {}
+unsafe impl Sync for GicHypervisorInterface {}
+
 /// Driver for an Arm Generic Interrupt Controller version 2.
 #[derive(Debug, Copy, Clone)]
 pub struct GicV2 {
@@ -260,6 +263,8 @@ impl GenericArmGic for GicV2 {
         self.gicc.regs().EOIR.set(intid.0 as u32);
     }
 
+
+    /* HV pzc add */
     /// Returns the interrupt ID of the highest priority pending interrupt for
     /// the CPU interface. (read GICC_IAR)
     ///
@@ -269,12 +274,43 @@ impl GenericArmGic for GicV2 {
     fn get_iar(&self) -> u32 {
         self.gicc.regs().IAR.get()
     }
+
+    /// Informs the CPU interface that it has completed the processing of the
+    /// specified interrupt. (write GICC_EOIR)
+    ///
+    /// The value written must be the value returns from [`Self::iar`].
+    fn set_eoi(&self, iar: u32) {
+        self.gicc.regs().EOIR.set(iar);
+    }
+
+    fn set_dir(&self, dir: u32) {
+        self.gicc.regs().DIR.set(dir);
+    }
+
+    fn get_priority(&self, int_id: usize) -> usize {
+        let idx = (int_id * 8) / 32;
+        let off = (int_id * 8) % 32;
+        ((self.gicd.regs().IPRIORITYR[idx].get() >> off) & 0xff) as usize
+    }
+
+    fn send_sgi(&mut self, cpu_if: usize, sgi_num: usize) {
+        log::debug!(
+            "send sgi {} with priority {:#x} to cpu {}",
+            sgi_num,
+            self.get_priority(sgi_num),
+            cpu_if
+        );
+        // debug!("send sgi 2 with priority {:#x} to cpu {}", self.get_priority(2), cpu_if);
+        let sgir = ((1 << (16 + cpu_if)) | (sgi_num & 0b1111)) as u32;
+        log::debug!("this is sgir value: {:#x}", sgir);
+        self.gicd.regs().SGIR.set(sgir);
+    }
 }
 
 // pzc add 5.1
 
 use tock_registers::register_structs;
-use tock_registers::registers::{ReadOnly, ReadWrite};
+use tock_registers::registers::{ReadOnly, ReadWrite, WriteOnly};
 
 pub const GIC_LIST_REGS_NUM: usize = 64;
 
@@ -394,5 +430,92 @@ impl GicHypervisorInterface {
         // LRENPIE, bit [2]: List Register Entry Not Present Interrupt Enable. When it set to 1, maintenance interrupt signaled while GICH_HCR.EOICount is not 0.
         let hcr_prev: u32 = self.get_hcr();
         self.set_hcr(hcr_prev | 1 as u32 | (1 << 2) as u32);    // need to set bit 0????? [0] enable maintenance interrupt
+    }
+}
+
+
+
+// for debug usage  'GicVcpuInterfaceRegs'
+register_structs! {
+    #[allow(non_snake_case)]
+    GicVcpuInterfaceRegs {
+        /// CPU Interface Control Register.
+        (0x0000 => CTLR: ReadWrite<u32>),
+        /// Interrupt Priority Mask Register.
+        (0x0004 => PMR: ReadWrite<u32>),
+        /// Binary Point Register.
+        (0x0008 => BPR: ReadWrite<u32>),
+        /// Interrupt Acknowledge Register.
+        (0x000c => IAR: ReadOnly<u32>),
+        /// End of Interrupt Register.
+        (0x0010 => EOIR: WriteOnly<u32>),
+        /// Running Priority Register.
+        (0x0014 => RPR: ReadOnly<u32>),
+        /// Highest Priority Pending Interrupt Register.
+        (0x0018 => HPPIR: ReadOnly<u32>),
+        (0x001c => _reserved_1),
+        /// CPU Interface Identification Register.
+        (0x00fc => IIDR: ReadOnly<u32>),
+        (0x0100 => _reserved_2),
+        /// Deactivate Interrupt Register.
+        (0x1000 => DIR: WriteOnly<u32>),
+        (0x1004 => @END),
+    }
+}
+
+
+#[derive(Debug, Clone)]
+pub struct GicVcpuInterface {
+    base: NonNull<GicVcpuInterfaceRegs>,
+}
+
+unsafe impl Send for GicVcpuInterface {}
+unsafe impl Sync for GicVcpuInterface {}
+
+impl GicVcpuInterface {
+    /// Construct a new GIC VCPU interface instance from the base address.
+    pub const fn new(base: *mut u8) -> Self {
+        Self {
+            base: NonNull::new(base).unwrap().cast(),
+        }
+    }
+
+    const fn regs(&self) -> &GicVcpuInterfaceRegs {
+        unsafe { self.base.as_ref() }
+    }
+
+    // When interrupt priority drop is separated from interrupt deactivation,
+    // a write to this register deactivates the specified interrupt.
+    pub fn set_dir(&self, dir: u32) {
+        self.regs().DIR.set(dir);
+    }
+
+    /// Returns the interrupt ID of the highest priority pending interrupt for
+    /// the CPU interface. (read GICC_IAR)
+    ///
+    /// The read returns a spurious interrupt ID of `1023` if the distributor
+    /// or the CPU interface are disabled, or there is no pending interrupt on
+    /// the CPU interface.
+    pub fn get_iar(&self) -> u32 {
+        self.regs().IAR.get()
+    }
+
+    /// Informs the CPU interface that it has completed the processing of the
+    /// specified interrupt. (write GICC_EOIR)
+    ///
+    /// The value written must be the value returns from [`Self::iar`].
+    pub fn set_eoi(&self, iar: u32) {
+        self.regs().EOIR.set(iar);
+    }
+    
+    /// Controls the CPU interface, including enabling of interrupt groups,
+    /// interrupt signal bypass, binary point registers used, and separation
+    /// of priority drop and interrupt deactivation.
+    /// Get or set CTLR.
+    pub fn get_ctlr(&self) -> u32 {
+        self.regs().CTLR.get()
+    }
+    pub fn set_ctlr(&self, ctlr: u32) {
+        self.regs().CTLR.set(ctlr);
     }
 }

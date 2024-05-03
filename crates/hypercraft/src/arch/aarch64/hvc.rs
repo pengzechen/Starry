@@ -168,7 +168,7 @@ fn hvc_call(
     x6: usize,
     x7: usize,
 ) -> usize {
-    let r0= 0;
+    let r0;
     #[cfg(target_arch = "aarch64")]
     unsafe {
         

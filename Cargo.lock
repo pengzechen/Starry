@@ -221,6 +221,7 @@ dependencies = [
  "aarch64-cpu",
  "bitflags 2.4.0",
  "cfg-if",
+ "log",
  "tock-registers",
 ]
 
@@ -410,6 +411,7 @@ dependencies = [
  "raw-cpuid 11.0.1",
  "riscv",
  "sbi-rt",
+ "spin 0.9.8",
  "spinlock",
  "static_assertions",
  "tock-registers",
@@ -513,6 +515,7 @@ dependencies = [
 name = "axruntime"
 version = "0.1.0"
 dependencies = [
+ "arm_gic",
  "axalloc",
  "axconfig",
  "axdisplay",
@@ -525,11 +528,16 @@ dependencies = [
  "axprocess",
  "axtask",
  "cfg-if",
+ "cortex-a",
  "crate_interface",
  "hypercraft",
  "kernel_guard",
  "lazy_init",
+ "page_table",
+ "page_table_entry",
  "percpu",
+ "smccc",
+ "spin 0.9.8",
 ]
 
 [[package]]

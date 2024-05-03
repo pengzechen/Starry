@@ -500,4 +500,12 @@ impl GenericArmGic for GicV3 {
     fn get_iar(&self) -> u32 {
         0
     }
+
+    fn set_eoi(&self, _iar: u32) {}
+
+    fn set_dir(&self, _dir: u32) {}
+
+    fn send_sgi(&mut self, cpu_if: usize, sgi_num: usize) {}
+
+    fn get_priority(&self, int_id: usize) -> usize {0}
 }

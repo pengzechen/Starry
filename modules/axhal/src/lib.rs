@@ -38,6 +38,13 @@ extern crate log;
 /// The kernel process ID, which is always 1.
 pub const KERNEL_PROCESS_ID: u64 = 1;
 
+pub use platform::aarch64_common::gic::{ 
+    gicc_get_current_irq, deactivate_irq, gic_is_priv, gic_lrs, interrupt_cpu_ipi_send, 
+    GIC_SPI_MAX, IPI_IRQ_NUM, GICV, GICH, GIC, GICD_BASE,  
+};
+
+pub use platform::aarch64_common::pl011::UART;
+
 mod platform;
 
 pub mod arch;
@@ -86,6 +93,3 @@ pub use self::platform::set_tss_stack_top;
 
 #[cfg(feature = "smp")]
 pub use self::platform::platform_init_secondary;
-
-
-pub use platform::aarch64_common::gic::gicc_get_current_irq;

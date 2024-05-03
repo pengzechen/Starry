@@ -11,7 +11,7 @@ use hypercraft::arch::vgic::{Vgic, VgicInt};
 use hypercraft::{IrqState, VCpu, VM};
 
 use crate::{GuestPageTable, HyperCraftHalImpl};
-use hypercraft::{GuestPageTableTrait};
+// use hypercraft::{GuestPageTableTrait};
 // use hypercraft::{GuestPageTableTrait, HyperCraftHal};
 
 use super::vm_array::get_vm;
@@ -1213,7 +1213,8 @@ pub fn emu_sgiregs_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ct
     let vm = active_vm();
 
     // if the address is sgir (offset 0x0f00)
-    if bit_extract(emu_ctx.address, 0, 12) == bit_extract(usize::from(axhal::GICD_BASE + 0x0f00) + 0x0f00, 0, 12) {
+    let cfg_bits = usize::from(axhal::GICD_BASE + 0x0f00) + 0x0f00;
+    if bit_extract(emu_ctx.address, 0, 12) == bit_extract(cfg_bits, 0, 12) {
         if emu_ctx.write {
             // TargetListFilter, bits [25:24] Determines how the Distributor processes the requested SGI.
             let sgir_target_list_filter = bit_extract(val, 24, 2);
@@ -1633,7 +1634,7 @@ fn vgic_int_is_owner(
     // let owner_vcpu_id = interrupt.owner_id().unwrap();
     // let owner_vm_id = interrupt.owner_vm_id().unwrap();
 
-    return false;
+    // return false;
 }
 
 pub fn vgic_set_hw_int(vm:&mut VM<HyperCraftHalImpl, GuestPageTable>, int_id: usize) {
