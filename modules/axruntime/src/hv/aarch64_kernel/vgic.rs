@@ -2,7 +2,10 @@ use arm_gic::{
     GIC_CONFIG_BITS, GIC_PRIO_BITS, GIC_PRIVATE_INT_NUM, GIC_SGIS_NUM, GIC_TARGETS_MAX,
     GIC_TARGET_BITS,
 };
-use axhal::{gic_is_priv, gic_lrs, GICD, GICH};
+
+// items from traits can only be used if the trait is in scope
+use arm_gic::GenericArmGic;
+use axhal::{gic_is_priv, gic_lrs, GIC, GICH};
 // use axhal::{gic_is_priv, gic_lrs, GICD, GICH, GICV};
 use hypercraft::arch::emu::EmuContext;
 use hypercraft::arch::utils::*;
@@ -327,9 +330,12 @@ fn write_lr(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraf
         } else {
             lr |= (state & 0b11) << 28;
         }
-        let gicd = GICD.lock();
-        if gicd.get_state(int_id) != 2 {
-            gicd.set_state(int_id, 2, current_cpu().cpu_id);
+        let gicd;
+        unsafe {
+            gicd = GIC.lock();
+            if gicd.get_state(int_id) != 2 {
+                gicd.set_state(int_id, 2, current_cpu().cpu_id);
+            }
         }
     }
     // If the interrupt is a software-generated interrupt (SGI), set the appropriate bits in the List Register.
@@ -432,7 +438,9 @@ fn set_enable(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCr
                     route(vgic, vcpu.clone(), interrupt.clone());
                 }
                 if interrupt.hw() {
-                    GICD.lock().set_enable(interrupt.id() as usize, en);
+                    unsafe {
+                        GIC.lock().set_enable(interrupt.id() as usize, en);
+                    }
                 }
             }
             vgic_int_yield_owner(vcpu, interrupt.clone());
@@ -505,11 +513,13 @@ fn set_pend(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraf
         let state = interrupt.state().to_num();
         if interrupt.hw() {
             let vgic_int_id = interrupt.id() as usize;
-            GICD.lock().set_state(
-                vgic_int_id,
-                if state == 1 { 2 } else { state },
-                current_cpu().cpu_id,
-            )
+            unsafe {
+                GIC.lock().set_state(
+                    vgic_int_id,
+                    if state == 1 { 2 } else { state },
+                    current_cpu().cpu_id,
+                )
+            }
         }
         route(vgic, vcpu.clone(), interrupt.clone());
         vgic_int_yield_owner(vcpu, interrupt.clone());
@@ -584,11 +594,13 @@ fn set_active(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCr
         let state = interrupt.state().to_num();
         if interrupt.hw() {
             let vgic_int_id = interrupt.id() as usize;
-            GICD.lock().set_state(
-                vgic_int_id,
-                if state == 1 { 2 } else { state },
-                current_cpu().cpu_id,
-            )
+            unsafe {
+                GIC.lock().set_state(
+                    vgic_int_id,
+                    if state == 1 { 2 } else { state },
+                    current_cpu().cpu_id,
+                )
+            }
         }
         route(vgic, vcpu.clone(), interrupt.clone());
         vgic_int_yield_owner(vcpu, interrupt.clone());
@@ -638,7 +650,9 @@ fn set_icfgr(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCra
         let interrupt_lock = interrupt.lock.lock();
         interrupt.set_cfg(cfg);
         if interrupt.hw() {
-            GICD.lock().set_icfgr(interrupt.id() as usize, cfg);
+            unsafe {
+                GIC.lock().set_icfgr(interrupt.id() as usize, cfg);
+            }
         }
         vgic_int_yield_owner(vcpu, interrupt.clone());
         /*
@@ -752,7 +766,9 @@ fn set_priority(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<Hyper
                 route(vgic, vcpu.clone(), interrupt.clone());
             }
             if interrupt.hw() {
-                GICD.lock().set_priority(interrupt.id() as usize, prio);
+                unsafe {
+                    GIC.lock().set_priority(interrupt.id() as usize, prio);
+                }
             }
         }
         vgic_int_yield_owner(vcpu, interrupt.clone());
@@ -814,7 +830,7 @@ fn set_target(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCr
                 }
             }
             if interrupt.hw() {
-                GICD.lock().set_target_cpu(interrupt.id() as usize, ptrgt as u8);
+                unsafe { GIC.lock().set_target_cpu(interrupt.id() as usize, ptrgt as u8); }
             }
             if vgic_get_state(interrupt.clone()) != 0 {
                 route(vgic, vcpu.clone(), interrupt.clone());
@@ -1490,7 +1506,7 @@ pub fn eoir_highest_spilled_active(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable
             update_int_list(vgic, vcpu.clone(), int.clone());
 
             if vgic_int_is_hw(int.clone()) {
-                GICD.lock().set_active(int.id() as usize, false);
+                unsafe { GIC.lock().set_active(int.id() as usize, false); }
             } else {
                 if int.state().to_num() & 1 != 0 {
                     add_lr(vgic, vcpu, int);

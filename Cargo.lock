@@ -572,6 +572,7 @@ dependencies = [
  "bitflags 2.4.0",
  "cfg-if",
  "crate_interface",
+ "hypercraft",
  "kernel_guard",
  "lazy_init",
  "num_enum",

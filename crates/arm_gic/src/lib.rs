@@ -219,8 +219,42 @@ pub trait GenericArmGic: Debug + Clone + Copy + Sync + Send + Sized {
     fn send_sgi(&mut self, cpu_if: usize, sgi_num: usize);
 
     fn get_priority(&self, int_id: usize) -> usize;
+
+    /// Set interrupt state to pending or not.
+    fn set_pend(&self, int_id: usize, is_pend: bool, current_cpu_id: usize);
+    
+    /// Set interrupt state to active or not.
+    fn set_active(&self, int_id: usize, is_active: bool);
+    
+    /// Set interrupt state. Depend on its active state and pending state.
+    fn set_state(&self, int_id: usize, state: usize, current_cpu_id: usize);
+    
+    /// Get interrupt state. Depend on its active state and pending state.
+    fn get_state(&self, int_id: usize) -> usize ;
+    
+    /// Enables or disables the given interrupt.
+    fn set_enable(&mut self, vector: usize, enable: bool);
+
+    /// Determines whether the corresponding interrupt is edge-triggered or level-sensitive.
+    fn set_icfgr(&self, int_id: usize, cfg: u8) ;
+
+    /// Set interrupt priority.
+    fn set_priority(&mut self, int_id: usize, priority: u8);
+
+    /// Set interrupt target cpu.
+    fn set_target_cpu(&mut self, int_id: usize, target: u8) ;
+
+
+    /// Provides information about the configuration of this Redistributor.
+    /// Get typer register.
+    fn get_typer(&self) -> u32;
+
+    /// Get iidr register.
+    fn get_iidr(&self) -> u32;
 }
 
+
+pub const SGI_RANGE: Range<usize> = 0..16;
 
 /* HV */
 pub const GIC_TARGET_BITS: usize = 8;

@@ -20,7 +20,7 @@ impl axhal::trap::TrapHandler for TrapHandlerImpl {
     }
     
     fn handle_irq_hv(irq_num: usize, src: usize, ctx: &mut ContextFrame) {
-        /*
+        
         current_cpu().set_ctx(ctx);
         if axhal::irq::irq_num_exist(irq_num) {
             let guard = kernel_guard::NoPreempt::new();
@@ -40,6 +40,6 @@ impl axhal::trap::TrapHandler for TrapHandlerImpl {
 
         //debug!("[handle_irq_hv] after deactivate irq {} ", irq_num);
         current_cpu().clear_ctx();
-        */
+        
     }
 }

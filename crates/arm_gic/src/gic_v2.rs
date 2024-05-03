@@ -6,7 +6,7 @@ use core::ptr::NonNull;
 
 use crate::registers::gicv2_regs::*;
 
-use crate::{GenericArmGic, IntId, TriggerMode};
+use crate::{GenericArmGic, IntId, TriggerMode, SGI_RANGE, GIC_CONFIG_BITS};
 use tock_registers::interfaces::{Readable, Writeable};
 
 /// The GIC distributor.
@@ -304,6 +304,124 @@ impl GenericArmGic for GicV2 {
         let sgir = ((1 << (16 + cpu_if)) | (sgi_num & 0b1111)) as u32;
         log::debug!("this is sgir value: {:#x}", sgir);
         self.gicd.regs().SGIR.set(sgir);
+    }
+
+    /// Set interrupt state to pending or not.
+    fn set_pend(&self, int_id: usize, is_pend: bool, current_cpu_id: usize) {
+        if SGI_RANGE.contains(&int_id) {
+            let reg_idx = int_id / 4;
+            let offset = (int_id % 4) * 8;
+            if is_pend {
+                self.gicd.regs().SPENDSGIR[reg_idx].set(1 << (offset + current_cpu_id));
+            // get current cpu todo()
+            } else {
+                self.gicd.regs().CPENDSGIR[reg_idx].set(0xff << offset);
+            }
+        } else {
+            let reg_idx = int_id / 32;
+            let mask = 1 << int_id % 32;
+            if is_pend {
+                self.gicd.regs().ISPENDR[reg_idx].set(mask);
+            } else {
+                self.gicd.regs().ICPENDR[reg_idx].set(mask);
+            }
+        }
+    }
+    
+    /// Set interrupt state to active or not.
+    fn set_active(&self, int_id: usize, is_active: bool) {
+        let reg_idx = int_id / 32;
+        let mask = 1 << int_id % 32;
+
+        if is_active {
+            self.gicd.regs().ISACTIVER[reg_idx].set(mask);
+        } else {
+            self.gicd.regs().ICACTIVER[reg_idx].set(mask);
+        }
+    }
+    
+    /// Set interrupt state. Depend on its active state and pending state.
+    fn set_state(&self, int_id: usize, state: usize, current_cpu_id: usize) {
+        self.set_active(int_id, (state & 0b10) != 0);
+        self.set_pend(int_id, (state & 0b01) != 0, current_cpu_id);
+    }
+    
+    /// Get interrupt state. Depend on its active state and pending state.
+    fn get_state(&self, int_id: usize) -> usize {
+        let reg_idx = int_id / 32;
+        let mask = 1 << int_id % 32;
+
+        let pend = if (self.gicd.regs().ISPENDR[reg_idx].get() & mask) != 0 {
+            0b01
+        } else {
+            0b00
+        };
+        let active = if (self.gicd.regs().ISACTIVER[reg_idx].get() & mask) != 0 {
+            0b10
+        } else {
+            0b00
+        };
+        return pend | active;
+    }
+    
+    /// Enables or disables the given interrupt.
+    fn set_enable(&mut self, vector: usize, enable: bool) {
+        // max_irqs original
+        if vector >= self.gicd.support_irqs {
+            return;
+        }
+        let reg = vector / 32;
+        let mask = 1 << (vector % 32);
+        if enable {
+            self.gicd.regs().ISENABLER[reg].set(mask);
+        } else {
+            self.gicd.regs().ICENABLER[reg].set(mask);
+        }
+    }
+
+    /// Determines whether the corresponding interrupt is edge-triggered or level-sensitive.
+    fn set_icfgr(&self, int_id: usize, cfg: u8) {
+        let reg_ind = (int_id * GIC_CONFIG_BITS) / 32;
+        let off = (int_id * GIC_CONFIG_BITS) % 32;
+        let mask = 0b11 << off;
+
+        let icfgr = self.gicd.regs().ICFGR[reg_ind].get();
+        self.gicd.regs().ICFGR[reg_ind].set((icfgr & !mask) | (((cfg as u32) << off) & mask));
+    }
+
+    /// Set interrupt priority.
+    fn set_priority(&mut self, int_id: usize, priority: u8) {
+        let idx = (int_id * 8) / 32;
+        let offset = (int_id * 8) % 32;
+        let mask: u32 = 0xff << offset;
+
+        let prev_reg_val = self.gicd.regs().IPRIORITYR[idx].get();
+        // clear target int_id priority and set its priority.
+        let reg_val = (prev_reg_val & !mask) | (((priority as u32) << offset) & mask);
+        self.gicd.regs().IPRIORITYR[idx].set(reg_val);
+    }
+
+    /// Set interrupt target cpu.
+    fn set_target_cpu(&mut self, int_id: usize, target: u8) {
+        let idx = (int_id * 8) / 32;
+        let offset = (int_id * 8) % 32;
+        let mask: u32 = 0xff << offset;
+
+        let prev_reg_val = self.gicd.regs().ITARGETSR[idx].get();
+        // clear target int_id target and set its target.
+        let reg_val: u32 = (prev_reg_val & !mask) | (((target as u32) << offset) & mask);
+        self.gicd.regs().ITARGETSR[idx].set(reg_val);
+    }
+
+    /// Provides information about the configuration of this Redistributor.
+    /// Get typer register.
+    fn get_typer(&self) -> u32 {
+        self.gicd.regs().TYPER.get()
+    }
+
+    /// Get iidr register.
+    fn get_iidr(&self) -> u32 {
+        self.gicd.regs().IIDR.get()
     }
 }
 

@@ -4,6 +4,8 @@ use crate::syscall::syscall;
 
 struct TrapHandlerImpl;
 
+use hypercraft::arch::ContextFrame;
+
 #[crate_interface::impl_interface]
 impl axhal::trap::TrapHandler for TrapHandlerImpl {
     fn handle_irq(_irq_num: usize, from_user: bool) {
@@ -43,4 +45,6 @@ impl axhal::trap::TrapHandler for TrapHandlerImpl {
     fn handle_signal() {
         axprocess::signal::handle_signals();
     }
+    
+    fn handle_irq_hv(irq_num: usize, src: usize, ctx: &mut ContextFrame) {}
 }

@@ -137,7 +137,8 @@ use arm_gic::{
     GIC_PRIVATE_INT_NUM, GIC_SGIS_NUM
 };
 
-use axhal::{GICH, GICD, GIC_SPI_MAX};
+use axhal::{GICH, GIC, GIC_SPI_MAX};
+use arm_gic::GenericArmGic;
 // 以下函数用到了 gicd gich
 pub fn emu_intc_init(vm: &mut VM<HyperCraftHalImpl, GuestPageTable>, emu_dev_id: usize) {
     // let vgic_cpu_num = vm.config().cpu_num();
@@ -147,9 +148,11 @@ pub fn emu_intc_init(vm: &mut VM<HyperCraftHalImpl, GuestPageTable>, emu_dev_id:
     let vgic = Arc::new(Vgic::<HyperCraftHalImpl, GuestPageTable>::default());
 
     let mut vgicd = vgic.vgicd.lock();
-    vgicd.typer = (GICD.lock().get_typer() & GICD_TYPER_CPUNUM_MSK as u32)
-        | (((vm.vcpu_num() - 1) << GICD_TYPER_CPUNUM_OFF) & GICD_TYPER_CPUNUM_MSK) as u32;
-    vgicd.iidr = GICD.lock().get_iidr();
+    unsafe {
+        vgicd.typer = (GIC.lock().get_typer() & GICD_TYPER_CPUNUM_MSK as u32)
+            | (((vm.vcpu_num() - 1) << GICD_TYPER_CPUNUM_OFF) & GICD_TYPER_CPUNUM_MSK) as u32;
+        vgicd.iidr = GIC.lock().get_iidr();
+    }
 
     for i in 0..GIC_SPI_MAX {
         vgicd.interrupts.push(VgicInt::<HyperCraftHalImpl, GuestPageTable>::new(i));
