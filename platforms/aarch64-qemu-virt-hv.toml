@@ -1,16 +1,16 @@
 # Architecture identifier.
 arch = "aarch64"
 # Platform identifier.
-platform = "qemu-virt-aarch64"
+platform = "aarch64-qemu-virt"
+# Platform family.
+family = "aarch64-qemu-virt"
 
-# Base address of the whole physical memory.
-phys-memory-base = "0x4000_0000"
-# Size of the whole physical memory.
-phys-memory-size = "0x800_0000"     # 128M
 # Base physical address of the kernel image.
 kernel-base-paddr = "0x4008_0000"
 # Base virtual address of the kernel image.
 kernel-base-vaddr = "0x0000_0000_4008_0000"
+
+
 # Linear mapping offset, for quick conversions between physical and virtual
 # addresses.
 phys-virt-offset = "0x0000_0000_0000_0000"
@@ -69,10 +69,19 @@ pci-ranges = [
 ]
 # UART Address
 uart-paddr = "0x0900_0000"
-uart-irq-num = "33"
+# uart-irq-num = "33" original hyper
+uart-irq = "33"
 
 # GICC Address
 gicc-paddr = "0x0801_0000"
 gicd-paddr = "0x0800_0000"
 gich-paddr = "0x0803_0000"
 gicv-paddr = "0x0804_0000"
+
+# PSCI
+psci-method = "hvc"
+
+# Base address of the whole physical memory.
+phys-memory-base = "0x4000_0000"
+# Size of the whole physical memory.
+phys-memory-size = "0x800_0000"     # 128M

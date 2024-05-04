@@ -118,6 +118,8 @@ else
   $(error "ARCH" must be one of "x86_64", "riscv64", or "aarch64")
 endif
 
+$(info "PLATFORM: $(PLATFORM) PLATFORM_NAME: $(PLATFORM_NAME)")
+
 export AX_ARCH=$(ARCH)
 export AX_PLATFORM=$(PLATFORM_NAME)
 export AX_SMP=$(SMP)
@@ -147,7 +149,7 @@ OUT_ELF := $(OUT_DIR)/$(APP_NAME)_$(PLATFORM_NAME).elf
 OUT_BIN := $(OUT_DIR)/$(APP_NAME)_$(PLATFORM_NAME).bin
 
 ifeq ($(HV), y)
-  ifneq ($(PLATFORM_NAME), aarch64-qemu-virt)
+  ifneq ($(PLATFORM_NAME), aarch64-qemu-virt-hv)
     $(error "HV only support arm arch")
   endif
 	LD_SCRIPT = $(CURDIR)/modules/axhal/linker_$(PLATFORM_NAME)_hv.lds
