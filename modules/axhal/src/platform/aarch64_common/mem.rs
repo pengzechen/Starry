@@ -108,10 +108,10 @@ fn fdt_region() -> MemRegion {
 }
 
 #[link_section = ".data.boot_page_table"]
-static mut BOOT_PT_L0: [A64PTE; 512] = [A64PTE::empty(); 512];
+pub static mut BOOT_PT_L0: [A64PTE; 512] = [A64PTE::empty(); 512];
 
 #[link_section = ".data.boot_page_table"]
-static mut BOOT_PT_L1: [A64PTE; 512] = [A64PTE::empty(); 512];
+pub static mut BOOT_PT_L1: [A64PTE; 512] = [A64PTE::empty(); 512];
 
 pub(crate) unsafe fn init_mmu() {
     MAIR_EL1.set(MemAttr::MAIR_VALUE);

@@ -60,11 +60,8 @@ unsafe fn enable_fp() {
 use page_table_entry::aarch64::A64PTE;
 use memory_addr::PhysAddr;
 
-#[link_section = ".data.boot_page_table"]
-static mut BOOT_PT_L0: [A64PTE; 512] = [A64PTE::empty(); 512];
-
-#[link_section = ".data.boot_page_table"]
-static mut BOOT_PT_L1: [A64PTE; 512] = [A64PTE::empty(); 512];
+use crate::platform::mem::BOOT_PT_L0;
+use crate::platform::mem::BOOT_PT_L1;
 
 unsafe fn init_boot_page_table() {
     crate::platform::mem::init_boot_page_table(&mut BOOT_PT_L0, &mut BOOT_PT_L1);
@@ -230,7 +227,7 @@ unsafe extern "C" fn _start() -> ! {
     );
     */
     // set vbar_el2 for hypervisor.
-    //#[cfg(feature = "hv")]
+    // #[cfg(feature = "hv")]
     core::arch::asm!("
         // disable cache and MMU
         mrs x1, sctlr_el2

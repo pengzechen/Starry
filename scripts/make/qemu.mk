@@ -22,6 +22,7 @@ qemu_args-riscv64 := \
 qemu_args-aarch64 := \
   -cpu cortex-a72 \
   -machine virt \
+  -machine virtualization=on \
   -kernel $(OUT_BIN)
 
 # bitmap_allocator is hard coding, support max 4GB mem
@@ -74,6 +75,10 @@ ifeq ($(shell uname), Darwin)
   qemu_args-$(ACCEL) += -cpu host -accel hvf
 else
   qemu_args-$(ACCEL) += -cpu host -accel kvm
+endif
+
+ifeq ($(HV), y)
+  qemu_args += -machine virtualization=on
 endif
 
 define run_qemu
