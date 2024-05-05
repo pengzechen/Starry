@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use arm_gic::{
     GIC_CONFIG_BITS, GIC_PRIO_BITS, GIC_PRIVATE_INT_NUM, GIC_SGIS_NUM, GIC_TARGETS_MAX,
     GIC_TARGET_BITS,

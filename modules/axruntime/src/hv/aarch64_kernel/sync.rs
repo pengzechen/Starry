@@ -86,13 +86,13 @@ pub extern "C" fn data_abort_handler(ctx: &mut ContextFrame) {
 
 #[no_mangle]
 pub extern "C" fn hvc_handler(ctx: &mut ContextFrame) {
-    let x0 = ctx.gpr(0);
-    let x1 = ctx.gpr(1);
-    let x2 = ctx.gpr(2);
-    let x3 = ctx.gpr(3);
-    let x4 = ctx.gpr(4);
-    let x5 = ctx.gpr(5);
-    let x6 = ctx.gpr(6);
+    let _x0 = ctx.gpr(0);
+    let _x1 = ctx.gpr(1);
+    let _x2 = ctx.gpr(2);
+    let _x3 = ctx.gpr(3);
+    let _x4 = ctx.gpr(4);
+    let _x5 = ctx.gpr(5);
+    let _x6 = ctx.gpr(6);
     let mode = ctx.gpr(7);
     debug!("[hvc_handler]: mode:{}", mode);
     let hvc_type = (mode >> 8) & 0xff;

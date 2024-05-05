@@ -505,40 +505,44 @@ impl GenericArmGic for GicV3 {
 
     fn set_dir(&self, _dir: u32) {}
 
-    fn send_sgi(&mut self, cpu_if: usize, sgi_num: usize) {}
+    fn send_sgi(&mut self, cpu_if: usize, _sgi_num: usize) {
+        let _ = cpu_if;
+    }
 
-    fn get_priority(&self, int_id: usize) -> usize {0}
+    fn get_priority(&self, int_id: usize) -> usize {
+        let _ = int_id;
+    0}
 
     /// Set interrupt state to pending or not.
-    fn set_pend(&self, int_id: usize, is_pend: bool, current_cpu_id: usize) {
+    fn set_pend(&self, _int_id: usize, _is_pendd: bool, _current_cpu_id: usize) {
     }
     
     /// Set interrupt state to active or not.
-    fn set_active(&self, int_id: usize, is_active: bool) {
+    fn set_active(&self, _int_id: usize, _is_active: bool) {
     }
     
     /// Set interrupt state. Depend on its active state and pending state.
-    fn set_state(&self, int_id: usize, state: usize, current_cpu_id: usize) {
+    fn set_state(&self, _int_id: usize, _state: usize, _current_cpu_id: usize) {
     }
     
     /// Get interrupt state. Depend on its active state and pending state.
-    fn get_state(&self, int_id: usize) -> usize {
+    fn get_state(&self, _int_id: usize) -> usize {
         0
     }
 
     /// Enables or disables the given interrupt.
-    fn set_enable(&mut self, vector: usize, enable: bool) {   
+    fn set_enable(&mut self, _vector: usize, _enable: bool) {   
     }
 
     /// Determines whether the corresponding interrupt is edge-triggered or level-sensitive.
-    fn set_icfgr(&self, int_id: usize, cfg: u8) {}
+    fn set_icfgr(&self, _int_id: usize, _cfg: u8) {}
     
     /// Set interrupt priority.
-    fn set_priority(&mut self, int_id: usize, priority: u8) {
+    fn set_priority(&mut self, _int_id: usize, _priority: u8) {
     }
 
     /// Set interrupt target cpu.
-    fn set_target_cpu(&mut self, int_id: usize, target: u8) {
+    fn set_target_cpu(&mut self, _int_id: usize, _target: u8) {
     }
 
     /// Provides information about the configuration of this Redistributor.

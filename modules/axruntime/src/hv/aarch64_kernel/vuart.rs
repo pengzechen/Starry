@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use hypercraft::arch::vuart::{Vuart, BUF_CAP};
 use hypercraft::arch::emu::EmuContext;
 use axhal::UART;

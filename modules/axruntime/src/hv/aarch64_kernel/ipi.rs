@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use spin::Mutex;
 use super::current_cpu;
 use super::guest_psci::psci_ipi_handler;

@@ -1,1 +1,3 @@
 ./build_img.sh -m aarch64 -fs fat32 -file aarch64/sbin
+
+pkill qemu || clear && make ARCH=aarch64 PLATFORM=aarch64-qemu-virt-hv HV=y debug

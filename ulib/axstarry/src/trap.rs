@@ -46,5 +46,5 @@ impl axhal::trap::TrapHandler for TrapHandlerImpl {
         axprocess::signal::handle_signals();
     }
     
-    fn handle_irq_hv(irq_num: usize, src: usize, ctx: &mut ContextFrame) {}
+    fn handle_irq_hv(_irq_num: usize, _src: usize, _ctx: &mut ContextFrame) {}
 }
