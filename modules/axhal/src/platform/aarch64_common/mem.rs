@@ -174,12 +174,6 @@ pub(crate) unsafe fn idmap_device(phys_addr: usize) {
     }
 }
 
-extern "C" {
-    fn _stext();
-    fn _ekernel();
-}
-
-
 
 pub(crate) unsafe fn init_boot_page_table(
     boot_pt_l0: &mut [A64PTE; 512],
@@ -200,3 +194,12 @@ pub(crate) unsafe fn init_boot_page_table(
         true,
     );
 }
+
+extern "C" {
+    fn _stext();
+    fn _ekernel();
+}
+
+
+
+
