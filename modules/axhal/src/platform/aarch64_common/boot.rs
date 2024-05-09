@@ -61,15 +61,10 @@ use page_table_entry::aarch64::A64PTE;
 use memory_addr::PhysAddr;
 
 use crate::platform::mem::BOOT_PT_L0;
-use crate::platform::mem::BOOT_PT_L1;
+use crate::platform::mem::init_boot_page_table_mem;
 
-unsafe fn init_boot_page_table() {
-    crate::platform::mem::init_boot_page_table(&mut BOOT_PT_L0, &mut BOOT_PT_L1);
-}
 
-extern "C" {
-    fn exception_vector_base_el2();
-}
+extern "C" { fn exception_vector_base_el2(); }
 
 unsafe fn cache_invalidate(cache_level: usize) {
     core::arch::asm!(
@@ -265,7 +260,7 @@ unsafe extern "C" fn _start() -> ! {
         b      .",
         cache_invalidate = sym cache_invalidate,
         exception_vector_base_el2 = sym exception_vector_base_el2,
-        init_boot_page_table = sym init_boot_page_table,
+        init_boot_page_table = sym init_boot_page_table_mem,
         init_mmu_el2 = sym init_mmu_el2,
         switch_to_el2 = sym switch_to_el2,
         enable_fp = sym enable_fp,

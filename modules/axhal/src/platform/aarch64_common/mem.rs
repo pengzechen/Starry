@@ -195,6 +195,10 @@ pub(crate) unsafe fn init_boot_page_table(
     );
 }
 
+pub(crate) unsafe fn init_boot_page_table_mem() {
+    init_boot_page_table(&mut BOOT_PT_L0, &mut BOOT_PT_L1);
+}
+
 extern "C" {
     fn _stext();
     fn _ekernel();

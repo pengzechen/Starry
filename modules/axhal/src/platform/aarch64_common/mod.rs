@@ -51,21 +51,26 @@ pub(crate) unsafe extern "C" fn rust_entry(cpu_id: usize, dtb: usize) {
     crate::arch::set_exception_vector_base(exception_vector_base as usize);
     crate::cpu::init_primary(cpu_id);
 
+    /*
     // init fdt
     crate::platform::mem::idmap_device(dtb);
     of::init_fdt_ptr(phys_to_virt(dtb.into()).as_usize() as *const u8);
-
     // HugeMap all device memory for allocator
     for m in of::memory_nodes() {
         for r in m.regions() {
             crate::platform::mem::idmap_device(r.starting_address as usize);
         }
     }
+    */
+    
 
     crate::platform::console::init_early();
     crate::platform::time::init_early();
-    // disable low address access
-    crate::arch::write_page_table_root0(0.into());
+    // // disable low address access
+    // crate::arch::write_page_table_root0(0.into());
+
+    // super::aarch64_common::pl011::init_early();
+    // super::aarch64_common::generic_timer::init_early();
     rust_main(cpu_id, dtb);
 }
 
@@ -98,5 +103,6 @@ pub fn platform_init_secondary() {
 
 /// Returns the name of the platform.
 pub fn platform_name() -> &'static str {
-    of::machin_name()
+    // of::machin_name()
+    "aarch64 qemu virt hv"
 }
