@@ -39,8 +39,8 @@ extern crate log;
 pub const KERNEL_PROCESS_ID: u64 = 1;
 
 pub use platform::aarch64_common::gic::{ 
-    gicc_get_current_irq, deactivate_irq, gic_is_priv, gic_lrs, interrupt_cpu_ipi_send, 
-    GIC_SPI_MAX, IPI_IRQ_NUM, GICV, GICH, GIC, GICD_BASE,  
+    gicc_get_current_irq, gicc_clear_current_irq, deactivate_irq, gic_is_priv, gic_lrs, interrupt_cpu_ipi_send, 
+    GIC_SPI_MAX, IPI_IRQ_NUM, GICV, GICH, GIC, GICD_BASE,  MAINTENANCE_IRQ_NUM, HYPERVISOR_TIMER_IRQ_NUM
 };
 
 pub use platform::aarch64_common::pl011::UART;
