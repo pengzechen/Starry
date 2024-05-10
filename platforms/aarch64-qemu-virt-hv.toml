@@ -79,7 +79,7 @@ gich-paddr = "0x0803_0000"
 gicv-paddr = "0x0804_0000"
 
 # PSCI
-psci-method = "hvc"
+psci-method = "smc"
 
 # Base address of the whole physical memory.
 phys-memory-base = "0x4000_0000"

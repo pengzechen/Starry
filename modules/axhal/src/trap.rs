@@ -28,6 +28,7 @@ pub trait TrapHandler {
     /// Handles signals.
     fn handle_signal();
 
+    #[cfg(all(feature = "hv"))]
     /// Handles interrupt requests for the given IRQ number for route to el2.
     fn handle_irq_hv(irq_num: usize, src: usize, ctx: &mut ContextFrame);
 }
@@ -62,6 +63,7 @@ pub(crate) fn handle_signal() {
 use hypercraft::arch::ContextFrame;
 /// Call the external IRQ handler.
 #[allow(dead_code)]
+#[cfg(all(feature = "hv"))]
 pub fn handle_irq_extern_hv(irq_num: usize, src: usize, ctx: &mut ContextFrame) {
     if irq_num != 27 {
         debug!("in handle_irq_extern_hv: irq_num {}, src {}", irq_num, src);
