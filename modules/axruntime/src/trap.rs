@@ -2,6 +2,8 @@ struct TrapHandlerImpl;
 
 
 use hypercraft::arch::ContextFrame;
+#[cfg(all(feature = "hv"))]
+use crate::hv::kernel::{handle_virtual_interrupt, current_cpu};
 
 #[crate_interface::impl_interface]
 impl axhal::trap::TrapHandler for TrapHandlerImpl {
@@ -19,6 +21,7 @@ impl axhal::trap::TrapHandler for TrapHandlerImpl {
         unimplemented();
     }
     
+    #[cfg(all(feature = "hv"))]
     fn handle_irq_hv(irq_num: usize, src: usize, ctx: &mut ContextFrame) {
         
         current_cpu().set_ctx(ctx);

@@ -51,7 +51,6 @@ pub(crate) unsafe extern "C" fn rust_entry(cpu_id: usize, dtb: usize) {
     crate::arch::set_exception_vector_base(exception_vector_base as usize);
     crate::cpu::init_primary(cpu_id);
 
-    /*
     // init fdt
     crate::platform::mem::idmap_device(dtb);
     of::init_fdt_ptr(phys_to_virt(dtb.into()).as_usize() as *const u8);
@@ -61,16 +60,12 @@ pub(crate) unsafe extern "C" fn rust_entry(cpu_id: usize, dtb: usize) {
             crate::platform::mem::idmap_device(r.starting_address as usize);
         }
     }
-    */
     
-
     crate::platform::console::init_early();
     crate::platform::time::init_early();
-    // // disable low address access
-    // crate::arch::write_page_table_root0(0.into());
-
-    // super::aarch64_common::pl011::init_early();
-    // super::aarch64_common::generic_timer::init_early();
+    // disable low address access
+    crate::arch::write_page_table_root0(0.into());
+    
     rust_main(cpu_id, dtb);
 }
 

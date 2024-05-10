@@ -34,6 +34,29 @@ mod mp;
 #[cfg(feature = "smp")]
 pub use self::mp::rust_main_secondary;
 
+#[cfg(feature = "hv")] mod gpm;
+#[cfg(feature = "hv")] mod hv;
+#[cfg(feature = "hv")] pub use gpm::GuestPageTable;
+#[cfg(feature = "hv")] pub use hv::HyperCraftHalImpl;
+
+#[cfg(all(feature = "hv"))]
+pub use hv::{
+    VM_ARRAY, VM_MAX_NUM,
+    add_vm, add_vm_vcpu, get_vm, print_vm,
+    init_vm_vcpu, init_vm_emu_device, init_vm_passthrough_device, 
+    is_vcpu_init_ok, is_vcpu_primary_ok,
+    run_vm_vcpu, 
+};
+
+#[cfg(all(feature = "hv"))]
+use axhal::{IPI_IRQ_NUM};
+
+#[cfg(all(feature = "hv"))]
+use crate::hv::kernel::{
+    ipi_irq_handler, init_ipi, cpu_int_list_init,
+    gic_maintenance_handler
+};
+
 const LOGO: &str = r#"
        d8888                            .d88888b.   .d8888b.
       d88888                           d88P" "Y88b d88P  Y88b
@@ -45,15 +68,13 @@ const LOGO: &str = r#"
 d88P     888 888      "Y8888P  "Y8888   "Y88888P"   "Y8888P"
 "#;
 
-mod gpm;
-mod hv;
-pub use gpm::GuestPageTable;
-pub use hv::HyperCraftHalImpl;
 
 
 extern "C" {
-    fn main();
+    #[cfg(feature = "hv")]     fn main(cpu_id: usize);
+    #[cfg(not(feature = "hv"))]     fn main();
 }
+
 #[cfg(feature = "img")]
 core::arch::global_asm!(include_str!("../../axdriver/image.S"));
 
@@ -151,10 +172,13 @@ pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
     #[cfg(feature = "alloc")]
     init_allocator();
 
-    #[cfg(feature = "paging")]
+    #[cfg(not(feature = "hv"))]
     {
-        info!("Initialize kernel page table...");
-        remap_kernel_memory().expect("remap kernel memoy failed");
+        #[cfg(feature = "paging")]
+        {
+            info!("Initialize kernel page table...");
+            remap_kernel_memory().expect("remap kernel memoy failed");
+        }
     }
 
     info!("Initialize platform devices...");
@@ -169,19 +193,24 @@ pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
             axtask::init_scheduler();
         }
     }
-    #[cfg(any(feature = "fs", feature = "net", feature = "display"))]
+
+    #[cfg(not(feature = "hv"))]
     {
-        #[allow(unused_variables)]
-        let all_devices = axdriver::init_drivers();
+        #[cfg(any(feature = "fs", feature = "net", feature = "display"))]
+        {
+            #[allow(unused_variables)]
+            let all_devices = axdriver::init_drivers();
+            info!("this ________________________________");
 
-        #[cfg(feature = "fs")]
-        axfs::init_filesystems(all_devices.block);
+            #[cfg(feature = "fs")]
+            axfs::init_filesystems(all_devices.block);
 
-        #[cfg(feature = "net")]
-        axnet::init_network(all_devices.net);
+            #[cfg(feature = "net")]
+            axnet::init_network(all_devices.net);
 
-        #[cfg(feature = "display")]
-        axdisplay::init_display(all_devices.display);
+            #[cfg(feature = "display")]
+            axdisplay::init_display(all_devices.display);
+        }
     }
 
     #[cfg(feature = "smp")]
@@ -206,7 +235,10 @@ pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
         core::hint::spin_loop();
     }
 
-    unsafe { main() };
+    unsafe { 
+        #[cfg(not(feature = "hv"))] main();
+        #[cfg(feature = "hv")] main(cpu_id);
+    };
 
     #[cfg(feature = "multitask")]
     axtask::exit(0);

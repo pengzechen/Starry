@@ -1,4 +1,6 @@
-// use crate::platform::mem::init_mmu;
+use crate::platform::mem::init_mmu;
+use crate::platform::mem::init_mmu_el2;
+
 use aarch64_cpu::{asm, asm::barrier, registers::*};
 use axconfig::TASK_STACK_SIZE;
 use tock_registers::interfaces::{ReadWriteable, Readable, Writeable};
@@ -56,6 +58,27 @@ unsafe fn enable_fp() {
     }
 }
 
+unsafe fn switch_to_el2() {
+    SPSel.write(SPSel::SP::ELx);
+    let current_el = CurrentEL.read(CurrentEL::EL);
+
+    if current_el == 3 {
+        SCR_EL3.write(
+            SCR_EL3::NS::NonSecure + SCR_EL3::HCE::HvcEnabled + SCR_EL3::RW::NextELIsAarch64,
+        );
+        SPSR_EL3.write(
+            SPSR_EL3::M::EL2h
+                + SPSR_EL3::D::Masked
+                + SPSR_EL3::A::Masked
+                + SPSR_EL3::I::Masked
+                + SPSR_EL3::F::Masked,
+        );
+        ELR_EL3.set(LR.get());
+        SP_EL1.set(BOOT_STACK.as_ptr_range().end as u64);
+        // This should be SP_EL2. To
+        asm::eret();
+    }
+}
 
 use page_table_entry::aarch64::A64PTE;
 use memory_addr::PhysAddr;
@@ -101,80 +124,6 @@ unsafe fn cache_invalidate(cache_level: usize) {
     );
 }
 
-unsafe fn init_mmu_el2() {
-    /* 
-    MAIR_EL2.write(
-        MAIR_EL2::Attr0_Device::nonGathering_nonReordering_noEarlyWriteAck
-            + MAIR_EL2::Attr1_Normal_Outer::WriteBack_NonTransient_ReadWriteAlloc
-            + MAIR_EL2::Attr1_Normal_Inner::WriteBack_NonTransient_ReadWriteAlloc
-            + MAIR_EL2::Attr2_Normal_Outer::NonCacheable
-            + MAIR_EL2::Attr2_Normal_Inner::NonCacheable,
-    );
-    TCR_EL2.write(
-        TCR_EL2::PS::Bits_40
-            + TCR_EL2::SH0::Inner
-            + TCR_EL2::TG0::KiB_4
-            + TCR_EL2::ORGN0::WriteBack_ReadAlloc_WriteAlloc_Cacheable
-            + TCR_EL2::IRGN0::WriteBack_ReadAlloc_WriteAlloc_Cacheable
-            + TCR_EL2::T0SZ.val(16),
-    );
-    */
-    
-    // Set EL1 to 64bit.
-    HCR_EL2.write(HCR_EL2::RW::EL1IsAarch64);
-
-    // Device-nGnRE memory
-    let attr0 = MAIR_EL2::Attr0_Device::nonGathering_nonReordering_EarlyWriteAck;
-    // Normal memory
-    let attr1 = MAIR_EL2::Attr1_Normal_Inner::WriteBack_NonTransient_ReadWriteAlloc
-        + MAIR_EL2::Attr1_Normal_Outer::WriteBack_NonTransient_ReadWriteAlloc;
-    MAIR_EL2.write(attr0 + attr1); // 0xff_04
-
-     // Enable TTBR0 and TTBR1 walks, page size = 4K, vaddr size = 48 bits, paddr size = 40 bits.
-    let tcr_flags0 = TCR_EL2::TG0::KiB_4
-        + TCR_EL2::SH0::Inner
-         + TCR_EL2::ORGN0::WriteBack_ReadAlloc_WriteAlloc_Cacheable
-         + TCR_EL2::IRGN0::WriteBack_ReadAlloc_WriteAlloc_Cacheable
-         + TCR_EL2::T0SZ.val(16);
-    TCR_EL2.write(TCR_EL2::PS::Bits_40 + tcr_flags0);
-    barrier::isb(barrier::SY);
-
-    let root_paddr = PhysAddr::from(BOOT_PT_L0.as_ptr() as usize).as_usize() as _;
-    TTBR0_EL2.set(root_paddr);
-    // #[macro_use]
-    // hypercraft::msr!(TTBR1_EL2, root_paddr);
-
-    // Flush the entire TLB
-    crate::arch::flush_tlb(None);
-
-    // Enable the MMU and turn on I-cache and D-cache
-    // SCTLR_EL2.set(0x30c51835);
-    SCTLR_EL2.modify(SCTLR_EL2::M::Enable + SCTLR_EL2::C::Cacheable + SCTLR_EL2::I::Cacheable);
-    barrier::isb(barrier::SY);
-}
-
-unsafe fn switch_to_el2() {
-    SPSel.write(SPSel::SP::ELx);
-    let current_el = CurrentEL.read(CurrentEL::EL);
-
-    if current_el == 3 {
-        SCR_EL3.write(
-            SCR_EL3::NS::NonSecure + SCR_EL3::HCE::HvcEnabled + SCR_EL3::RW::NextELIsAarch64,
-        );
-        SPSR_EL3.write(
-            SPSR_EL3::M::EL2h
-                + SPSR_EL3::D::Masked
-                + SPSR_EL3::A::Masked
-                + SPSR_EL3::I::Masked
-                + SPSR_EL3::F::Masked,
-        );
-        ELR_EL3.set(LR.get());
-        SP_EL1.set(BOOT_STACK.as_ptr_range().end as u64);
-        // This should be SP_EL2. To
-        asm::eret();
-    }
-}
-
 /// The earliest entry point for the primary CPU.
 #[naked]
 #[no_mangle]
@@ -182,7 +131,7 @@ unsafe fn switch_to_el2() {
 unsafe extern "C" fn _start() -> ! {
     // PC = 0x8_0000
     // X0 = dtb
-    /*
+
     #[cfg(not(feature = "hv"))]
     core::arch::asm!("
         mrs     x19, mpidr_el1
@@ -220,14 +169,16 @@ unsafe extern "C" fn _start() -> ! {
         entry = sym crate::platform::rust_entry,
         options(noreturn),
     );
-    */
+
     // set vbar_el2 for hypervisor.
-    // #[cfg(feature = "hv")]
+    #[cfg(feature = "hv")]
     core::arch::asm!("
         // disable cache and MMU
         mrs x1, sctlr_el2
         bic x1, x1, #0xf
         msr sctlr_el2, x1
+
+        mov     x20, x0                 // save DTB pointer
 
         // cache_invalidate(0): clear dl1$
         mov x0, #0
@@ -240,12 +191,13 @@ unsafe extern "C" fn _start() -> ! {
 
         mrs     x19, mpidr_el1
         and     x19, x19, #0xffffff     // get current CPU id
-        mov     x20, x0                 // save DTB pointer
+        
         adrp    x8, {boot_stack}        // setup boot stack
         add     x8, x8, {boot_stack_size}
         mov     sp, x8
 
-        bl      {init_boot_page_table}
+        adrp    x0, {start}             // kernel image phys addr
+        bl      {idmap_kernel}
         bl      {init_mmu_el2}
         bl      {switch_to_el2}         // switch to EL1
         bl      {enable_fp}             // enable fp/neon
@@ -260,7 +212,8 @@ unsafe extern "C" fn _start() -> ! {
         b      .",
         cache_invalidate = sym cache_invalidate,
         exception_vector_base_el2 = sym exception_vector_base_el2,
-        init_boot_page_table = sym init_boot_page_table_mem,
+        start = sym _start,
+        idmap_kernel = sym crate::platform::mem::idmap_kernel,
         init_mmu_el2 = sym init_mmu_el2,
         switch_to_el2 = sym switch_to_el2,
         enable_fp = sym enable_fp,

@@ -20,6 +20,14 @@ use arm_gic::{GIC_SGIS_NUM, GIC_PRIVATE_INT_NUM};
 pub const GIC_SPI_MAX: usize = MAX_IRQ_COUNT - GIC_PRIVATE_INT_NUM;
 pub const IPI_IRQ_NUM: usize = 1;
 
+#[cfg(feature = "hv")]
+/// The maintenance interrupt irq number.
+pub const MAINTENANCE_IRQ_NUM: usize = 25;
+
+#[cfg(feature = "hv")]
+/// The hypervisor timer irq number.
+pub const HYPERVISOR_TIMER_IRQ_NUM: usize = 26;
+
 use arm_gic::GicHypervisorInterface;
 use arm_gic::gic_v2::GicVcpuInterface;
 use spin::Mutex;
