@@ -18,8 +18,8 @@ irq = []
 tls = ["alloc"]
 signal = []
 monolithic = ["paging", "dep:axfs_ramfs"]
-# hv = []
-default = []
+hv = ["paging", "irq"]
+default = ["hv"]
 
 [dependencies]
 log = "0.4"
