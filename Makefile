@@ -36,14 +36,15 @@ LOG ?= off
 V ?=
 
 # App options
-A ?= apps/monolithic_userboot
+A ?= apps/hv
 APP ?= $(A)
 FEATURES ?=
 APP_FEATURES ?=
 RUSTFLAGS ?=
 STRUCT ?= Unikernel
 
-override FEATURES += fp_simd
+# I'm not sure
+# override FEATURES += fp_simd
 
 # QEMU options
 BLK ?= y

@@ -74,7 +74,8 @@ members = [
     "apps/task/yield",
     "apps/task/priority",
     "apps/task/tls",
-    "apps/monolithic_userboot"
+    "apps/monolithic_userboot",
+    "apps/hv"
 ]
 
 [profile.release]

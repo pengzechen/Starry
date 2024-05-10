@@ -112,6 +112,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "arceos-hv"
+version = "0.1.0"
+dependencies = [
+ "arrayvec",
+ "axstd",
+ "fdt",
+ "lazy_init",
+ "log",
+ "page_table_entry",
+ "spin 0.9.8",
+]
+
+[[package]]
 name = "arceos-memtest"
 version = "0.1.0"
 dependencies = [
@@ -588,7 +601,11 @@ dependencies = [
  "arceos_api",
  "axerrno",
  "axfeat",
+ "axhal",
  "axio",
+ "axlog",
+ "axruntime",
+ "hypercraft",
  "spinlock",
 ]
 
