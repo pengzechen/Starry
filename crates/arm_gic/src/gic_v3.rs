@@ -433,6 +433,8 @@ impl GenericArmGic for GicV3 {
         self.per_cpu_init();
     }
 
+    fn gicc_init(&mut self) {    }
+
     fn per_cpu_init(&mut self) {
         self.gicr.init();
         self.cpu_sys_reg_init();
@@ -555,4 +557,28 @@ impl GenericArmGic for GicV3 {
     fn get_iidr(&self) -> u32 {
         self.gicd.regs().IIDR.get()
     }
+
+    /// Initializes the GIC distributor globally.
+    ///
+    /// It disables all interrupts, sets the target of all SPIs to CPU 0,
+    /// configures all SPIs to be edge-triggered, and finally enables the GICD.
+    ///
+    /// This function should be called only once.
+    fn global_init(&mut self) {}
+    /// Initializes the GIC distributor locally.
+    ///
+    /// It disables and clear all sgi interrupts
+    /// configures all interrupts have lowest priority possible by default
+    ///
+    /// This function should be called every cpu init.
+    fn local_init(&mut self) {}
+
+    /// The maximum number of interrupts that the GIC supports
+    fn max_irqs(&self) -> usize { 0 }
+
+    /// The number of implemented CPU interfaces.
+    fn cpu_num(&self) -> usize { 0 }
+
+    /// Configures the trigger mode for the given interrupt.
+    fn configure_interrupt(&mut self, vector: usize, tm: TriggerMode) {}
 }

@@ -2,6 +2,7 @@ use crate::{irq::IrqHandler, mem::phys_to_virt};
 use arm_gic::{translate_irq, GenericArmGic, IntId, InterruptType};
 use memory_addr::PhysAddr;
 use spinlock::SpinNoIrq;
+use spin::Mutex;
 
 /// The maximum number of IRQs.
 pub const MAX_IRQ_COUNT: usize = IntId::GIC_MAX_IRQ;
@@ -16,9 +17,10 @@ pub const GICD_BASE: PhysAddr = PhysAddr::from(axconfig::GICD_PADDR);
 const GICC_BASE: PhysAddr = PhysAddr::from(axconfig::GICC_PADDR);
 
 /* HV start */
-use arm_gic::{GIC_SGIS_NUM, GIC_PRIVATE_INT_NUM};
+use arm_gic::{GIC_SGIS_NUM, GIC_PRIVATE_INT_NUM, GicHypervisorInterface};
 pub const GIC_SPI_MAX: usize = MAX_IRQ_COUNT - GIC_PRIVATE_INT_NUM;
 pub const IPI_IRQ_NUM: usize = 1;
+use arm_gic::gic_v2::GicVcpuInterface;
 
 #[cfg(feature = "hv")]
 /// The maintenance interrupt irq number.
@@ -28,9 +30,6 @@ pub const MAINTENANCE_IRQ_NUM: usize = 25;
 /// The hypervisor timer irq number.
 pub const HYPERVISOR_TIMER_IRQ_NUM: usize = 26;
 
-use arm_gic::GicHypervisorInterface;
-use arm_gic::gic_v2::GicVcpuInterface;
-use spin::Mutex;
 
 // 需要确定位置  GICH_PADDR
 const GICH_BASE: PhysAddr = PhysAddr::from(0x0803_0000);
@@ -60,7 +59,7 @@ cfg_if::cfg_if! {
 
 /// Enables or disables the given IRQ.
 pub fn set_enable(irq_num: usize, enabled: bool) {
-    trace!("GICD set enable: {} {}", irq_num, enabled);
+    debug!("in platform gic set_enable: irq_num {}, enabled {}", irq_num, enabled);
 
     // SAFETY:
     // access percpu interface through get_mut, no need to lock
@@ -73,6 +72,9 @@ pub fn set_enable(irq_num: usize, enabled: bool) {
             GIC.lock().disable_interrupt(irq_num.into());
         }
     }
+
+    #[cfg(feature = "hv")]
+    unsafe { GIC.lock().set_priority(irq_num as _, 0x7f); }
 }
 
 /// Registers an IRQ handler for the given IRQ.
@@ -89,6 +91,7 @@ pub fn register_handler(irq_num: usize, handler: IrqHandler) -> bool {
 /// This function is called by the common interrupt handler. It looks
 /// up in the IRQ handler table and calls the corresponding handler. If
 /// necessary, it also acknowledges the interrupt controller after handling.
+#[cfg(not(feature = "hv"))]
 pub fn dispatch_irq(_unused: usize) {
     // actually no need to lock
     let intid = unsafe { GIC.get_mut().get_and_acknowledge_interrupt() };
@@ -100,11 +103,35 @@ pub fn dispatch_irq(_unused: usize) {
     }
 }
 
+#[cfg(feature = "hv")]
+pub fn dispatch_irq(irq_num: usize) {
+    debug!("dispatch_irq_hv: irq_num {}", irq_num);
+    crate::irq::dispatch_irq_common(irq_num as _);
+}
+
+
+
 /// Initializes GICD, GICC on the primary CPU.
 pub(crate) fn init_primary() {
     info!("Initialize GICv2...");
-    unsafe { GIC.lock().init_primary() };
+    gic_global_init();
+    gic_local_init();
 }
+
+fn gic_global_init() {
+    set_gic_lrs(GICH.get_lrs_num());
+    unsafe {  GIC.lock().global_init(); }
+}
+
+fn gic_local_init() {
+    unsafe { GIC.lock().local_init(); }
+    unsafe { GIC.lock().gicc_init(); }
+    #[cfg(feature = "hv")]
+    GICH.init();
+    // let ctlr = GICC.get_ctlr();
+}
+
+
 
 /// Initializes GICC on secondary CPUs.
 #[cfg(feature = "smp")]
@@ -181,5 +208,8 @@ pub fn gic_lrs() -> usize {
     *GIC_LRS_NUM.lock()
 }
 
-
+pub fn set_gic_lrs(lrs: usize) {
+    let mut gic_lrs = GIC_LRS_NUM.lock();
+    *gic_lrs = lrs;
+}
 /* HV end */

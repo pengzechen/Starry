@@ -83,7 +83,9 @@ pub(crate) unsafe extern "C" fn rust_entry_secondary(cpu_id: usize) {
 pub fn platform_init() {
     #[cfg(feature = "irq")]
     crate::platform::irq::init_primary();
+
     crate::platform::time::init_percpu();
+    
     #[cfg(feature = "irq")]
     crate::platform::console::init_irq();
 }
@@ -98,6 +100,5 @@ pub fn platform_init_secondary() {
 
 /// Returns the name of the platform.
 pub fn platform_name() -> &'static str {
-    // of::machin_name()
-    "aarch64 qemu virt hv"
+    of::machin_name()
 }

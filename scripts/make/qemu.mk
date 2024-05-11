@@ -24,7 +24,7 @@ qemu_args-aarch64 := \
   -machine virt \
   -kernel $(OUT_BIN)
 
-GUEST ?= linux
+GUEST ?= nimbos
 ROOTFS = apps/hv/guest/$(GUEST)/rootfs-aarch64.img
 GUEST_DTB = apps/hv/guest/$(GUEST)/$(GUEST)-aarch64.dtb
 GUEST_BIN = apps/hv/guest/$(GUEST)/$(GUEST)-aarch64.bin

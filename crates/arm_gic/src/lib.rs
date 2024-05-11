@@ -189,6 +189,8 @@ pub trait GenericArmGic: Debug + Clone + Copy + Sync + Send + Sized {
     /// Initialises the GIC.
     fn init_primary(&mut self);
 
+    fn gicc_init(&mut self) ;
+
     /// Initialises the GIC for the current CPU core.
     fn per_cpu_init(&mut self);
 
@@ -251,6 +253,30 @@ pub trait GenericArmGic: Debug + Clone + Copy + Sync + Send + Sized {
 
     /// Get iidr register.
     fn get_iidr(&self) -> u32;
+
+    /// Initializes the GIC distributor globally.
+    ///
+    /// It disables all interrupts, sets the target of all SPIs to CPU 0,
+    /// configures all SPIs to be edge-triggered, and finally enables the GICD.
+    ///
+    /// This function should be called only once.
+    fn global_init(&mut self) ;
+    /// Initializes the GIC distributor locally.
+    ///
+    /// It disables and clear all sgi interrupts
+    /// configures all interrupts have lowest priority possible by default
+    ///
+    /// This function should be called every cpu init.
+    fn local_init(&mut self) ;
+
+    /// The maximum number of interrupts that the GIC supports
+    fn max_irqs(&self) -> usize ;
+
+    /// The number of implemented CPU interfaces.
+    fn cpu_num(&self) -> usize ;
+
+    /// Configures the trigger mode for the given interrupt.
+    fn configure_interrupt(&mut self, vector: usize, tm: TriggerMode) ;
 }
 
 
@@ -263,3 +289,11 @@ pub const GIC_CONFIG_BITS: usize = 2;
 pub const GIC_PRIO_BITS: usize = 8;
 pub const GICD_TYPER_CPUNUM_MSK: usize = 0b11111;
 pub const GICD_TYPER_CPUNUM_OFF: usize = 5;
+
+pub const GIC_MAX_IRQ: usize = 1024;
+
+/// Interrupt ID 32-1019 are used for SPIs (Shared Peripheral Interrupt).
+///
+/// SPI is a peripheral interrupt that the Distributor can route to any of a
+/// specified combination of processors.
+pub const SPI_RANGE: Range<usize> = 32..1020;

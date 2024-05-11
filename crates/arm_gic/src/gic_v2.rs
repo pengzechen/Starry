@@ -6,7 +6,8 @@ use core::ptr::NonNull;
 
 use crate::registers::gicv2_regs::*;
 
-use crate::{GenericArmGic, IntId, TriggerMode, SGI_RANGE, GIC_CONFIG_BITS};
+use crate::{GenericArmGic, IntId, TriggerMode, SGI_RANGE, GIC_CONFIG_BITS, 
+    GIC_MAX_IRQ, SPI_RANGE, GIC_PRIVATE_INT_NUM, GIC_SGIS_NUM};
 use tock_registers::interfaces::{Readable, Writeable};
 
 /// The GIC distributor.
@@ -33,6 +34,7 @@ pub struct GicDistributor {
     support_irqs: usize,
     #[allow(dead_code)]
     support_cpu: usize,
+    max_irqs: usize,
 }
 
 impl GicDistributor {
@@ -49,6 +51,7 @@ impl GicDistributor {
             base: NonNull::new(base).unwrap().cast(),
             support_irqs: 0,
             support_cpu: 0,
+            max_irqs: 0,
         }
     }
 
@@ -216,6 +219,10 @@ impl GenericArmGic for GicV2 {
     /// Initialises the GIC.
     fn init_primary(&mut self) {
         self.gicd.init();
+        self.gicc.init(&self.gicd);
+    }
+
+    fn gicc_init(&mut self) {
         self.gicc.init(&self.gicd);
     }
 
@@ -422,6 +429,99 @@ impl GenericArmGic for GicV2 {
     /// Get iidr register.
     fn get_iidr(&self) -> u32 {
         self.gicd.regs().IIDR.get()
+    }
+
+    /// The maximum number of interrupts that the GIC supports
+    fn max_irqs(&self) -> usize {
+        ((self.gicd.regs().TYPER.get() as usize & 0b11111) + 1) * 32
+    }
+    /// The number of implemented CPU interfaces.
+    fn cpu_num(&self) -> usize {
+        ((self.gicd.regs().TYPER.get() as usize >> 5) & 0b111) + 1
+    }
+
+    /// Configures the trigger mode for the given interrupt.
+    fn configure_interrupt(&mut self, vector: usize, tm: TriggerMode) {
+        // Only configurable for SPI interrupts
+        if vector >= self.gicd.max_irqs || vector < SPI_RANGE.start {
+            return;
+        }
+
+        // type is encoded with two bits, MSB of the two determine type
+        // 16 irqs encoded per ICFGR register
+        let reg_idx = vector >> 4;
+        let bit_shift = ((vector & 0xf) << 1) + 1;
+        let mut reg_val = self.gicd.regs().ICFGR[reg_idx].get();
+        match tm {
+            TriggerMode::Edge => reg_val |= 1 << bit_shift,
+            TriggerMode::Level => reg_val &= !(1 << bit_shift),
+        }
+        self.gicd.regs().ICFGR[reg_idx].set(reg_val);
+    }
+
+    /// Initializes the GIC distributor globally.
+    ///
+    /// It disables all interrupts, sets the target of all SPIs to CPU 0,
+    /// configures all SPIs to be edge-triggered, and finally enables the GICD.
+    ///
+    /// This function should be called only once.
+    fn global_init(&mut self) {
+        let max_irqs = self.max_irqs();
+        assert!(max_irqs <= GIC_MAX_IRQ);
+        self.gicd.max_irqs = max_irqs;
+
+        // Disable all interrupts
+        for i in (GIC_PRIVATE_INT_NUM..max_irqs).step_by(32) {
+            self.gicd.regs().ICENABLER[i / 32].set(u32::MAX);
+            self.gicd.regs().ICPENDR[i / 32].set(u32::MAX);
+            self.gicd.regs().ICACTIVER[i / 32].set(u32::MAX);
+        }
+        if self.cpu_num() > 1 {
+            for i in (SPI_RANGE.start..max_irqs).step_by(4) {
+                // Set external interrupts to target cpu 0
+                // #[cfg(feature = "hv")]
+                self.gicd.regs().IPRIORITYR[i / 4].set(u32::MAX);
+                self.gicd.regs().ITARGETSR[i / 4].set(0x01_01_01_01);
+            }
+        }
+        #[cfg(not(feature = "hv"))]
+        // Initialize all the SPIs to edge triggered
+        for i in SPI_RANGE.start..max_irqs {
+            self.configure_interrupt(i, TriggerMode::Edge);
+        }
+
+        // enable GIC0
+        let prev = self.gicd.regs().CTLR.get();
+        self.gicd.regs().CTLR.set(prev | 1);
+    }
+
+    /// Initializes the GIC distributor locally.
+    ///
+    /// It disables and clear all sgi interrupts
+    /// configures all interrupts have lowest priority possible by default
+    ///
+    /// This function should be called every cpu init.
+    fn local_init(&mut self) {
+        let max_irqs = self.max_irqs();
+        assert!(max_irqs <= GIC_MAX_IRQ);
+        self.gicd.max_irqs = max_irqs;
+
+        // Disable all interrupts
+        for i in (0..GIC_PRIVATE_INT_NUM).step_by(32) {
+            self.gicd.regs().ICENABLER[i / 32].set(u32::MAX);
+            self.gicd.regs().ICPENDR[i / 32].set(u32::MAX);
+            self.gicd.regs().ICACTIVER[i / 32].set(u32::MAX);
+        }
+        // the corresponding GICD_CPENDSGIR register number, n, is given by n = x DIV 4
+        // the SGI Clear-pending field offset, y, is given by y = x MOD 4
+        for i in (0..GIC_SGIS_NUM).step_by(4) {
+            self.gicd.regs().CPENDSGIR[i / 4].set(u32::MAX);
+        }
+        
+        for i in (0..GIC_PRIVATE_INT_NUM).step_by(4) {
+            self.gicd.regs().IPRIORITYR[i / 4].set(u32::MAX);
+        }
+        
     }
 }
 

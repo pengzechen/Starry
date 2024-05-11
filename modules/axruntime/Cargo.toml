@@ -27,7 +27,7 @@ img = ["axdriver/img", "paging"]
 monolithic = ["axprocess/monolithic", "axhal/monolithic", "axtask/monolithic", "axmem/monolithic"]
 
 hv = ["alloc", "dep:hypercraft", "axhal/hv", "dep:page_table", 
-        "dep:page_table_entry", "lazy_init", "dep:arm_gic", "kernel_guard"]
+        "dep:page_table_entry", "lazy_init", "dep:arm_gic", "kernel_guard", "irq"]
 
 [dependencies]
 cfg-if = "1.0"
