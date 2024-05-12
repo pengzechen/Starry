@@ -62,6 +62,8 @@ pub fn init_vm_emu_device(vm_id: usize) {
             // init emu intc
             let idx = 0;
             vm.set_intc_dev_id(idx);
+
+            debug!("================================this is init_vm_emu_device===============================!");
             emu_register_dev(
                 EmuDeviceType::EmuDeviceTGicd,
                 vm.vm_id,

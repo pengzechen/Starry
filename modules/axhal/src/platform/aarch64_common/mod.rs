@@ -81,13 +81,17 @@ pub(crate) unsafe extern "C" fn rust_entry_secondary(cpu_id: usize) {
 ///
 /// For example, the interrupt controller and the timer.
 pub fn platform_init() {
-    #[cfg(feature = "irq")]
-    crate::platform::irq::init_primary();
-
+    #[cfg(feature = "irq")]    crate::platform::irq::init_primary();
+    
+    info!("gic global local init ok!!");
+    
     crate::platform::time::init_percpu();
     
-    #[cfg(feature = "irq")]
-    crate::platform::console::init_irq();
+    info!("timer init ok!!");
+    
+    #[cfg(feature = "irq")]    crate::platform::console::init_irq();
+    
+    info!("pl011 init ok!!");
 }
 
 /// Initializes the platform devices for secondary CPUs.

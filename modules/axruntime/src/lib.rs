@@ -170,7 +170,10 @@ pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
     }
 
     #[cfg(feature = "alloc")]
-    init_allocator();
+    {
+        info!("Initialize global memory allocator...");
+        init_allocator();
+    }
 
     #[cfg(not(feature = "hv"))]
     {
@@ -196,11 +199,11 @@ pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
 
     #[cfg(not(feature = "hv"))]
     {
+        info!("this ________________________________");
         #[cfg(any(feature = "fs", feature = "net", feature = "display"))]
         {
             #[allow(unused_variables)]
             let all_devices = axdriver::init_drivers();
-            info!("this ________________________________");
 
             #[cfg(feature = "fs")]
             axfs::init_filesystems(all_devices.block);
