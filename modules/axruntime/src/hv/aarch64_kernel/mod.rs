@@ -26,16 +26,17 @@ pub use interrupt::handle_virtual_interrupt;
 pub use ipi::{init_ipi, ipi_irq_handler, cpu_int_list_init};
 
 use axhal::{deactivate_irq, gicc_get_current_irq};
+use axhal::cpu::this_cpu_id;
 
 /// get current cpu
 pub fn current_cpu() -> &'static mut PerCpu<HyperCraftHalImpl> {
-    let cpu_id = axhal::cpu::this_cpu_id();
+    let cpu_id = this_cpu_id();
     PerCpu::<HyperCraftHalImpl>::ptr_for_cpu(cpu_id)
 }
 
 /// get active vm
 pub fn active_vm() -> &'static mut VM<HyperCraftHalImpl, GuestPageTable> {
-    let cpu_id = axhal::cpu::this_cpu_id();
+    let cpu_id = this_cpu_id();
     let percpu = PerCpu::<HyperCraftHalImpl>::ptr_for_cpu(cpu_id);
     let vm_id = percpu.get_active_vcpu().unwrap().vm_id;
     match get_vm(vm_id) {

@@ -10,7 +10,7 @@ repository = "https://github.com/rcore-os/arceos/tree/main/modules/axruntime"
 documentation = "https://rcore-os.github.io/arceos/axruntime/index.html"
 
 [features]
-default = ["hv"]
+default = []
 
 smp = ["axhal/smp"]
 irq = ["axhal/irq", "axtask?/irq", "percpu", "kernel_guard"]
@@ -49,9 +49,9 @@ lazy_init = { path = "../../crates/lazy_init", optional = true }
 
 hypercraft = { path = "../../crates/hypercraft", optional = true }
 spin = "0.9"
-page_table_entry = { path = "../../crates/page_table_entry", optional = true }
 page_table = { path = "../../crates/page_table", optional = true }
-arm_gic = { path = "../../crates/arm_gic", optional = true }
+page_table_entry = { path = "../../crates/page_table_entry", features = ["hv"], optional = true }
+arm_gic = { path = "../../crates/arm_gic", features = ["hv"], optional = true }
 
 
 cortex-a = "8.1.1"

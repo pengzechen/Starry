@@ -227,6 +227,22 @@ qemu-system-aarch64 -m 3G -smp 2 -cpu cortex-a72 -machine virt -nographic   \
 */
 
 /*
+qemu-system-aarch64 -m 3G -smp 1 -cpu cortex-a72 -machine virt -nographic
+-machine virtualization=on,gic-version=2  
+-kernel apps/hv/hv_aarch64-qemu-virt-hv.bin 
+-device loader,file=apps/hv/guest/linux/linux-aarch64.dtb,addr=0x70000000,force-raw=on 
+-device loader,file=apps/hv/guest/linux/linux-aarch64.bin,addr=0x70200000,force-raw=on 
+-drive id=hd0,if=none,file=apps/hv/guest/linux/rootfs-aarch64.img,format=raw
+-device virtio-blk-device,drive=hd0 
+
+-device virtio-blk-device,drive=disk0 
+-drive id=disk0,if=none,format=raw,file=disk.img 
+-device virtio-net-device,netdev=net0 
+-netdev user,id=net0,hostfwd=tcp::5555-:5555,hostfwd=udp::5555-:5555 
+*/
+
+
+/*
 qemu-system-aarch64 -m 3G -smp 2 -cpu cortex-a72 -machine virt -nographic   \
 -machine virtualization=on,gic-version=2                                    \
 -kernel apps/hv/hv_qemu-virt-aarch64.bin                                    \

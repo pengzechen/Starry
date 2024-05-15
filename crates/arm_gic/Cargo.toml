@@ -15,3 +15,6 @@ bitflags = "2.0"
 cfg-if = "1.0"
 aarch64-cpu = "9.3"
 log = "0.4"
+
+[features]
+hv = []

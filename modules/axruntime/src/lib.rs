@@ -49,7 +49,7 @@ pub use hv::{
 };
 
 #[cfg(all(feature = "hv"))]
-use axhal::{IPI_IRQ_NUM};
+use axhal::IPI_IRQ_NUM;
 
 #[cfg(all(feature = "hv"))]
 use crate::hv::kernel::{
@@ -250,6 +250,7 @@ pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
         debug!("main task exited: exit_code={}", 0);
         axhal::misc::terminate();
     }
+    
 }
 
 #[cfg(feature = "alloc")]

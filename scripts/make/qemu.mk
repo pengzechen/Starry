@@ -24,7 +24,7 @@ qemu_args-aarch64 := \
   -machine virt \
   -kernel $(OUT_BIN)
 
-GUEST ?= nimbos
+GUEST ?= linux
 ROOTFS = apps/hv/guest/$(GUEST)/rootfs-aarch64.img
 GUEST_DTB = apps/hv/guest/$(GUEST)/$(GUEST)-aarch64.dtb
 GUEST_BIN = apps/hv/guest/$(GUEST)/$(GUEST)-aarch64.bin
@@ -33,6 +33,8 @@ GUEST_BIN = apps/hv/guest/$(GUEST)/$(GUEST)-aarch64.bin
 qemu_args-y := -m 3G -smp $(SMP) $(qemu_args-$(ARCH)) \
             -device loader,file=$(GUEST_DTB),addr=0x70000000,force-raw=on \
             -device loader,file=$(GUEST_BIN),addr=0x70200000,force-raw=on \
+            -drive if=none,file=$(ROOTFS),format=raw,id=hd0 \
+            -device virtio-blk-device,drive=hd0 \
             -machine virtualization=on,gic-version=2 
 
 qemu_args-$(BLK) += \

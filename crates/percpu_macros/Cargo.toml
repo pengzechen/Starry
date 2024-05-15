@@ -16,7 +16,9 @@ sp-naive = []
 # Whether the system enables preemption.
 preempt = []
 
-default = []
+hv = []
+
+default = ["hv"]
 
 [dependencies]
 proc-macro2 = "1.0"
