@@ -47,6 +47,9 @@ pub use platform::aarch64_common::gic::{
     GICH, GICD, GICV, GICC, GICD_BASE, GIC_SPI_MAX,
     IPI_IRQ_NUM, MAINTENANCE_IRQ_NUM,
 };
+
+pub use platform::aarch64_common::gicv3;
+
 #[cfg(all(feature = "hv"))]
 pub use platform::aarch64_common::pl011::UART;
 

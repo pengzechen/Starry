@@ -29,9 +29,36 @@ pub fn gic_cpu_reset() {
 }
 
 
+/* =============== warn! ===================== 
+   ========   current_cpu().current_irq   ====
+   ===========================================
+*/
+// pub fn gicc_clear_current_irq(for_hypervisor: bool) {
+//     let irq = current_cpu().current_irq as u32;
+//     if irq == 0 {
+//         return;
+//     }
+//     GICC.set_eoir(irq);
+//     if for_hypervisor {
+//         GICC.set_dir(irq);
+//     }
+//     current_cpu().current_irq = 0;
+// }
+
+// pub fn gicc_get_current_irq() -> Option<usize> {
+//     let iar = GICC.iar();
+//     let irq = iar as usize;
+//     current_cpu().current_irq = irq;
+//     let id = bit_extract(iar as usize, GICC_IAR_ID_OFF, GICC_IAR_ID_LEN);
+//     if id >= 1024 {   // IntCtrl::NUM_MAX
+//         None
+//     } else {
+//         Some(id)
+//     }
+// }
 
 pub fn gicc_clear_current_irq(for_hypervisor: bool) {
-    let irq = current_cpu().current_irq as u32;
+    let irq = 0;
     if irq == 0 {
         return;
     }
@@ -39,13 +66,13 @@ pub fn gicc_clear_current_irq(for_hypervisor: bool) {
     if for_hypervisor {
         GICC.set_dir(irq);
     }
-    current_cpu().current_irq = 0;
+    // current_cpu().current_irq = 0;
 }
 
 pub fn gicc_get_current_irq() -> Option<usize> {
     let iar = GICC.iar();
     let irq = iar as usize;
-    current_cpu().current_irq = irq;
+    // current_cpu().current_irq = irq;
     let id = bit_extract(iar as usize, GICC_IAR_ID_OFF, GICC_IAR_ID_LEN);
     if id >= 1024 {   // IntCtrl::NUM_MAX
         None

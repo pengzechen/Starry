@@ -46,7 +46,7 @@ hypercraft = { path = "../../crates/hypercraft", optional = true }
 page_table = { path = "../../crates/page_table", optional = true }
 page_table_entry = { path = "../../crates/page_table_entry", features = ["hv"], optional = true }
 arm_gic = { path = "../../crates/arm_gic", features = ["hv"], optional = true}
-arm_gicv3 = { path = "../../crates/arm_gicv3", optional = true}
+arm_gicv3 = { path = "../../crates/arm_gicv3"}
 
 cortex-a = "8.1.1"
 tock-registers = "0.8.1"

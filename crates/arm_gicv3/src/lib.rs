@@ -260,7 +260,7 @@ impl core::fmt::Debug for GicDistributor {
 
 unsafe impl Sync for GicDistributor {}
 
-mod platform;
+pub mod platform;
 
 impl GicDistributor {
     pub fn is_enabler(&self, idx: usize) -> u32 {
