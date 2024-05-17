@@ -69,33 +69,25 @@ impl GuestPageTableTrait for GuestPageTable {
     }
 
     fn unmap(&mut self, gpa: GuestPhysAddr) -> HyperResult<()> {
-        #[cfg(any(target_arch = "riscv64", target_arch = "x86_64", target_arch = "aarch64"))]
-        {
+        // #[cfg(any(target_arch = "riscv64", target_arch = "x86_64", target_arch = "aarch64"))]
+        // {
             let (_, _) = self.0.unmap(VirtAddr::from(gpa)).map_err(|paging_err| {
                 error!("paging error: {:?}", paging_err);
                 return HyperError::Internal;
             })?;
             Ok(())
-        }
-        #[cfg(not(any(target_arch = "riscv64", target_arch = "x86_64", target_arch = "aarch64")))]
-        {
-            todo!()
-        }
+        // }
     }
 
     fn translate(&self, gpa: GuestPhysAddr) -> HyperResult<hypercraft::HostPhysAddr> {
-        #[cfg(any(target_arch = "riscv64", target_arch = "x86_64", target_arch = "aarch64"))]
-        {
+        // #[cfg(any(target_arch = "riscv64", target_arch = "x86_64", target_arch = "aarch64"))]
+        // {
             let (addr, _, _) = self.0.query(VirtAddr::from(gpa)).map_err(|paging_err| {
                 error!("paging error: {:?}", paging_err);
                 HyperError::Internal
             })?;
             Ok(addr.into())
-        }
-        #[cfg(not(any(target_arch = "riscv64", target_arch = "x86_64", target_arch = "aarch64")))]
-        {
-            todo!()
-        }
+        // }
     }
 
     fn token(&self) -> usize {

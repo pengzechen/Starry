@@ -61,11 +61,6 @@ endif
 rustc_flags := -Clink-args="-T$(LD_SCRIPT) -no-pie"
 # rustc_flags := -Clink-args="-T$(LD_SCRIPT)" -C relocation-model=static
 
-ifeq ($(HV), y)
-  ifeq ($(ARCH), riscv64)
-    rustc_flags += -Ctarget-feature=+h
-  endif
-endif 
 
 define cargo_build
   cargo rustc $(build_args) $(1) -- $(rustc_flags)

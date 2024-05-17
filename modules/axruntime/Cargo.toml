@@ -45,7 +45,7 @@ axtask = { path = "../axtask", default-features = false, optional = true }
 hypercraft = { path = "../../crates/hypercraft", optional = true }
 page_table = { path = "../../crates/page_table", optional = true }
 page_table_entry = { path = "../../crates/page_table_entry", features = ["hv"], optional = true }
-arm_gic = { path = "../../crates/arm_gic", optional = true}
+arm_gic = { path = "../../crates/arm_gic", features = ["hv"], optional = true}
 
 
 cortex-a = "8.1.1"

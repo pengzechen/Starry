@@ -220,6 +220,7 @@ pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
         debug!("main task exited: exit_code={}", 0);
         axhal::misc::terminate();
     }
+    
 }
 
 #[cfg(feature = "alloc")]

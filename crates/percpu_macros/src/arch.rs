@@ -26,13 +26,6 @@ pub fn gen_offset(symbol: &Ident) -> proc_macro2::TokenStream {
                 out(reg) value,
                 VAR = sym #symbol,
             );
-            #[cfg(any(target_arch = "riscv32", target_arch = "riscv64"))]
-            ::core::arch::asm!(
-                "lui {0}, %hi({VAR})",
-                "addi {0}, {0}, %lo({VAR})",
-                out(reg) value,
-                VAR = sym #symbol,
-            );
         }
         value
     }
@@ -58,8 +51,6 @@ pub fn gen_current_ptr(symbol: &Ident, ty: &Type) -> proc_macro2::TokenStream {
             ::core::arch::asm!("mrs {}, TPIDR_EL1", out(reg) base);
             #[cfg(all(target_arch = "aarch64", feature = "hv"))]
             ::core::arch::asm!("mrs {}, TPIDR_EL2", out(reg) base);
-            #[cfg(any(target_arch = "riscv32", target_arch = "riscv64"))]
-            ::core::arch::asm!("mv {}, tp", out(reg) base);
             (base + self.offset()) as *const #ty
         }
     })
@@ -127,8 +118,6 @@ pub fn gen_read_current_raw(symbol: &Ident, ty: &Type) -> proc_macro2::TokenStre
     let rv64_code = gen_code(rv64_asm);
     let x64_code = gen_code(x64_asm);
     macos_unimplemented(quote! {
-        #[cfg(target_arch = "riscv64")]
-        { #rv64_code }
         #[cfg(target_arch = "x86_64")]
         { #x64_code }
         #[cfg(not(any(target_arch = "riscv64", target_arch = "x86_64")))]
