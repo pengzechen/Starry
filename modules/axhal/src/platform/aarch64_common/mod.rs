@@ -6,3 +6,7 @@ pub mod psci;
 
 #[cfg(feature = "irq")]
 pub mod gic;
+
+
+pub mod gicv3;
+

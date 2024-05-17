@@ -6,6 +6,7 @@ mod interrupt;
 mod ipi;
 mod sync;
 mod vgic;
+mod vgicv3;
 mod vuart;
 
 pub mod vm_array;

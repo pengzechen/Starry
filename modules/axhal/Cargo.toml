@@ -55,6 +55,7 @@ hypercraft = { path = "../../crates/hypercraft" }
 
 
 arm_gic = { path = "../../crates/arm_gic" }
+arm_gicv3 = { path = "../../crates/arm_gicv3" }
 arm_pl011 = { path = "../../crates/arm_pl011" }
 
 
