@@ -1,27 +1,30 @@
 
 
-use hypercraft::arch::vgic::{Vgic, VgicInt};
+use hypercraft::arch::vgicv3::{Vgic, VgicInt};
 use hypercraft::{IrqState, VCpu, VM};
 use crate::{GuestPageTable, HyperCraftHalImpl};
 
-use arm_gicv3::{GIC_PRIVINT_NUM, GIC_INTS_MAX, GICH_LR_STATE_OFF, GICH_LR_STATE_LEN, GICH_HCR_NPIE_BIT,
-                GICH_LR_VID_OFF, GICH_LR_VID_LEN, 
-                // add_lr
-                GICH_LR_PRIO_MSK, GICH_LR_PRIO_OFF, GICH_LR_STATE_MSK, GICH_LR_VID_MASK, GICH_LR_STATE_ACT, 
-                GICH_LR_STATE_PND, 
-                // vgic_int_is_hw
-                GIC_SGIS_NUM,
-                // write_lr
-                GICH_LR_HW_BIT, GICH_LR_PID_OFF, GICH_LR_PID_MSK, GICH_LR_EOI_BIT, GICH_LR_GRP_BIT,   
-            };
+use arm_gicv3::{
+    GIC_PRIVINT_NUM, GIC_INTS_MAX, GICH_LR_STATE_OFF, GICH_LR_STATE_LEN, GICH_HCR_NPIE_BIT,
+    GICH_LR_VID_OFF, GICH_LR_VID_LEN, 
+    // add_lr
+    GICH_LR_PRIO_MSK, GICH_LR_PRIO_OFF, GICH_LR_STATE_MSK, GICH_LR_VID_MASK, GICH_LR_STATE_ACT, 
+    GICH_LR_STATE_PND, 
+    // vgic_int_is_hw
+    GIC_SGIS_NUM,
+    // write_lr
+    GICH_LR_HW_BIT, GICH_LR_PID_OFF, GICH_LR_PID_MSK, GICH_LR_EOI_BIT, GICH_LR_GRP_BIT,   
+};
 
 use arm_gicv3::GICH;
+use arm_gicv3::GICR;
+use arm_gicv3::GICD;
 use arm_gicv3::platform::PLAT_DESC;
 
 use arm_gicv3::gic_is_priv;
 use hypercraft::arch::utils::bit_extract;
 use hypercraft::arch::utils::bit_get;
-
+use hypercraft::gicv3::gic_set_state;
 use axhal::cpu::this_cpu_id;
 
 use axhal::gicv3::gic_lrs;
@@ -59,7 +62,7 @@ fn remove_int_list(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<Hy
     }
 }
 
-
+// add interrupt in specific vcpu
 fn add_int_list(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftHalImpl>, 
         interrupt: VgicInt<HyperCraftHalImpl, GuestPageTable>, is_pend: bool) {
     let mut cpu_priv = vgic.cpu_priv.lock();
@@ -93,7 +96,7 @@ fn update_int_list(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<Hy
     }
 }
 
-
+// get interrupt in pend_list[0] or act_list[0]
 fn int_list_head(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftHalImpl>,
         is_pend: bool) -> Option<VgicInt<HyperCraftHalImpl, GuestPageTable>> {
     let cpu_priv = vgic.cpu_priv.lock();
@@ -249,8 +252,8 @@ fn add_lr(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftH
     if lr_ind.is_none() {
         let mut pend_found = 0;
         // let mut act_found = 0;
-        let mut min_prio_act = interrupt.get_priority() as usize;
-        let mut min_prio_pend = interrupt.get_priority() as usize;
+        let mut min_prio_act = interrupt.prio() as usize;
+        let mut min_prio_pend = interrupt.prio() as usize;
         let mut min_id_act = interrupt.id() as usize;
         let mut min_id_pend = interrupt.id() as usize;
         let mut act_ind = None;
@@ -328,7 +331,7 @@ fn write_lr(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraf
         interrupt: VgicInt<HyperCraftHalImpl, GuestPageTable>, lr_ind: usize) {
     let vcpu_id = vcpu.vcpu_id;
     let int_id = interrupt.id() as usize;
-    let int_prio = interrupt.get_priority();
+    let int_prio = interrupt.prio();
 
     let prev_int_id = vgic.cpu_priv_curr_lrs(vcpu_id, lr_ind) as usize;
     if prev_int_id != int_id && !gic_is_priv(prev_int_id) {
@@ -418,3 +421,359 @@ fn route(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftHa
 }
 
 
+// remove   !vgic_int_get_owner(vcpu.clone(), interrupt.clone())
+fn set_enable(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftHalImpl>,
+        int_id: usize, en: bool) {
+    match get_int(vgic, vcpu.clone(), int_id) {
+        Some(interrupt) => {
+            let interrupt_lock = interrupt.lock.lock();
+            //if vgic_int_get_owner(vcpu.clone(), interrupt.clone()) {
+                
+                if interrupt.enabled() ^ en {
+                    interrupt.set_enabled(en);
+                    remove_lr(vgic, vcpu.clone(), interrupt.clone());
+                    if interrupt.hw() {
+                        if gic_is_priv(interrupt.id() as usize) {
+                            GICR.set_enable(interrupt.id() as usize, en, interrupt.phys_redist() as u32);
+                        } else {
+                            GICD.set_enable(interrupt.id() as usize, en);
+                        }
+                    }
+                }
+                route(vgic, vcpu.clone(), interrupt.clone());
+                vgic_int_yield_owner(vcpu, interrupt.clone());
+            /*
+            } else {
+                let int_phys_id = interrupt.owner_phys_id().unwrap();
+                let vcpu_vm_id = vcpu.vm_id;
+                let ipi_msg = IpiInitcMessage {
+                    event: InitcEvent::VgicdSetEn,
+                    vm_id: vcpu_vm_id,
+                    int_id: interrupt.id(),
+                    val: en as u8,
+                };
+                if !ipi_send_msg(int_phys_id, IpiType::IpiTIntc, IpiInnerMsg::Initc(ipi_msg)) {
+                    error!(
+                        "vgicd_set_enable: Failed to send ipi message, target {} type {}",
+                        int_phys_id, 0
+                    );
+                }
+            }
+            */
+            drop(interrupt_lock);
+        }
+        None => {
+            error!("vgicd_set_enable: interrupt {} is illegal", int_id);
+        }
+    }
+}
+
+fn get_enable(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftHalImpl>, 
+        int_id: usize) -> bool {
+    get_int(vgic, vcpu, int_id).unwrap().enabled()
+}
+
+
+fn set_pend(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftHalImpl>,
+        int_id: usize, pend: bool) {
+    if let Some(interrupt) = get_int(vgic, vcpu.clone(), int_id) {
+        let interrupt_lock = interrupt.lock.lock();
+        // if vgic_int_get_owner(vcpu.clone(), interrupt.clone()) {
+            remove_lr(vgic, vcpu.clone(), interrupt.clone());
+
+            let state = interrupt.state().to_num();
+            if pend && ((state & 1) == 0) {
+                interrupt.set_state(IrqState::num_to_state(state | 1));
+            } else if !pend && (state & 1) != 0 {
+                interrupt.set_state(IrqState::num_to_state(state & !1));
+            }
+
+            let state = interrupt.state().to_num();
+            if interrupt.hw() {
+                if gic_is_priv(int_id) {
+                    gic_set_state(interrupt.id() as usize, state, interrupt.phys_redist() as u32);
+                } else {
+                    // GICD non`t need gicr_id
+                    gic_set_state(interrupt.id() as usize, state, 0);
+                }
+            }
+            route(vgic, vcpu.clone(), interrupt.clone());
+            vgic_int_yield_owner(vcpu, interrupt.clone());
+        /*
+        } else {
+            let vm_id = vcpu.vm_id();
+
+            let m = IpiInitcMessage {
+                event: InitcEvent::VgicdSetPend,
+                vm_id,
+                int_id: interrupt.id(),
+                val: pend as u8,
+            };
+            match interrupt.owner() {
+                Some(owner) => {
+                    let phys_id = owner.phys_id();
+
+                    if !ipi_send_msg(phys_id, IpiType::IpiTIntc, IpiInnerMsg::Initc(m)) {
+                        error!(
+                            "vgicd_set_pend: Failed to send ipi message, target {} type {}",
+                            phys_id, 0
+                        );
+                    }
+                }
+                None => {
+                    panic!(
+                        "set_pend: Core {} int {} has no owner",
+                        current_cpu().id,
+                        interrupt.id()
+                    );
+                }
+            }
+        }
+        */
+        drop(interrupt_lock);
+    }
+}
+
+
+fn set_active(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftHalImpl>, 
+        int_id: usize, act: bool) {
+    let interrupt_option = get_int(vgic, vcpu.clone(), bit_extract(int_id, 0, 10));
+    if let Some(interrupt) = interrupt_option {
+        let interrupt_lock = interrupt.lock.lock();
+        // if vgic_int_get_owner(vcpu.clone(), interrupt.clone()) {
+            remove_lr(vgic, vcpu.clone(), interrupt.clone());
+            let state = interrupt.state().to_num();
+            if act && ((state & IrqState::IrqSActive.to_num()) == 0) {
+                interrupt.set_state(IrqState::num_to_state(state | IrqState::IrqSActive.to_num()));
+            } else if !act && (state & IrqState::IrqSActive.to_num()) != 0 {
+                interrupt.set_state(IrqState::num_to_state(state & !IrqState::IrqSActive.to_num()));
+            }
+            let state = interrupt.state().to_num();
+            if interrupt.hw() {
+                let vgic_int_id = interrupt.id() as usize;
+                if gic_is_priv(vgic_int_id) {
+                    gic_set_state(
+                        vgic_int_id,
+                        if state == 1 { 2 } else { state },
+                        interrupt.phys_redist() as u32,
+                    );
+                } else {
+                    gic_set_state(vgic_int_id, if state == 1 { 2 } else { state }, 0);
+                }
+            }
+            route(vgic, vcpu.clone(), interrupt.clone());
+            vgic_int_yield_owner(vcpu, interrupt.clone());
+        /*
+        } else {
+            let vm_id = vcpu.vm_id();
+
+            let m = IpiInitcMessage {
+                event: InitcEvent::VgicdSetPend,
+                vm_id,
+                int_id: interrupt.id(),
+                val: act as u8,
+            };
+            let phys_id = interrupt.owner_phys_id().unwrap();
+            if !ipi_send_msg(phys_id, IpiType::IpiTIntc, IpiInnerMsg::Initc(m)) {
+                error!(
+                    "vgicd_set_active: Failed to send ipi message, target {} type {}",
+                    phys_id, 0
+                );
+            }
+        }
+        */
+        drop(interrupt_lock);
+    }
+}
+
+
+fn set_icfgr(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftHalImpl>, 
+        int_id: usize, cfg: u8) {
+    if let Some(interrupt) = get_int(vgic, vcpu.clone(), int_id) {
+        let interrupt_lock = interrupt.lock.lock();
+        //if vgic_int_get_owner(vcpu.clone(), interrupt.clone()) {
+            interrupt.set_cfg(cfg);
+            if interrupt.hw() {
+                if gic_is_priv(interrupt.id() as usize) {
+                    GICR.set_icfgr(interrupt.id() as usize, cfg, interrupt.phys_redist() as u32);
+                } else {
+                    GICD.set_icfgr(interrupt.id() as usize, cfg);
+                }
+            }
+            route(vgic, vcpu.clone(), interrupt.clone());
+            vgic_int_yield_owner(vcpu, interrupt.clone());
+        /*
+        } else {
+            let m = IpiInitcMessage {
+                event: InitcEvent::VgicdSetCfg,
+                vm_id: vcpu.vm_id(),
+                int_id: interrupt.id(),
+                val: cfg,
+            };
+            if !ipi_send_msg(
+                interrupt.owner_phys_id().unwrap(),
+                IpiType::IpiTIntc,
+                IpiInnerMsg::Initc(m),
+            ) {
+                error!(
+                    "set_icfgr: Failed to send ipi message, target {} type {}",
+                    interrupt.owner_phys_id().unwrap(),
+                    0
+                );
+            }
+        }
+        */
+        drop(interrupt_lock);
+    } else {
+        unimplemented!();
+    }
+}
+
+fn get_icfgr(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftHalImpl>, 
+        int_id: usize) -> u8 {
+    let interrupt_option = get_int(vgic, vcpu, int_id);
+    if let Some(interrupt) = interrupt_option {
+        interrupt.cfg()
+    } else {
+        unimplemented!();
+    }
+}
+
+fn set_prio(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftHalImpl>, 
+        int_id: usize, mut prio: u8) {
+    let interrupt_option = get_int(vgic, vcpu.clone(), int_id);
+    prio &= 0xf0; // gicv3 allows 8 priority bits in non-secure state
+
+    if let Some(interrupt) = interrupt_option {
+        let interrupt_lock = interrupt.lock.lock();
+        // if vgic_int_get_owner(vcpu.clone(), interrupt.clone()) {
+            if interrupt.prio() != prio {
+                remove_lr(vgic, vcpu.clone(), interrupt.clone());
+                let prev_prio = interrupt.prio();
+                interrupt.set_prio(prio);
+                if prio <= prev_prio {
+                    route(vgic, vcpu.clone(), interrupt.clone());
+                }
+                if interrupt.hw() {
+                    if gic_is_priv(interrupt.id() as usize) {
+                        GICR.set_prio(interrupt.id() as usize, prio, interrupt.phys_redist() as u32);
+                    } else {
+                        GICD.set_prio(interrupt.id() as usize, prio);
+                    }
+                }
+            }
+            vgic_int_yield_owner(vcpu, interrupt.clone());
+        /*
+        } else {
+            let vm_id = vcpu.vm_id();
+
+            let m = IpiInitcMessage {
+                event: InitcEvent::VgicdSetPrio,
+                vm_id,
+                int_id: interrupt.id(),
+                val: prio,
+            };
+            if !ipi_send_msg(
+                interrupt.owner_phys_id().unwrap(),
+                IpiType::IpiTIntc,
+                IpiInnerMsg::Initc(m),
+            ) {
+                error!(
+                    "set_prio: Failed to send ipi message, target {} type {}",
+                    interrupt.owner_phys_id().unwrap(),
+                    0
+                );
+            }
+        }
+        */
+        drop(interrupt_lock);
+    }
+}
+
+fn get_prio(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftHalImpl>, 
+        int_id: usize) -> u8 {
+    let interrupt_option = get_int(vgic, vcpu, int_id);
+    interrupt_option.unwrap().prio()
+}
+
+
+/* ============  set target ============*/
+/* ============  get target ============*/
+/* ===========  sgi_set_pend ============*/
+
+
+pub fn inject(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftHalImpl>,
+        int_id: usize) {
+    let interrupt_option = get_int(vgic, vcpu.clone(), bit_extract(int_id, 0, 10));
+    if let Some(interrupt) = interrupt_option {
+        if interrupt.hw() {
+            let interrupt_lock = interrupt.lock.lock();
+            interrupt.set_owner(vcpu.clone());
+            interrupt.set_state(IrqState::IrqSPend);
+            update_int_list(vgic, vcpu.clone(), interrupt.clone());
+            interrupt.set_in_lr(false);
+            route(vgic, vcpu, interrupt.clone());
+            drop(interrupt_lock);
+        } else {
+            set_pend(vgic, vcpu, int_id, true);
+        }
+    }
+}
+
+
+
+
+
+
+/*
+
+fn emu_ctrl_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>,  emu_ctx: &EmuContext) {
+    if emu_ctx.write {
+        let prev_ctlr = self.vgicd_ctlr();
+        let idx = emu_ctx.reg;
+        self.set_vgicd_ctlr(current_cpu().get_gpr(idx) as u32 & 0x2 | GICD_CTLR_ARE_NS_BIT as u32);
+        if prev_ctlr ^ self.vgicd_ctlr() != 0 {
+            let enable = self.vgicd_ctlr() != 0;
+            let hcr = GICH.hcr();
+            if enable {
+                GICH.set_hcr(hcr | GICH_HCR_EN_BIT);
+            } else {
+                GICH.set_hcr(hcr & !GICH_HCR_EN_BIT);
+            }
+
+            let m = IpiInitcMessage {
+                event: InitcEvent::VgicdGichEn,
+                vm_id: active_vm_id(),
+                int_id: 0,
+                val: enable as u8,
+            };
+            ipi_intra_broadcast_msg(active_vm().unwrap(), IpiType::IpiTIntc, IpiInnerMsg::Initc(m));
+        }
+    } else {
+        let idx = emu_ctx.reg;
+        let val = self.vgicd_ctlr() as usize;
+        current_cpu().set_gpr(idx, val | GICD.ctlr() as usize);
+    }
+}
+
+fn emu_typer_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>,  emu_ctx: &EmuContext) {
+    if !emu_ctx.write {
+        let idx = emu_ctx.reg;
+        let val = self.vgicd_typer() as usize;
+        current_cpu().set_gpr(idx, val);
+    } else {
+        error!("emu_typer_access: can't write to RO reg");
+    }
+}
+
+fn emu_iidr_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>,  emu_ctx: &EmuContext) {
+    if !emu_ctx.write {
+        let idx = emu_ctx.reg;
+        let val = self.vgicd_iidr() as usize;
+        current_cpu().set_gpr(idx, val);
+    } else {
+        error!("emu_iidr_access: can't write to RO reg");
+    }
+}
+
+*/

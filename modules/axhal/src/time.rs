@@ -8,13 +8,13 @@ pub use core::time::Duration;
 /// represent a duration, but a clock time.
 pub type TimeValue = Duration;
 
-#[cfg(feature = "irq")]
+#[cfg(all(feature = "irq", not(feature = "gic_v3")))]
 pub use crate::platform::irq::TIMER_IRQ_NUM;
 #[cfg(feature = "irq")]
 pub use crate::platform::time::set_oneshot_timer;
 pub use crate::platform::time::{current_ticks, nanos_to_ticks, ticks_to_nanos};
 
-#[cfg(all(feature = "irq", feature = "hv", target_arch = "aarch64"))]
+#[cfg(all(feature = "irq", feature = "hv", target_arch = "aarch64", not(feature = "gic_v3")))]
 pub use crate::platform::irq::HYPERVISOR_TIMER_IRQ_NUM;
 
 /// Number of milliseconds in a second.

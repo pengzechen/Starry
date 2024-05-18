@@ -19,9 +19,10 @@ smp         = ["axhal/smp", "spinlock/smp"]
 fs          = ["alloc", "paging", "axdriver/virtio-blk", "dep:axfs"]   # TODO: remove "paging"
 net         = ["alloc", "paging", "axdriver/virtio-net", "dep:axnet"]
 display     = ["alloc", "paging", "axdriver/virtio-gpu", "dep:axdisplay"]
-hv          = ["alloc", "dep:hypercraft", "axhal/hv", "dep:page_table", "dep:page_table_entry", "dep:lazy_init", "dep:arm_gic"]
+hv          = ["alloc", "dep:hypercraft", "axhal/hv", "dep:page_table", "dep:page_table_entry", "dep:lazy_init", "dep:arm_gic", "gic_v3"]
 
-default     = ["axtask?/default"]
+gic_v3      = []
+default     = ["axtask?/default", ]
 
 
 [dependencies]

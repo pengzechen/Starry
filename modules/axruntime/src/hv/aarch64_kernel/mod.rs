@@ -5,8 +5,12 @@ mod guest_psci;
 mod interrupt;
 mod ipi;
 mod sync;
+
+#[cfg(not(feature = "gic_v3"))]
 mod vgic;
+#[cfg(feature = "gic_v3")]
 mod vgicv3;
+
 mod vuart;
 
 pub mod vm_array;

@@ -44,6 +44,11 @@ pub static GICV: GicVcpuInterface = GicVcpuInterface::new(phys_to_virt(GICV_BASE
 #[cfg(feature = "hv")]
 pub static GIC_LRS_NUM: Mutex<usize> = Mutex::new(0);
 
+
+
+
+
+
 /// Enables or disables the given IRQ.
 pub fn set_enable(irq_num: usize, enabled: bool) {
     debug!("in platform gic set_enable: irq_num {}, enabled {}", irq_num, enabled);
@@ -85,6 +90,9 @@ pub fn dispatch_irq(irq_num: usize) {
     debug!("dispatch_irq_hv: irq_num {}", irq_num);
     crate::irq::dispatch_irq_common(irq_num as _);
 }
+
+
+
 
 /// Initializes GICD, GICC on the primary CPU.
 pub(crate) fn init_primary() {

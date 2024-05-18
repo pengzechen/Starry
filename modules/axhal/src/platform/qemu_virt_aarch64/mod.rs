@@ -3,9 +3,14 @@ pub mod mem;
 #[cfg(feature = "smp")]
 pub mod mp;
 
-#[cfg(feature = "irq")]
+#[cfg(all(feature = "irq", not(feature = "gic_v3")))]
 pub mod irq {
     pub use crate::platform::aarch64_common::gic::*;
+}
+
+#[cfg(all(feature = "irq", feature = "gic_v3"))]
+pub mod irq {
+    pub use crate::platform::aarch64_common::gicv3::*;
 }
 
 pub mod console {
@@ -47,8 +52,10 @@ pub(crate) unsafe extern "C" fn rust_entry_secondary(cpu_id: usize) {
 ///
 /// For example, the interrupt controller and the timer.
 pub fn platform_init() {
-    #[cfg(feature = "irq")]
+    #[cfg(all(feature = "irq", not(feature = "gic_v3")))]
     super::aarch64_common::gic::init_primary();
+    #[cfg(all(feature = "irq", feature = "gic_v3"))]
+    super::aarch64_common::gicv3::init_primary();
     super::aarch64_common::generic_timer::init_percpu();
     super::aarch64_common::pl011::init();
 }

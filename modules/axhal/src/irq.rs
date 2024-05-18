@@ -2,6 +2,9 @@
 
 use handler_table::HandlerTable;
 
+#[cfg(not(feature = "gic_v3"))]
+use crate::platform::irq::MAX_IRQ_COUNT;
+#[cfg(feature = "gic_v3")]
 use crate::platform::irq::MAX_IRQ_COUNT;
 
 pub use crate::platform::irq::{dispatch_irq, register_handler, set_enable};

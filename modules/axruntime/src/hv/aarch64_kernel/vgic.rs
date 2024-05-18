@@ -11,7 +11,7 @@ use hypercraft::arch::vgic::{Vgic, VgicInt};
 use hypercraft::{IrqState, VCpu, VM};
 
 use crate::{GuestPageTable, HyperCraftHalImpl};
-use hypercraft::{GuestPageTableTrait};
+use hypercraft::GuestPageTableTrait;
 // use hypercraft::{GuestPageTableTrait, HyperCraftHal};
 
 use super::vm_array::get_vm;
@@ -417,6 +417,8 @@ fn route(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftHa
     */
 }
 
+
+
 fn set_enable(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftHalImpl>, int_id: usize, en: bool) {
     if int_id < GIC_SGIS_NUM {
         return;
@@ -632,6 +634,8 @@ fn set_active(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCr
     }
 }
 
+
+
 fn set_icfgr(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftHalImpl>, int_id: usize, cfg: u8) {
     let interrupt_option = get_int(vgic, vcpu.clone(), int_id);
     if let Some(interrupt) = interrupt_option {
@@ -681,61 +685,6 @@ fn get_icfgr(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCra
     } else {
         unimplemented!();
     }
-}
-
-pub fn sgi_set_pend(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftHalImpl>, int_id: usize, pend: bool) {
-    // let begin = time_current_us();
-    if bit_extract(int_id, 0, 10) > GIC_SGIS_NUM {
-        return;
-    }
-
-    let interrupt_option = get_int(vgic, vcpu.clone(), bit_extract(int_id, 0, 10));
-    let source = bit_extract(int_id, 10, 5);
-
-    if let Some(interrupt) = interrupt_option {
-        let interrupt_lock = interrupt.lock.lock();
-        remove_lr(vgic, vcpu.clone(), interrupt.clone());
-        let vcpu_id = vcpu.vcpu_id;
-
-        let vgic_int_id = interrupt.id() as usize;
-        let pendstate = vgic.cpu_priv_sgis_pend(vcpu_id, vgic_int_id);
-        // let pendstate = cpu_priv[vcpu_id].sgis[vgic_int_id].pend;
-        let new_pendstate = if pend {
-            pendstate | (1 << source) as u8
-        } else {
-            pendstate & !(1 << source) as u8
-        };
-        if (pendstate ^ new_pendstate) != 0 {
-            // cpu_priv[vcpu_id].sgis[vgic_int_id].pend = new_pendstate;
-            vgic.set_cpu_priv_sgis_pend(vcpu_id, vgic_int_id, new_pendstate);
-            let state = interrupt.state().to_num();
-            if new_pendstate != 0 {
-                interrupt.set_state(IrqState::num_to_state(state | 1));
-            } else {
-                interrupt.set_state(IrqState::num_to_state(state & !1));
-            }
-
-            update_int_list(vgic, vcpu.clone(), interrupt.clone());
-
-            // debug!("state {}", interrupt.state().to_num());
-            match interrupt.state() {
-                IrqState::IrqSInactive => {
-                    debug!("inactive");
-                }
-                _ => {
-                    add_lr(vgic, vcpu, interrupt.clone());
-                }
-            }
-        }
-        drop(interrupt_lock);
-    } else {
-        debug!(
-            "sgi_set_pend: interrupt {} is None",
-            bit_extract(int_id, 0, 10)
-        );
-    }
-    // let end = time_current_us();
-    // debug!("sgi_set_pend[{}]", end - begin);
 }
 
 fn set_priority(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftHalImpl>, int_id: usize, mut prio: u8) {
@@ -867,6 +816,63 @@ fn get_target(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCr
     let interrupt_option = get_int(vgic, vcpu, int_id);
     return interrupt_option.unwrap().targets();
 }
+
+
+pub fn sgi_set_pend(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftHalImpl>, int_id: usize, pend: bool) {
+    // let begin = time_current_us();
+    if bit_extract(int_id, 0, 10) > GIC_SGIS_NUM {
+        return;
+    }
+
+    let interrupt_option = get_int(vgic, vcpu.clone(), bit_extract(int_id, 0, 10));
+    let source = bit_extract(int_id, 10, 5);
+
+    if let Some(interrupt) = interrupt_option {
+        let interrupt_lock = interrupt.lock.lock();
+        remove_lr(vgic, vcpu.clone(), interrupt.clone());
+        let vcpu_id = vcpu.vcpu_id;
+
+        let vgic_int_id = interrupt.id() as usize;
+        let pendstate = vgic.cpu_priv_sgis_pend(vcpu_id, vgic_int_id);
+        // let pendstate = cpu_priv[vcpu_id].sgis[vgic_int_id].pend;
+        let new_pendstate = if pend {
+            pendstate | (1 << source) as u8
+        } else {
+            pendstate & !(1 << source) as u8
+        };
+        if (pendstate ^ new_pendstate) != 0 {
+            // cpu_priv[vcpu_id].sgis[vgic_int_id].pend = new_pendstate;
+            vgic.set_cpu_priv_sgis_pend(vcpu_id, vgic_int_id, new_pendstate);
+            let state = interrupt.state().to_num();
+            if new_pendstate != 0 {
+                interrupt.set_state(IrqState::num_to_state(state | 1));
+            } else {
+                interrupt.set_state(IrqState::num_to_state(state & !1));
+            }
+
+            update_int_list(vgic, vcpu.clone(), interrupt.clone());
+
+            // debug!("state {}", interrupt.state().to_num());
+            match interrupt.state() {
+                IrqState::IrqSInactive => {
+                    debug!("inactive");
+                }
+                _ => {
+                    add_lr(vgic, vcpu, interrupt.clone());
+                }
+            }
+        }
+        drop(interrupt_lock);
+    } else {
+        debug!(
+            "sgi_set_pend: interrupt {} is None",
+            bit_extract(int_id, 0, 10)
+        );
+    }
+    // let end = time_current_us();
+    // debug!("sgi_set_pend[{}]", end - begin);
+}
+
 
 /// inject interrupt to vgic
 pub fn vgic_inject(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftHalImpl>, int_id: usize) {

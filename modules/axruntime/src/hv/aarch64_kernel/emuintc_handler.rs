@@ -7,11 +7,20 @@ use axhal::GIC_SPI_MAX;
 use alloc::sync::Arc;
 use hypercraft::VM;
 use hypercraft::arch::emu::{EmuContext, EmuDevs};
+
+#[cfg(not(feature = "gic_v3"))]
 use hypercraft::arch::vgic::{Vgic, VgicInt, VgicCpuPriv};
+#[cfg(feature = "gic_v3")]
+use hypercraft::arch::vgicv3::{Vgic, VgicInt, VgicCpuPriv};
+
 use super::{active_vm, current_cpu};
 use axhal::{GICH, GICD};
 use crate::{HyperCraftHalImpl, GuestPageTable};
+
+#[cfg(not(feature = "gic_v3"))]
 use super::vgic::*;
+#[cfg(feature = "gic_v3")]
+use super::vgicv3::*;
 
 const VGICD_REG_OFFSET_PREFIX_CTLR: usize = 0x0;
 // same as TYPER & IIDR

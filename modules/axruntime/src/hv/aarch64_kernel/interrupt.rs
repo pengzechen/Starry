@@ -2,7 +2,13 @@
 
 use super::{current_cpu, active_vm};
 use hypercraft::{VM, VCpu};
+
+#[cfg(not(feature = "gic_v3"))]
 use super::vgic::vgic_inject;
+#[cfg(feature = "gic_v3")]
+use super::vgicv3::vgic_inject;
+
+
 use crate::{HyperCraftHalImpl, GuestPageTable};
 
 pub fn handle_virtual_interrupt(irq_num: usize, src: usize) {

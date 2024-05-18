@@ -26,9 +26,10 @@ platform-qemu-virt-aarch64 = [
     "dep:page_table_entry", "dep:ratio",
 ]
 
+gic_v3  = []
 
 
-default = []
+default = ["gic_v3", "hv", "irq"]
 
 
 [dependencies]

@@ -40,12 +40,19 @@ extern crate log;
 
 mod platform;
 
-#[cfg(all(feature = "hv"))]
+#[cfg(all(feature = "hv", feature = "irq", not(feature = "gic_v3")))]
 pub use platform::aarch64_common::gic::{
     gicc_get_current_irq, deactivate_irq, interrupt_cpu_ipi_send, 
     gic_is_priv, gic_lrs, gicc_clear_current_irq, gicv_clear_current_irq,
     GICH, GICD, GICV, GICC, GICD_BASE, GIC_SPI_MAX,
     IPI_IRQ_NUM, MAINTENANCE_IRQ_NUM,
+};
+
+#[cfg(all(feature = "hv", feature = "irq", feature = "gic_v3"))]
+pub use platform::aarch64_common::gicv3::{
+    gicc_get_current_irq,   
+    gic_lrs, gicc_clear_current_irq,
+    GICD, GICC, GICH, 
 };
 
 pub use platform::aarch64_common::gicv3;
