@@ -52,7 +52,7 @@ pub use platform::aarch64_common::gic::{
 pub use platform::aarch64_common::gicv3::{
     gicc_get_current_irq,   
     gic_lrs, gicc_clear_current_irq,
-    GICD, GICC, GICH, 
+    GICD, GICC, GICH, GIC_SPI_MAX, IPI_IRQ_NUM, MAINTENANCE_IRQ_NUM, HYPERVISOR_TIMER_IRQ_NUM
 };
 
 pub use platform::aarch64_common::gicv3;

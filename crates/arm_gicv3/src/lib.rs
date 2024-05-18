@@ -131,8 +131,8 @@ const GICH_VMCR_VEOIM: usize = 0x1 << 9;
 pub const GIC_SGIS_NUM: usize = 16;
 const GIC_PPIS_NUM: usize = 16;
 pub const GIC_INTS_MAX: usize = 1024;     // temp const NUM_MAX: usize
-pub const GIC_PRIVINT_NUM: usize = GIC_SGIS_NUM + GIC_PPIS_NUM;
-pub const GIC_SPI_MAX: usize = 1024 - GIC_PRIVINT_NUM;  // temp const NUM_MAX: usize
+pub const GIC_PRIVATE_INT_NUM: usize = GIC_SGIS_NUM + GIC_PPIS_NUM;
+pub const GIC_SPI_MAX: usize = 1024 - GIC_PRIVATE_INT_NUM;  // temp const NUM_MAX: usize
 pub const GIC_PRIO_BITS: usize = 8;
 pub const GIC_TARGET_BITS: usize = 8;
 pub const GIC_TARGETS_MAX: usize = GIC_TARGET_BITS;
@@ -167,7 +167,7 @@ pub static INTERRUPT_EN_SET: Mutex<BTreeSet<usize>> = Mutex::new(BTreeSet::new()
 
 
 pub fn add_en_interrupt(id: usize) {
-    if id < GIC_PRIVINT_NUM {
+    if id < GIC_PRIVATE_INT_NUM {
         return;
     }
     let mut set = INTERRUPT_EN_SET.lock();
@@ -310,18 +310,18 @@ impl GicDistributor {
     pub fn global_init(&self) {
         let int_num = gic_max_spi();
 
-        for i in (GIC_PRIVINT_NUM / 32)..(int_num / 32) {
+        for i in (GIC_PRIVATE_INT_NUM / 32)..(int_num / 32) {
             self.IGROUPR[i].set(u32::MAX);
             self.ICENABLER[i].set(u32::MAX);
             self.ICPENDR[i].set(u32::MAX);
             self.ICACTIVER[i].set(u32::MAX);
         }
 
-        for i in (GIC_PRIVINT_NUM * 8 / 32)..(int_num * 8 / 32) {
+        for i in (GIC_PRIVATE_INT_NUM * 8 / 32)..(int_num * 8 / 32) {
             self.IPRIORITYR[i].set(u32::MAX);
         }
 
-        for i in GIC_PRIVINT_NUM..GIC_INTS_MAX {
+        for i in GIC_PRIVATE_INT_NUM..GIC_INTS_MAX {
             self.IROUTER[i].set(GICD_IROUTER_INV as u64);
         }
 
@@ -597,7 +597,7 @@ impl GicRedistributor {
         self[id].ICPENDR0.set(u32::MAX);
         self[id].ICACTIVER0.set(u32::MAX);
 
-        for i in 0..gic_prio_reg(GIC_PRIVINT_NUM) {
+        for i in 0..gic_prio_reg(GIC_PRIVATE_INT_NUM) {
             self[id].IPRIORITYR[i].set(u32::MAX);
         }
     }
@@ -946,7 +946,7 @@ pub static GICR: DeviceRef<GicRedistributor> = unsafe { DeviceRef::new((platform
 }
 
 #[inline(always)] pub fn gic_is_priv(int_id: usize) -> bool {
-    int_id < GIC_PRIVINT_NUM
+    int_id < GIC_PRIVATE_INT_NUM
 }
 
 #[inline(always)] pub fn gic_is_sgi(int_id: usize) -> bool {

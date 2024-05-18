@@ -16,6 +16,8 @@ pub use crate::platform::time::{current_ticks, nanos_to_ticks, ticks_to_nanos};
 
 #[cfg(all(feature = "irq", feature = "hv", target_arch = "aarch64", not(feature = "gic_v3")))]
 pub use crate::platform::irq::HYPERVISOR_TIMER_IRQ_NUM;
+#[cfg(all(feature = "irq", feature = "hv", target_arch = "aarch64", feature = "gic_v3"))]
+pub use crate::platform::irq::HYPERVISOR_TIMER_IRQ_NUM;
 
 /// Number of milliseconds in a second.
 pub const MILLIS_PER_SEC: u64 = 1_000;

@@ -5,8 +5,9 @@ pub use arm_gicv3::GICD;
 pub use arm_gicv3::GICR;
 pub use arm_gicv3::GICC;
 pub use arm_gicv3::GICH;
-use arm_gicv3::GICC_IAR_ID_OFF;
-use arm_gicv3::GICC_IAR_ID_LEN;
+pub use arm_gicv3::{ GICC_IAR_ID_OFF, GICC_IAR_ID_LEN, GIC_SPI_MAX
+
+};
 use arm_gicv3::gic_is_priv;
 use arm_gicv3::bit_extract;
 use arm_gicv3::GIC_LRS_NUM;
@@ -18,6 +19,12 @@ use crate::cpu::this_cpu_id;
 use core::sync::atomic::Ordering;
 
 use crate::{irq::IrqHandler};
+
+// like gic v2
+pub const IPI_IRQ_NUM: usize = 1;
+pub const HYPERVISOR_TIMER_IRQ_NUM: usize = 26;
+pub const MAINTENANCE_IRQ_NUM: usize = 25;
+
 
 /* ====== InterFace ====== */
 

@@ -8,6 +8,10 @@ use super::vgic::vgic_inject;
 #[cfg(feature = "gic_v3")]
 use super::vgicv3::vgic_inject;
 
+#[cfg(not(feature = "gic_v3"))]
+use super::vgic::vgic_set_hw_int;
+#[cfg(feature = "gic_v3")]
+use super::vgicv3::vgic_set_hw_int;
 
 use crate::{HyperCraftHalImpl, GuestPageTable};
 
@@ -77,7 +81,7 @@ pub fn interrupt_vm_inject(vm: &mut VM<HyperCraftHalImpl, GuestPageTable>,
 
 pub fn interrupt_vm_register(vm:& mut VM<HyperCraftHalImpl, GuestPageTable>, id: usize) -> bool {
     debug!("interrupt_vm_register id: {:#x}", id);
-    super::vgic::vgic_set_hw_int(vm, id);
+    vgic_set_hw_int(vm, id);
     vm.set_int_bit_map(id);
     true
 }

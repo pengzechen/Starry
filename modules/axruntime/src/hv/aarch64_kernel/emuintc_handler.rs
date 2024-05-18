@@ -1,26 +1,32 @@
 extern crate alloc;
 
+#[cfg(not(feature = "gic_v3"))]
 use arm_gic::{
     GICD_TYPER_CPUNUM_MSK, GICD_TYPER_CPUNUM_OFF, GIC_PRIVATE_INT_NUM, GIC_SGIS_NUM
 };
-use axhal::GIC_SPI_MAX;
-use alloc::sync::Arc;
-use hypercraft::VM;
-use hypercraft::arch::emu::{EmuContext, EmuDevs};
+#[cfg(feature = "gic_v3")]
+use arm_gicv3::{
+    GICD_TYPER_CPUNUM_MSK, GICD_TYPER_CPUNUM_OFF, GIC_PRIVATE_INT_NUM, GIC_SGIS_NUM
+};
 
 #[cfg(not(feature = "gic_v3"))]
 use hypercraft::arch::vgic::{Vgic, VgicInt, VgicCpuPriv};
 #[cfg(feature = "gic_v3")]
 use hypercraft::arch::vgicv3::{Vgic, VgicInt, VgicCpuPriv};
 
-use super::{active_vm, current_cpu};
-use axhal::{GICH, GICD};
-use crate::{HyperCraftHalImpl, GuestPageTable};
-
 #[cfg(not(feature = "gic_v3"))]
 use super::vgic::*;
 #[cfg(feature = "gic_v3")]
 use super::vgicv3::*;
+
+use super::{active_vm, current_cpu};
+use axhal::{GIC_SPI_MAX, GICH, GICD};
+use crate::{HyperCraftHalImpl, GuestPageTable};
+
+use alloc::sync::Arc;
+use hypercraft::VM;
+use hypercraft::arch::emu::{EmuContext, EmuDevs};
+
 
 const VGICD_REG_OFFSET_PREFIX_CTLR: usize = 0x0;
 // same as TYPER & IIDR

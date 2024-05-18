@@ -5,7 +5,7 @@ use hypercraft::{IrqState, VCpu, VM};
 use crate::{GuestPageTable, HyperCraftHalImpl};
 
 use arm_gicv3::{
-    GIC_PRIVINT_NUM, GIC_INTS_MAX, GICH_LR_STATE_OFF, GICH_LR_STATE_LEN, GICH_HCR_NPIE_BIT,
+    GIC_PRIVATE_INT_NUM, GIC_INTS_MAX, GICH_LR_STATE_OFF, GICH_LR_STATE_LEN, GICH_HCR_NPIE_BIT,
     GICH_LR_VID_OFF, GICH_LR_VID_LEN, 
     // add_lr
     GICH_LR_PRIO_MSK, GICH_LR_PRIO_OFF, GICH_LR_STATE_MSK, GICH_LR_VID_MASK, GICH_LR_STATE_ACT, 
@@ -117,11 +117,11 @@ fn int_list_head(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<Hype
 
 fn get_int(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftHalImpl>,
         int_id: usize) -> Option<VgicInt<HyperCraftHalImpl, GuestPageTable>> {
-    if int_id < GIC_PRIVINT_NUM {
+    if int_id < GIC_PRIVATE_INT_NUM {
         let vcpu_id = vcpu.vcpu_id;
         return Some(vgic.cpu_priv_interrupt(vcpu_id, int_id));
-    } else if (GIC_PRIVINT_NUM..GIC_INTS_MAX).contains(&int_id) {
-        return Some(vgic.vgicd_interrupt(int_id - GIC_PRIVINT_NUM));
+    } else if (GIC_PRIVATE_INT_NUM..GIC_INTS_MAX).contains(&int_id) {
+        return Some(vgic.vgicd_interrupt(int_id - GIC_PRIVATE_INT_NUM));
     }
     None
 }
@@ -702,7 +702,7 @@ fn get_prio(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraf
 /* ===========  sgi_set_pend ============*/
 
 
-pub fn inject(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftHalImpl>,
+pub fn vgic_inject(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftHalImpl>,
         int_id: usize) {
     let interrupt_option = get_int(vgic, vcpu.clone(), bit_extract(int_id, 0, 10));
     if let Some(interrupt) = interrupt_option {
