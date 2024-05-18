@@ -968,3 +968,5 @@ pub fn gic_set_pend(int_id: usize, pend: bool, gicr_id: u32) {
         GICR.set_pend(int_id, pend, gicr_id);
     }
 }
+
+pub use platform::cpuid2mpidr;

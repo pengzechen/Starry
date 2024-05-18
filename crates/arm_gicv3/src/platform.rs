@@ -90,6 +90,10 @@ pub fn cpuid_to_cpuif(cpuid: usize) -> usize {
     PLAT_DESC.cpu_desc.core_list[cpuid].mpidr
 }
 
+pub fn cpuid2mpidr(cpuid: usize) -> usize {
+    PLAT_DESC.cpu_desc.core_list[cpuid].mpidr
+}
+
 
 pub const GICD_BASE: usize = 0x8000000;
 pub const GICR_BASE: usize = 0x8000000;

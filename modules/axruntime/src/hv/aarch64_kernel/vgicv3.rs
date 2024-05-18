@@ -1,7 +1,7 @@
 
 
 use hypercraft::arch::vgicv3::{Vgic, VgicInt};
-use hypercraft::{IrqState, VCpu, VM};
+use hypercraft::{GuestPageTableTrait, IrqState, VCpu, VM, };
 use crate::{GuestPageTable, HyperCraftHalImpl};
 
 use arm_gicv3::{
@@ -13,12 +13,24 @@ use arm_gicv3::{
     // vgic_int_is_hw
     GIC_SGIS_NUM,
     // write_lr
-    GICH_LR_HW_BIT, GICH_LR_PID_OFF, GICH_LR_PID_MSK, GICH_LR_EOI_BIT, GICH_LR_GRP_BIT,   
+    GICH_LR_HW_BIT, GICH_LR_PID_OFF, GICH_LR_PID_MSK, GICH_LR_EOI_BIT, GICH_LR_GRP_BIT,  
+
+    GICD_CTLR_ARE_NS_BIT,  GIC_CONFIG_BITS, GIC_PRIO_BITS, GICH_HCR_UIE_BIT, 
+
+    //set irouter
+    GICD_IROUTER_IRM_BIT, MPIDR_AFF_MSK, GICD_IROUTER_INV, GICD_IROUTER_RES0_MSK
 };
+
+use hypercraft::arch::utils::bitmap_find_nth;
+use axhal::gicv3::gic_set_act;
+
+use super::{active_vm, active_vm_id, current_cpu};
+use hypercraft::arch::emu::EmuContext;
 
 use arm_gicv3::GICH;
 use arm_gicv3::GICR;
 use arm_gicv3::GICD;
+use arm_gicv3::cpuid2mpidr;
 use arm_gicv3::platform::PLAT_DESC;
 
 use arm_gicv3::gic_is_priv;
@@ -696,12 +708,6 @@ fn get_prio(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraf
     interrupt_option.unwrap().prio()
 }
 
-
-/* ============  set target ============*/
-/* ============  get target ============*/
-/* ===========  sgi_set_pend ============*/
-
-
 pub fn vgic_inject(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftHalImpl>,
         int_id: usize) {
     let interrupt_option = get_int(vgic, vcpu.clone(), bit_extract(int_id, 0, 10));
@@ -721,17 +727,13 @@ pub fn vgic_inject(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<Hy
 }
 
 
-
-
-
-
-/*
-
-fn emu_ctrl_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>,  emu_ctx: &EmuContext) {
+pub fn emu_ctrl_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>,  emu_ctx: &EmuContext) {
     if emu_ctx.write {
-        let prev_ctlr = self.vgicd_ctlr();
+        let prev_ctlr = vgic.vgicd_ctlr();
         let idx = emu_ctx.reg;
-        self.set_vgicd_ctlr(current_cpu().get_gpr(idx) as u32 & 0x2 | GICD_CTLR_ARE_NS_BIT as u32);
+        vgic.set_vgicd_ctlr(current_cpu().get_gpr(idx) as u32 & 0x2 | GICD_CTLR_ARE_NS_BIT as u32);
+        // only one cpu for a vm, do not need ipi broadcast?
+        /*
         if prev_ctlr ^ self.vgicd_ctlr() != 0 {
             let enable = self.vgicd_ctlr() != 0;
             let hcr = GICH.hcr();
@@ -749,31 +751,573 @@ fn emu_ctrl_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>,  emu_ctx: &Em
             };
             ipi_intra_broadcast_msg(active_vm().unwrap(), IpiType::IpiTIntc, IpiInnerMsg::Initc(m));
         }
+        */
     } else {
         let idx = emu_ctx.reg;
-        let val = self.vgicd_ctlr() as usize;
+        let val = vgic.vgicd_ctlr() as usize;
         current_cpu().set_gpr(idx, val | GICD.ctlr() as usize);
     }
 }
 
-fn emu_typer_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>,  emu_ctx: &EmuContext) {
+pub fn emu_typer_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>,  emu_ctx: &EmuContext) {
     if !emu_ctx.write {
         let idx = emu_ctx.reg;
-        let val = self.vgicd_typer() as usize;
+        let val = vgic.vgicd_typer() as usize;
         current_cpu().set_gpr(idx, val);
     } else {
         error!("emu_typer_access: can't write to RO reg");
     }
 }
 
-fn emu_iidr_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>,  emu_ctx: &EmuContext) {
+pub fn emu_iidr_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>,  emu_ctx: &EmuContext) {
     if !emu_ctx.write {
         let idx = emu_ctx.reg;
-        let val = self.vgicd_iidr() as usize;
+        let val = vgic.vgicd_iidr() as usize;
         current_cpu().set_gpr(idx, val);
     } else {
         error!("emu_iidr_access: can't write to RO reg");
     }
 }
 
-*/
+
+pub fn emu_isenabler_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx: &EmuContext) {
+    let first_int = ((emu_ctx.address & 0xffff) - 0x100) * 8; //emu_ctx.address - offsetof(GICD,ISENABLER)
+    let idx = emu_ctx.reg;
+    let mut val = if emu_ctx.write { current_cpu().get_gpr(idx) } else { 0 };
+
+    let vm_id = active_vm_id();
+    // let vm = match active_vm() {
+    //     Some(vm) => vm,
+    //     None => {
+    //         panic!("emu_isenabler_access: current vcpu.vm is none");
+    //     }
+    // };
+    let vm = active_vm();
+    let mut vm_has_interrupt_flag = false;
+
+    for i in 0..(emu_ctx.width * 8) {
+        if vm.has_interrupt(first_int + i) || vm.emu_has_interrupt(first_int + i) {
+            vm_has_interrupt_flag = true;
+            break;
+        }
+    }
+    if first_int >= 16 && !vm_has_interrupt_flag {
+        error!(
+            "emu_isenabler_access: vm[{}] does not have interrupt {}",
+            vm_id, first_int
+        );
+        return;
+    }
+
+    if emu_ctx.write {
+        for i in 0..(emu_ctx.width * 8) {
+            if bit_get(val, i) != 0 {
+                set_enable(vgic, current_cpu().active_vcpu.clone().unwrap(), first_int + i, true);
+            }
+        }
+    } else {
+        for i in 0..(emu_ctx.width * 8) {
+            if get_enable(vgic, current_cpu().active_vcpu.clone().unwrap(), first_int + i) {
+                val |= 1 << i;
+            }
+        }
+        let idx = emu_ctx.reg;
+        current_cpu().set_gpr(idx, val);
+    }
+}
+
+pub fn emu_icenabler_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx: &EmuContext) {
+    let first_int = ((emu_ctx.address & 0xffff) - 0x0180) * 8; //emu_ctx.address - OFFSET(GICR/D,ICENABLE)
+    let idx = emu_ctx.reg;
+    let mut val = if emu_ctx.write { current_cpu().get_gpr(idx) } else { 0 };
+
+    let vm_id = active_vm_id();
+    // let vm = match active_vm() {
+    //     Some(vm) => vm,
+    //     None => {
+    //         panic!("emu_activer_access: current vcpu.vm is none");
+    //     }
+    // };
+    let vm = active_vm();
+    let mut vm_has_interrupt_flag = false;
+
+    if emu_ctx.write {
+        for i in 0..32 {
+            if vm.has_interrupt(first_int + i) || vm.emu_has_interrupt(first_int + i) {
+                vm_has_interrupt_flag = true;
+                break;
+            }
+        }
+        if first_int >= 16 && !vm_has_interrupt_flag {
+            warn!(
+                "emu_icenabler_access: vm[{}] does not have interrupt {}",
+                vm_id, first_int
+            );
+            return;
+        }
+    }
+
+    if emu_ctx.write {
+        for i in 0..(emu_ctx.width * 8) {
+            if bit_get(val, i) != 0 {
+                set_enable(vgic, current_cpu().active_vcpu.clone().unwrap(), first_int + i, false);
+            }
+        }
+    } else {
+        for i in 0..(emu_ctx.width * 8) {
+            if get_enable(vgic, current_cpu().active_vcpu.clone().unwrap(), first_int + i) {
+                val |= 1 << i;
+            }
+        }
+        let idx = emu_ctx.reg;
+        current_cpu().set_gpr(idx, val);
+    }
+}
+
+
+pub fn emu_pendr_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx: &EmuContext, set: bool) {
+    let first_int = if set {
+        // ISPEND  emu_ctx.address - OFFSET(GICD/R,ISPENDR)
+        ((emu_ctx.address & 0xffff) - 0x0200) * 8
+    } else {
+        // ICPEND  emu_ctx.address - OFFSET(GICD/R,ICPENDR)
+        ((emu_ctx.address & 0xffff) - 0x0280) * 8
+    };
+
+    let idx = emu_ctx.reg;
+    let mut val = if emu_ctx.write { current_cpu().get_gpr(idx) } else { 0 };
+
+    if emu_ctx.write {
+        for i in 0..(emu_ctx.width * 8) {
+            if bit_get(val, i) != 0 {
+                set_pend(vgic, current_cpu().active_vcpu.clone().unwrap(), first_int + i, set);
+            }
+        }
+    } else {
+        for i in 0..32 {
+            match get_int(vgic, current_cpu().active_vcpu.clone().unwrap(), first_int + i) {
+                Some(interrupt) => {
+                    if vgic_get_state(interrupt.clone()) & IrqState::IrqSPend.to_num()
+                        != IrqState::IrqSInactive.to_num()
+                    {
+                        val |= 1 << i;
+                    }
+                }
+                None => {
+                    unimplemented!();
+                }
+            }
+        }
+        let idx = emu_ctx.reg;
+        current_cpu().set_gpr(idx, val);
+    }
+}
+
+pub fn emu_icpendr_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx: &EmuContext) {
+    emu_pendr_access(vgic, emu_ctx, false);
+}
+
+pub fn emu_ispendr_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx: &EmuContext) {
+    emu_pendr_access(vgic, emu_ctx, true);
+}
+
+
+pub fn emu_activer_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx: &EmuContext, set: bool) {
+    let first_int = if set {
+        // ISACTIVE (emu_ctx.address - OFFSET(GICD/R, ISACTIVER)
+        8 * ((emu_ctx.address & 0xffff) - 0x0300)
+    } else {
+        // ICACTIVE (emu_ctx.address - OFFSET(GICD/R, ICACTIVER)
+        8 * ((emu_ctx.address & 0xffff) - 0x0380)
+    };
+    let idx = emu_ctx.reg;
+
+    let mut val = if emu_ctx.write { current_cpu().get_gpr(idx) } else { 0 };
+    let vm_id = active_vm_id();
+    // let vm = match active_vm() {
+    //     Some(vm) => vm,
+    //     None => {
+    //         panic!("emu_activer_access: current vcpu.vm is none");
+    //     }
+    // };
+    let vm = active_vm();
+    let mut vm_has_interrupt_flag = false;
+
+    for i in 0..(emu_ctx.width * 8) {
+        if vm.has_interrupt(first_int + i) || vm.emu_has_interrupt(first_int + i) {
+            vm_has_interrupt_flag = true;
+            break;
+        }
+    }
+    if first_int >= 16 && !vm_has_interrupt_flag {
+        warn!(
+            "emu_activer_access: vm[{}] does not have interrupt {}",
+            vm_id, first_int
+        );
+        return;
+    }
+
+    if emu_ctx.write {
+        for i in 0..(emu_ctx.width * 8) {
+            if bit_get(val, i) != 0 {
+                set_active(vgic, current_cpu().active_vcpu.clone().unwrap(), first_int + i, set);
+            }
+        }
+    } else {
+        for i in 0..(emu_ctx.width * 8) {
+            match get_int(vgic, current_cpu().active_vcpu.clone().unwrap(), first_int + i) {
+                Some(interrupt) => {
+                    if vgic_get_state(interrupt.clone()) & IrqState::IrqSActive.to_num() != 0 {
+                        val |= 1 << i;
+                    }
+                }
+                None => {
+                    unimplemented!();
+                }
+            }
+        }
+        let idx = emu_ctx.reg;
+        current_cpu().set_gpr(idx, val);
+    }
+}
+
+pub fn emu_isactiver_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx: &EmuContext) {
+    emu_activer_access(vgic, emu_ctx, true);
+}
+
+pub fn emu_icactiver_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx: &EmuContext) {
+    emu_activer_access(vgic, emu_ctx, false);
+}
+       
+
+pub fn emu_icfgr_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx: &EmuContext) {
+    let first_int = ((emu_ctx.address & 0xffff) - 0x0C00) * 8 / GIC_CONFIG_BITS; // emu_ctx.address - OFFSET(GICR/D,ICFGR)
+
+    let vm_id = active_vm_id();
+    // let vm = match active_vm() {
+    //     Some(vm) => vm,
+    //     None => {
+    //         panic!("emu_icfgr_access: current vcpu.vm is none");
+    //     }
+    // };
+    let vm = active_vm();
+    let mut vm_has_interrupt_flag = false;
+
+    if emu_ctx.write {
+        for i in 0..emu_ctx.width * 8 {
+            if vm.has_interrupt(first_int + i) || vm.emu_has_interrupt(first_int + i) {
+                vm_has_interrupt_flag = true;
+                break;
+            }
+        }
+        if first_int >= 16 && !vm_has_interrupt_flag {
+            warn!("emu_icfgr_access: vm[{}] does not have interrupt {}", vm_id, first_int);
+            return;
+        }
+    }
+
+    if emu_ctx.write {
+        let idx = emu_ctx.reg;
+        let cfg = current_cpu().get_gpr(idx);
+        let mut irq = first_int;
+        let mut bit = 0;
+        while bit < (emu_ctx.width * 8) {
+            set_icfgr(vgic,
+                current_cpu().active_vcpu.clone().unwrap(),
+                irq,
+                bit_extract(cfg as usize, bit, GIC_CONFIG_BITS) as u8,
+            );
+            bit += 2;
+            irq += 1;
+        }
+    } else {
+        let mut cfg = 0;
+        let mut irq = first_int;
+        let mut bit = 0;
+        while bit < (emu_ctx.width * 8) {
+            cfg |= (get_icfgr(vgic, current_cpu().active_vcpu.clone().unwrap(), irq) as usize) << bit;
+            bit += 2;
+            irq += 1;
+        }
+        let idx = emu_ctx.reg;
+        current_cpu().set_gpr(idx, cfg);
+    }
+}
+
+pub fn emu_ipriorityr_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx: &EmuContext) {
+    let first_int = ((emu_ctx.address & 0xffff) - 0x0400) * 8 / GIC_PRIO_BITS; // emu_ctx.address - OFFSET(GICR/D,IPRIORITYR)
+    let idx = emu_ctx.reg;
+    let mut val = if emu_ctx.write { current_cpu().get_gpr(idx) } else { 0 };
+
+    let vm_id = active_vm_id();
+    // let vm = match active_vm() {
+    //     Some(vm) => vm,
+    //     None() => {
+    //         panic!("emu_ipriorityr_access: current vcpu.vm is none");
+    //     }
+    // };
+    let vm = active_vm();
+    let mut vm_has_interrupt_flag = false;
+
+    if emu_ctx.write {
+        for i in 0..emu_ctx.width {
+            if vm.has_interrupt(first_int + i) || vm.emu_has_interrupt(first_int + i) {
+                vm_has_interrupt_flag = true;
+                break;
+            }
+        }
+        if first_int >= 16 && !vm_has_interrupt_flag {
+            warn!(
+                "emu_ipriorityr_access: vm[{}] does not have interrupt {}",
+                vm_id, first_int
+            );
+            return;
+        }
+    }
+
+    if emu_ctx.write {
+        for i in 0..emu_ctx.width {
+            set_prio(vgic, 
+                current_cpu().active_vcpu.clone().unwrap(),
+                first_int + i,
+                bit_extract(val, GIC_PRIO_BITS * i, GIC_PRIO_BITS) as u8,
+            );
+        }
+    } else {
+        for i in 0..emu_ctx.width {
+            val |= (get_prio(vgic, current_cpu().active_vcpu.clone().unwrap(), first_int + i) as usize)
+                << (GIC_PRIO_BITS * i);
+        }
+        let idx = emu_ctx.reg;
+        current_cpu().set_gpr(idx, val);
+    }
+}
+
+pub fn handle_trapped_eoir(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftHalImpl>) {
+    let gic_lrs = gic_lrs();
+    // eisr():Interrupt Controller End of Interrupt Status Register
+    let mut lr_idx_opt = bitmap_find_nth(GICH.eisr() as usize, 0, gic_lrs, 1, true);
+
+    while lr_idx_opt.is_some() {
+        let lr_idx = lr_idx_opt.unwrap();
+        let lr_val = GICH.lr(lr_idx) as usize;
+        GICH.set_lr(lr_idx, 0);
+
+        match get_int(vgic, vcpu.clone(), bit_extract(lr_val, GICH_LR_VID_OFF, GICH_LR_VID_LEN)) {
+            Some(interrupt) => {
+                let interrupt_lock = interrupt.lock.lock();
+                interrupt.set_in_lr(false);
+                if (interrupt.id() as usize) < GIC_SGIS_NUM {
+                    add_lr(vgic, vcpu.clone(), interrupt.clone());
+                } else {
+                    vgic_int_yield_owner(vcpu.clone(), interrupt.clone());
+                }
+                drop(interrupt_lock);
+            }
+            None => {
+                continue;
+            }
+        }
+        lr_idx_opt = bitmap_find_nth(GICH.eisr() as usize, 0, gic_lrs, 1, true);
+    }
+}
+
+
+fn vgic_highest_proi_spilled(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: &VCpu<HyperCraftHalImpl>, 
+        flag: bool) -> Option<VgicInt<HyperCraftHalImpl, GuestPageTable>> {
+    let cpu_priv = &vgic.cpu_priv.lock()[vcpu.vcpu_id];
+    // info!("binding list_len:{}", binding.len());
+    let array = [
+        Some(cpu_priv.pend_list.iter()),
+        if flag { None } else { Some(cpu_priv.act_list.iter()) },
+    ];
+    let binding = array.into_iter().flatten().flatten();
+    binding
+        .min_by_key(|x| (((x.prio() as u32) << 10) | x.id() as u32))
+        .cloned()
+}
+
+fn vgic_int_get_owner(vcpu: VCpu<HyperCraftHalImpl>, interrupt: VgicInt<HyperCraftHalImpl, GuestPageTable>) -> bool {
+    let vcpu_id = vcpu.vcpu_id;
+    let vcpu_vm_id = vcpu.vm_id;
+
+    match interrupt.owner() {
+        Some(owner) => {
+            let owner_vcpu_id = owner.vcpu_id;
+            let owner_vm_id = owner.vm_id;
+
+            owner_vm_id == vcpu_vm_id && owner_vcpu_id == vcpu_id
+        }
+        None => {
+            interrupt.set_owner(vcpu);
+            true
+        }
+    }
+}
+
+
+pub fn refill_lrs(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftHalImpl>,  flag: bool) {
+    let gic_lrs = gic_lrs();
+    // ICH_ELRSR_EL2:locate a usable List register when the hypervisor is delivering an interrupt to a Guest OS.
+    let mut lr_idx_opt = bitmap_find_nth(GICH.elrsr(), 0, gic_lrs, 1, true);
+    // flag indicates that is no pending or not true:no pending flase:have pending,the we will look up active and pend
+    let mut new_flags = flag;
+    while lr_idx_opt.is_some() {
+        let interrupt_opt: Option<VgicInt<HyperCraftHalImpl, GuestPageTable>> = vgic_highest_proi_spilled(vgic, &vcpu, new_flags);
+
+        match interrupt_opt {
+            Some(interrupt) => {
+                let interrupt_lock = interrupt.lock.lock();
+                let got_ownership = vgic_int_get_owner(vcpu.clone(), interrupt.clone());
+                if got_ownership {
+                    write_lr(vgic, vcpu.clone(), interrupt.clone(), lr_idx_opt.unwrap());
+                }
+                drop(interrupt_lock);
+                if !got_ownership {
+                    continue;
+                }
+            }
+            None => {
+                let hcr = GICH.hcr();
+                GICH.set_hcr(hcr & !(GICH_HCR_NPIE_BIT | GICH_HCR_UIE_BIT));
+                break;
+            }
+        }
+
+        new_flags = false;
+        lr_idx_opt = bitmap_find_nth(GICH.elrsr(), 0, gic_lrs, 1, true);
+    }
+}
+
+pub fn eoir_highest_spilled_active(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftHalImpl>) {
+    let cpu_priv = vgic.cpu_priv.lock();
+    let binding = &cpu_priv[vcpu.vcpu_id].act_list;
+    let interrupt = binding
+        .iter()
+        .min_by_key(|x| (((x.prio() as u32) << 10) | x.id() as u32))
+        .cloned();
+    drop(cpu_priv);
+    if let Some(int) = interrupt {
+        int.lock.lock();
+        vgic_int_get_owner(vcpu.clone(), int.clone());
+
+        let state = int.state().to_num();
+        int.set_state(IrqState::num_to_state(state & !2));
+        update_int_list(vgic, vcpu.clone(), int.clone());
+
+        if vgic_int_is_hw(int.clone()) {
+            gic_set_act(int.id() as usize, false, current_cpu().cpu_id as u32);
+        } else if int.state().to_num() & 1 != 0 {
+            add_lr(vgic, vcpu, int.clone());
+        }
+    }
+}
+
+pub fn vgic_set_hw_int(vm:&mut VM<HyperCraftHalImpl, GuestPageTable>, int_id: usize) {
+    if int_id < GIC_SGIS_NUM {
+        return;
+    }
+
+    // if !vm.has_vgic() {
+    //     return;
+    // }
+
+    let vgic = vm.vgic();
+
+    if int_id < GIC_PRIVATE_INT_NUM {
+        for i in 0..vm.vcpu_num() {
+            if let Some(interrupt) = get_int(&vgic, vm.vcpu(i).unwrap().clone(), int_id) {
+                let interrupt_lock = interrupt.lock.lock();
+                interrupt.set_hw(true);
+                drop(interrupt_lock);
+            }
+        }
+    } else if let Some(interrupt) = get_int(&vgic, vm.vcpu(0).unwrap().clone(), int_id) {
+        let interrupt_lock = interrupt.lock.lock();
+        interrupt.set_hw(true);
+        drop(interrupt_lock);
+    }
+}
+
+
+
+pub fn emu_razwi(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx: &EmuContext) {
+    if !emu_ctx.write {
+        current_cpu().set_gpr(emu_ctx.reg, 0);
+    }
+}
+
+pub fn emu_irouter_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx: &EmuContext) {
+    let first_int = (bit_extract(emu_ctx.address, 0, 16) - 0x6000) / 8;
+    let idx = emu_ctx.reg;
+    let mut val = if emu_ctx.write { current_cpu().get_gpr(idx) } else { 0 };
+
+    if emu_ctx.write {
+        vgicd_set_irouter(vgic, current_cpu().active_vcpu.clone().unwrap(), first_int, val);
+    } else {
+        if !gic_is_priv(first_int) {
+            val = get_int(vgic, current_cpu().active_vcpu.clone().unwrap(), first_int)
+                .unwrap()
+                .route() as usize;
+        }
+        current_cpu().set_gpr(idx, val);
+    }
+}
+
+pub fn emu_pidr_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx: &EmuContext) {
+    if !emu_ctx.write {
+        current_cpu().set_gpr(emu_ctx.reg, GICD.id(((emu_ctx.address & 0xff) - 0xd0) / 4) as usize);
+    }
+}
+
+
+pub fn vgicd_set_irouter(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftHalImpl>, 
+        int_id: usize, val: usize) {
+    if let Some(interrupt) = get_int(vgic, vcpu.clone(), int_id) {
+        let interrupt_lock = interrupt.lock.lock();
+
+        // if vgic_int_get_owner(vcpu.clone(), interrupt.clone()) {
+            remove_lr(vgic, vcpu.clone(), interrupt.clone());
+
+            // let phys_route = if (val & GICD_IROUTER_IRM_BIT) != 0 {
+            //     cpuid2mpidr(vcpu.pcpu_id)
+            // } else {
+            //     match vcpu.vm().unwrap().get_vcpu_by_mpidr(val & MPIDR_AFF_MSK) {
+            //         Some(vcpu) => cpuid2mpidr(vcpu.phys_id()) & MPIDR_AFF_MSK,
+            //         _ => GICD_IROUTER_INV,
+            //     }
+            // };
+            /* ========= I'm not sure ======== */
+            let phys_route = cpuid2mpidr(vcpu.pcpu_id);
+            
+            interrupt.set_phys_route(phys_route);
+            interrupt.set_route(val & GICD_IROUTER_RES0_MSK);
+            if interrupt.hw() {
+                GICD.set_route(int_id, phys_route);
+            }
+            route(vgic, vcpu.clone(), interrupt.clone());
+            vgic_int_yield_owner(vcpu.clone(), interrupt.clone());
+        /*
+        } else {
+            let m = IpiInitcMessage {
+                event: InitcEvent::VgicdRoute,
+                vm_id: vcpu.vm().unwrap().id(),
+                int_id: interrupt.id(),
+                val: val as u8,
+            };
+            if !ipi_send_msg(
+                interrupt.owner().unwrap().phys_id(),
+                IpiType::IpiTIntc,
+                IpiInnerMsg::Initc(m),
+            ) {
+                print!(
+                    "vgicd_set_irouter: Failed to send ipi message, target {} type {}",
+                    interrupt.owner().unwrap().phys_id(),
+                    0
+                );
+            }
+        }
+        */
+        drop(interrupt_lock);
+    }
+}

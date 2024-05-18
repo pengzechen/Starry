@@ -50,7 +50,7 @@ pub use platform::aarch64_common::gic::{
 
 #[cfg(all(feature = "hv", feature = "irq", feature = "gic_v3"))]
 pub use platform::aarch64_common::gicv3::{
-    gicc_get_current_irq,   
+    gicc_get_current_irq, deactivate_irq, interrupt_cpu_ipi_send, 
     gic_lrs, gicc_clear_current_irq,
     GICD, GICC, GICH, GIC_SPI_MAX, IPI_IRQ_NUM, MAINTENANCE_IRQ_NUM, HYPERVISOR_TIMER_IRQ_NUM
 };

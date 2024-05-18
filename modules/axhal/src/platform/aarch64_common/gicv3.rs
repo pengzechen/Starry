@@ -5,9 +5,7 @@ pub use arm_gicv3::GICD;
 pub use arm_gicv3::GICR;
 pub use arm_gicv3::GICC;
 pub use arm_gicv3::GICH;
-pub use arm_gicv3::{ GICC_IAR_ID_OFF, GICC_IAR_ID_LEN, GIC_SPI_MAX
-
-};
+pub use arm_gicv3::{ GICC_IAR_ID_OFF, GICC_IAR_ID_LEN, GIC_SPI_MAX, GIC_SGIS_NUM };
 use arm_gicv3::gic_is_priv;
 use arm_gicv3::bit_extract;
 use arm_gicv3::GIC_LRS_NUM;
@@ -34,7 +32,6 @@ pub(crate) fn init_primary() {}
 /// Enables or disables the given IRQ.
 pub fn set_enable(irq_num: usize, enabled: bool) {}
 
-
 /// Registers an IRQ handler for the given IRQ.
 ///
 /// It also enables the IRQ if the registration succeeds. It returns `false` if
@@ -44,6 +41,21 @@ pub fn register_handler(irq_num: usize, handler: IrqHandler) -> bool {true}
 pub fn dispatch_irq(_unused: usize) {}
 
 /* ====== InterFace ====== */
+
+// not sure
+#[cfg(feature = "hv")] #[no_mangle]
+pub fn interrupt_cpu_ipi_send(cpu_id: usize, ipi_id: usize) {
+    debug!("interrupt_cpu_ipi_send: cpu_id {}, ipi_id {}", cpu_id, ipi_id);
+    if ipi_id < GIC_SGIS_NUM {
+       GICD.send_sgi(cpu_id, ipi_id);
+    }
+}
+
+// not sure
+#[cfg(feature = "hv")]
+pub fn deactivate_irq(iar: usize) {
+    GICC.set_eoir(iar as _);    
+}
 
 
 pub fn gic_glb_init() {
@@ -103,8 +115,9 @@ pub fn gicc_get_current_irq() -> (usize, usize) {
 }
 
 // remove current_cpu().current_irq ,add an argument
-pub fn gicc_clear_current_irq( irq: u32, for_hypervisor: bool) {
+pub fn gicc_clear_current_irq( irq: usize, for_hypervisor: bool) {
     // let irq = current_cpu().current_irq as u32;
+    let irq = irq as u32;
     if irq == 0 {
         return;
     }

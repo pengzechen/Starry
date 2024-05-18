@@ -20,12 +20,7 @@ const PSCI_RET_ALREADY_ON: usize = 0xffff_ffff_ffff_fffc;   // -4
 const PSCI_TOS_NOT_PRESENT_MP: usize = 2;
 
 #[inline(never)]
-pub fn smc_guest_handler(
-    fid: usize, 
-    x1: usize, 
-    x2: usize, 
-    x3: usize,
-) -> Result<usize, ()>  {
+pub fn smc_guest_handler( fid: usize, x1: usize, x2: usize,  x3: usize,) -> Result<usize, ()>  {
     debug!(
         "smc_guest_handler: fid {:#x}, x1 {:#x}, x2 {:#x}, x3 {:#x}",
         fid, x1, x2, x3
@@ -87,8 +82,7 @@ fn psci_guest_cpu_on(mpidr: usize, entry: usize, ctx: usize) -> usize {
     0
 }
 
-#[inline(never)]
-pub fn smc_call(x0: u32, x1: usize, x2: usize, x3: usize) -> (usize, usize, usize, usize) {
+#[inline(never)] pub fn smc_call(x0: u32, x1: usize, x2: usize, x3: usize) -> (usize, usize, usize, usize) {
     #[cfg(target_arch = "aarch64")]
     unsafe {
         let r0;
@@ -109,7 +103,6 @@ pub fn smc_call(x0: u32, x1: usize, x2: usize, x3: usize) -> (usize, usize, usiz
     #[cfg(not(target_arch = "aarch64"))]
     error!("smc not supported");
 }
-
 
 pub(crate) fn psci_ipi_handler(msg: &IpiMessage) {
     debug!("enter psci_ipi_handler");

@@ -49,6 +49,10 @@ pub fn active_vm() -> &'static mut VM<HyperCraftHalImpl, GuestPageTable> {
     }
 }
 
+pub fn active_vm_id() -> usize {
+    active_vm().vm_id
+}
+
 pub fn secondary_main_hv(cpu_id: usize) {
     info!("Hello World from cpu {}", cpu_id);
 
