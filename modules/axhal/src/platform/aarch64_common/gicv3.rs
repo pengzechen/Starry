@@ -19,31 +19,53 @@ use core::sync::atomic::Ordering;
 use crate::{irq::IrqHandler};
 
 // like gic v2
-pub const IPI_IRQ_NUM: usize = 1;
-pub const HYPERVISOR_TIMER_IRQ_NUM: usize = 26;
-pub const MAINTENANCE_IRQ_NUM: usize = 25;
+pub const IPI_IRQ_NUM:               usize = 1;
+pub const HYPERVISOR_TIMER_IRQ_NUM:  usize = 26;
+pub const MAINTENANCE_IRQ_NUM:       usize = 25;
 
-
-/* ====== InterFace ====== */
+/* =========================================== */
+/* ================ InterFace ================ */
+/* =========================================== */
 
 /// Initializes GICD, GICC on the primary CPU.
-pub(crate) fn init_primary() {}
+pub(crate) fn init_primary() {
+    gic_glb_init();
+    gic_cpu_init;
+}
+
+/// Initializes GICC on secondary CPUs.
+#[cfg(feature = "smp")] pub(crate) fn init_secondary() {
+    info!("Initialize init_secondary GICv3...");
+    // GICC.init();
+    gic_cpu_init();
+}
 
 /// Enables or disables the given IRQ.
-pub fn set_enable(irq_num: usize, enabled: bool) {}
+pub fn set_enable(irq_num: usize, enabled: bool) {
+    use tock_registers::interfaces::Readable;
+    gic_set_enable(irq_num, enabled);
+    gic_set_prio(irq_num, 0x1);
+    GICD.set_route(irq_num, cortex_a::registers::MPIDR_EL1.get() as usize);
+}
 
 /// Registers an IRQ handler for the given IRQ.
 ///
 /// It also enables the IRQ if the registration succeeds. It returns `false` if
 /// the registration failed.
-pub fn register_handler(irq_num: usize, handler: IrqHandler) -> bool {true}
+pub fn register_handler(irq_num: usize, handler: IrqHandler) -> bool {
+    // 这里v3的处理应该和v2相同，不会出问题
+    crate::irq::register_handler_common(irq_num, handler)
+}
 
-pub fn dispatch_irq(_unused: usize) {}
+#[cfg(feature = "hv")]
+pub fn dispatch_irq(irq_num: usize) {
+    debug!("dispatch_irq_hv: irq_num {}", irq_num);
+    crate::irq::dispatch_irq_common(irq_num as _);
+}
 
-/* ====== InterFace ====== */
 
-// not sure
-#[cfg(feature = "hv")] #[no_mangle]
+
+// Isn't right ?
 pub fn interrupt_cpu_ipi_send(cpu_id: usize, ipi_id: usize) {
     debug!("interrupt_cpu_ipi_send: cpu_id {}, ipi_id {}", cpu_id, ipi_id);
     if ipi_id < GIC_SGIS_NUM {
@@ -51,26 +73,11 @@ pub fn interrupt_cpu_ipi_send(cpu_id: usize, ipi_id: usize) {
     }
 }
 
-// not sure
-#[cfg(feature = "hv")]
+// Isn't right ?
 pub fn deactivate_irq(iar: usize) {
     GICC.set_eoir(iar as _);    
 }
 
-
-pub fn gic_glb_init() {
-    set_gic_lrs(gich_lrs_num());
-    GICD.global_init();
-}
-
-pub fn gic_cpu_init() {
-    GICR.init(this_cpu_id());
-    GICC.init();
-}
-
-pub fn gic_cpu_reset() {
-    GICC.init();
-}
 
 
 /* =============== warn! ===================== 
@@ -114,6 +121,7 @@ pub fn gicc_get_current_irq() -> (usize, usize) {
     (irq, src)
 }
 
+// Isn't right ?
 // remove current_cpu().current_irq ,add an argument
 pub fn gicc_clear_current_irq( irq: usize, for_hypervisor: bool) {
     // let irq = current_cpu().current_irq as u32;
@@ -126,6 +134,26 @@ pub fn gicc_clear_current_irq( irq: usize, for_hypervisor: bool) {
         GICC.set_dir(irq);
     }
     // current_cpu().current_irq = 0;
+}
+
+
+/* =========================================== */
+/* ================ InterFace ================ */
+/* =========================================== */
+
+
+pub fn gic_glb_init() {
+    set_gic_lrs(gich_lrs_num());
+    GICD.global_init();
+}
+
+pub fn gic_cpu_init() {
+    GICR.init(this_cpu_id());
+    GICC.init();
+}
+
+pub fn gic_cpu_reset() {
+    GICC.init();
 }
 
 pub fn gic_set_icfgr(int_id: usize, cfg: u8) {
@@ -175,6 +203,9 @@ pub fn gic_get_act(int_id: usize) -> bool {
         GICR.get_act(int_id, this_cpu_id() as u32)
     }
 }
+
+
+// 一下三个函数在开启或关闭某个中断使用 set_enable
 
 pub fn gic_set_enable(int_id: usize, en: bool) {
     if !gic_is_priv(int_id) {

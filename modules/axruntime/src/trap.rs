@@ -28,7 +28,7 @@ impl axhal::trap::TrapHandler for TrapHandlerImpl {
         
         //debug!("[handle_irq_hv] before deactivate irq {} ", irq_num);
         
-        if irq_num==axhal::IPI_IRQ_NUM || irq_num==axhal::MAINTENANCE_IRQ_NUM || irq_num==axhal::time::HYPERVISOR_TIMER_IRQ_NUM {
+        if irq_num==axhal::IPI_IRQ_NUM || irq_num==axhal::MAINTENANCE_IRQ_NUM || irq_num==axhal::HYPERVISOR_TIMER_IRQ_NUM {
             axhal::gicc_clear_current_irq(irq_num, true);
         }  else {
             axhal::gicc_clear_current_irq(irq_num, false);

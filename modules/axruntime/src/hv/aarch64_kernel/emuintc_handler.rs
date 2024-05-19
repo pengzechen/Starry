@@ -44,7 +44,7 @@ const VGICD_REG_OFFSET_PREFIX_ICFGR: usize = 0x18;
 const VGICD_REG_OFFSET_PREFIX_SGIR: usize = 0x1e;
 
 
-
+/* 时间紧，先这样搞了，有时间再优化 -_- */
 
 
 #[cfg(not(feature = "gic_v3"))]

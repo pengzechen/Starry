@@ -15,6 +15,8 @@ use super::vgicv3::vgic_set_hw_int;
 
 use crate::{HyperCraftHalImpl, GuestPageTable};
 
+// 选择合适的 vcpu 、vm 调用中断注入
+// caller trap : handle_irq_hv
 pub fn handle_virtual_interrupt(irq_num: usize, src: usize) {
     if irq_num != 27 {
         debug!("src {:#x} id{:#x} virtual interrupt", src, irq_num);
@@ -61,8 +63,8 @@ pub fn handle_virtual_interrupt(irq_num: usize, src: usize) {
     //debug!( "interrupt_handler: core {} receive virtual int {}", current_cpu().cpu_id, irq_num );
 }
 
-pub fn interrupt_vm_inject(vm: &mut VM<HyperCraftHalImpl, GuestPageTable>, 
-    vcpu: VCpu<HyperCraftHalImpl>, irq_num: usize) {
+// 中断注入函数，调用 vgic.rs : vgic_inject
+fn interrupt_vm_inject(vm: &mut VM<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftHalImpl>, irq_num: usize) {
     //debug!("[interrupt_vm_inject] this is interrupt vm inject");
     let vgic = vm.vgic();
     // restore_vcpu_gic(current_cpu().active_vcpu.clone(), vcpu.clone());
@@ -79,6 +81,8 @@ pub fn interrupt_vm_inject(vm: &mut VM<HyperCraftHalImpl, GuestPageTable>,
     // save_vcpu_gic(current_cpu().active_vcpu.clone(), vcpu.clone());
 }
 
+// 虚拟机的中断注册函数
+// caller init_vm_passthrough_device ， 最终由app调用
 pub fn interrupt_vm_register(vm:& mut VM<HyperCraftHalImpl, GuestPageTable>, id: usize) -> bool {
     debug!("interrupt_vm_register id: {:#x}", id);
     vgic_set_hw_int(vm, id);

@@ -100,8 +100,10 @@ fn psci_guest_cpu_on(mpidr: usize, entry: usize, ctx: usize) -> usize {
         (r0, r1, r2, r3)
     }
 
-    #[cfg(not(target_arch = "aarch64"))]
-    error!("smc not supported");
+    #[cfg(not(target_arch = "aarch64"))]{
+        error!("smc not supported");
+        (0, 0, 0, 0)
+    }
 }
 
 pub(crate) fn psci_ipi_handler(msg: &IpiMessage) {

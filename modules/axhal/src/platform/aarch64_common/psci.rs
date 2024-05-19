@@ -33,7 +33,8 @@ fn psci_hvc_call(func: u32, arg0: usize, arg1: usize, arg2: usize) -> usize {
 #[cfg(feature = "hv")]
 fn psci_smc_call(func: u32, arg0: usize, arg1: usize, arg2: usize) -> usize {
     debug!("this is smc call func:0x{:x}", func);
-    let ret;
+    let mut ret = 0;
+    #[cfg(target_arch = "aarch64")]
     unsafe {
         asm!(
             "smc #0",
@@ -42,7 +43,7 @@ fn psci_smc_call(func: u32, arg0: usize, arg1: usize, arg2: usize) -> usize {
             in("x2") arg1,
             in("x3") arg2,
             options(nomem, nostack)
-        )
+        );
     }
     ret
 }

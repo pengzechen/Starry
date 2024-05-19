@@ -55,6 +55,7 @@ pub use platform::aarch64_common::gicv3::{
     GICD, GICC, GICH, GIC_SPI_MAX, IPI_IRQ_NUM, MAINTENANCE_IRQ_NUM, HYPERVISOR_TIMER_IRQ_NUM
 };
 
+#[cfg(feature = "gic_v3")]
 pub use platform::aarch64_common::gicv3;
 
 #[cfg(all(feature = "hv"))]
