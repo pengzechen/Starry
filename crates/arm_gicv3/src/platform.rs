@@ -30,54 +30,30 @@ pub struct PlatCpuConfig {
 pub const PLAT_DESC: PlatformConfig = PlatformConfig {
     /// CPU configuration details for RK3588
     cpu_desc: PlatCpuConfig {
-        num: 8,
+        num: 4,
         core_list: &[
             PlatCpuCoreConfig {
                 //cluster0
                 name: ARM_CORTEX_A55,
-                mpidr: 0x81000000,
+                mpidr: 0,
                 sched: SchedRule::RoundRobin,
             },
             PlatCpuCoreConfig {
                 //cluster0
                 name: ARM_CORTEX_A55,
-                mpidr: 0x81000100,
+                mpidr: 1,
                 sched: SchedRule::RoundRobin,
             },
             PlatCpuCoreConfig {
                 //cluster0
                 name: ARM_CORTEX_A55,
-                mpidr: 0x81000200,
+                mpidr: 2,
                 sched: SchedRule::RoundRobin,
             },
             PlatCpuCoreConfig {
                 //cluster0
                 name: ARM_CORTEX_A55,
-                mpidr: 0x81000300,
-                sched: SchedRule::RoundRobin,
-            },
-            PlatCpuCoreConfig {
-                //cluster1
-                name: ARM_CORTEX_A76,
-                mpidr: 0x81000400,
-                sched: SchedRule::RoundRobin,
-            },
-            PlatCpuCoreConfig {
-                //cluster1
-                name: ARM_CORTEX_A76,
-                mpidr: 0x81000500,
-                sched: SchedRule::RoundRobin,
-            },
-            PlatCpuCoreConfig {
-                //cluster2
-                name: ARM_CORTEX_A76,
-                mpidr: 0x81000600,
-                sched: SchedRule::RoundRobin,
-            },
-            PlatCpuCoreConfig {
-                //cluster2
-                name: ARM_CORTEX_A76,
-                mpidr: 0x81000700,
+                mpidr: 3,
                 sched: SchedRule::RoundRobin,
             },
         ]
@@ -95,5 +71,5 @@ pub fn cpuid2mpidr(cpuid: usize) -> usize {
 }
 
 
-pub const GICD_BASE: usize = 0x8000000;
-pub const GICR_BASE: usize = 0x8000000;
+pub const GICD_BASE: usize = 0x08000000;
+pub const GICR_BASE: usize = 0x080a0000;
