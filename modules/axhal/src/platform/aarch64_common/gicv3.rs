@@ -23,6 +23,10 @@ pub const IPI_IRQ_NUM:               usize = 1;
 pub const HYPERVISOR_TIMER_IRQ_NUM:  usize = 26;
 pub const MAINTENANCE_IRQ_NUM:       usize = 25;
 
+// 来自v2
+/// The timer IRQ number.
+pub const TIMER_IRQ_NUM: usize = 30; // physical timer, type=PPI, id=14
+
 /* =========================================== */
 /* ================ InterFace ================ */
 /* =========================================== */
@@ -61,6 +65,13 @@ pub fn register_handler(irq_num: usize, handler: IrqHandler) -> bool {
 pub fn dispatch_irq(irq_num: usize) {
     debug!("dispatch_irq_hv: irq_num {}", irq_num);
     crate::irq::dispatch_irq_common(irq_num as _);
+}
+
+#[cfg(not(feature = "hv"))]
+pub fn dispatch_irq(_irq_num: usize) {
+    let intid = GICC.iar() as usize;
+    crate::irq::dispatch_irq_common(intid);
+    GICC.set_eoir(0);
 }
 
 
