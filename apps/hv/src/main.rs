@@ -164,6 +164,16 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
         0x10000,
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
     )?;
+
+    gpt.map_region(
+        0x80a0000,
+        0x80a0000,
+        0x10000,
+        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
+    )?;
+
+    debug!("gicd gicv gicr");
+
     if let Some(pcie) = meta.pcie {
         gpt.map_region(
             pcie.base_address,
