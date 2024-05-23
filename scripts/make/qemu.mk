@@ -8,9 +8,9 @@ ROOTFS ?= apps/hv/guest/$(GUEST)/rootfs.img
 
 ifeq ($(ARCH), aarch64)
   ROOTFS = apps/hv/guest/$(GUEST)/rootfs-aarch64.img
-  # GUEST_DTB = apps/hv/guest/$(GUEST)/$(GUEST)-aarch64.dtb
-  GUEST_DTB = apps/hv/guest/linux/v3.dtb
-  GUEST_BIN = apps/hv/guest/$(GUEST)/$(GUEST)-aarch64.bin
+  GUEST_DTB = apps/hv/guest/$(GUEST)/$(GUEST)-aarch64-v3.dtb
+  # GUEST_DTB = apps/hv/guest/linux/v3.dtb
+  GUEST_BIN = apps/hv/guest/$(GUEST)/$(GUEST)-aarch64-v3.bin
 endif
 
 

@@ -34,7 +34,7 @@ pub const TIMER_IRQ_NUM: usize = 30; // physical timer, type=PPI, id=14
 /// Initializes GICD, GICC on the primary CPU.
 pub(crate) fn init_primary() {
     gic_glb_init();
-    gic_cpu_init;
+    gic_cpu_init();
 }
 
 /// Initializes GICC on secondary CPUs.
