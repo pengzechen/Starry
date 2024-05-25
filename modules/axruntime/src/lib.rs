@@ -322,9 +322,9 @@ fn init_interrupt() {
 
         
         // axhal::GICD.lock().print_prio();
-/* 
+// /* 
         debug!("init hypervisor timer interrupt handler");
-        use axhal::time::HYPERVISOR_TIMER_IRQ_NUM;
+        use axhal::time::HYPERVISOR_TIMER_IRQ_NUM;    // 26
         // Setup timer interrupt handler
         const PERIODIC_INTERVAL_NANOS: u64 = axhal::time::NANOS_PER_SEC / axconfig::TICKS_PER_SEC as u64;
 
@@ -347,7 +347,7 @@ fn init_interrupt() {
             #[cfg(feature = "multitask")]
             axtask::on_timer_tick();
         });
-*/
+// */
     }
     
     // Enable IRQs before starting app

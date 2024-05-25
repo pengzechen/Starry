@@ -36,8 +36,8 @@ pub(crate) unsafe extern "C" fn rust_entry(cpu_id: usize, dtb: usize) {
     crate::mem::clear_bss();
     crate::arch::set_exception_vector_base(exception_vector_base as usize);
     crate::cpu::init_primary(cpu_id);
-    super::aarch64_common::pl011::init_early();
-    super::aarch64_common::generic_timer::init_early();
+    super::aarch64_common::pl011::init_early();             // 初始化锁
+    super::aarch64_common::generic_timer::init_early();     // 读寄存器 初始化频率
     rust_main(cpu_id, dtb);
 }
 
