@@ -710,9 +710,11 @@ fn get_prio(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraf
 
 pub fn vgic_inject(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftHalImpl>,
         int_id: usize) {
+    debug!("[vgic_inject] Core {} inject int {} to vm{}", current_cpu().cpu_id, int_id, vcpu.vm_id);
     let interrupt_option = get_int(vgic, vcpu.clone(), bit_extract(int_id, 0, 10));
     if let Some(interrupt) = interrupt_option {
         if interrupt.hw() {
+            debug!("[vgic_inject] interrupt is hw");
             let interrupt_lock = interrupt.lock.lock();
             interrupt.set_owner(vcpu.clone());
             interrupt.set_state(IrqState::IrqSPend);

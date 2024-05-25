@@ -179,7 +179,7 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
     )?;
 
-    debug!("gicd gicv gicr");
+    debug!("map gicd gicr");
 
     if let Some(pcie) = meta.pcie {
         gpt.map_region(

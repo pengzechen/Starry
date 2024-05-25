@@ -136,7 +136,7 @@ pub fn emu_intc_handler(_emu_dev_id: usize, emu_ctx: &EmuContext) -> bool {
 
     let vgic = vm.vgic();
     let vgicd_offset_prefix = offset >> 7;
-    trace!(
+    debug!(
         "current_cpu:{} emu_intc_handler offset:{:#x} is write:{},val:{:#x}",
         current_cpu().cpu_id,
         emu_ctx.address,

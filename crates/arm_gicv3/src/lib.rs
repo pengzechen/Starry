@@ -12,6 +12,7 @@ use core::mem::size_of;
 use core::sync::atomic::{AtomicUsize, Ordering};
 
 use alloc::collections::BTreeSet;
+use log::debug;
 
 use core::marker::Copy;
 use core::writeln;
@@ -309,7 +310,7 @@ impl GicDistributor {
 
     pub fn global_init(&self) {
         let int_num = gic_max_spi();
-
+        debug!("file: arm_gicv3 lib, func global_init, int_num: {}", int_num);
         for i in (GIC_PRIVATE_INT_NUM / 32)..(int_num / 32) {
             self.IGROUPR[i].set(u32::MAX);
             self.ICENABLER[i].set(u32::MAX);
@@ -326,9 +327,10 @@ impl GicDistributor {
         }
 
         let prev = self.CTLR.get();
-
+        debug!("prev: {}", prev);
         self.CTLR
             .set(prev | GICD_CTLR_ARE_NS_BIT as u32 | GICD_CTLR_ENNS_BIT as u32);
+        debug!("after: {}", self.CTLR.get());
     }
 
     

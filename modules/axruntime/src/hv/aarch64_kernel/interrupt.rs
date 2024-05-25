@@ -26,6 +26,7 @@ pub fn handle_virtual_interrupt(irq_num: usize, src: usize) {
     // if irq_num >= 16 && irq_num < 32 {
         let vcpu = current_cpu().get_active_vcpu().unwrap().clone();
         if vm.has_interrupt(irq_num) {
+            debug!("-------inject--------");
             interrupt_vm_inject(vm, vcpu, irq_num);
         }
         /* 
@@ -70,9 +71,9 @@ fn interrupt_vm_inject(vm: &mut VM<HyperCraftHalImpl, GuestPageTable>, vcpu: VCp
     // restore_vcpu_gic(current_cpu().active_vcpu.clone(), vcpu.clone());
     if let Some(cur_vcpu) = current_cpu().get_active_vcpu().clone() {
         if cur_vcpu.vm_id == vcpu.vm_id {
-            //debug!("[interrupt_vm_inject] before vgic_inject");
+            debug!("[interrupt_vm_inject] before vgic_inject");
             vgic_inject(&*vgic, vcpu, irq_num);
-            //debug!("[interrupt_vm_inject] after vm {} inject irq {}", vm.vm_id, irq_num);
+            debug!("[interrupt_vm_inject] after vm {} inject irq {}", vm.vm_id, irq_num);
             return;
         }
     }

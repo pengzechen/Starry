@@ -26,7 +26,7 @@ impl axhal::trap::TrapHandler for TrapHandlerImpl {
             handle_virtual_interrupt(irq_num, src);
         }
         
-        //debug!("[handle_irq_hv] before deactivate irq {} ", irq_num);
+        debug!("[handle_irq_hv] before deactivate irq {} ", irq_num);
         
         if irq_num==axhal::IPI_IRQ_NUM || irq_num==axhal::MAINTENANCE_IRQ_NUM || irq_num==axhal::HYPERVISOR_TIMER_IRQ_NUM {
             axhal::gicc_clear_current_irq(irq_num, true);
@@ -34,7 +34,7 @@ impl axhal::trap::TrapHandler for TrapHandlerImpl {
             axhal::gicc_clear_current_irq(irq_num, false);
         }
 
-        //debug!("[handle_irq_hv] after deactivate irq {} ", irq_num);
+        debug!("[handle_irq_hv] after deactivate irq {} ", irq_num);
         current_cpu().clear_ctx();
     }
 }

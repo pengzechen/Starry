@@ -125,7 +125,7 @@ pub fn deactivate_irq(iar: usize) {
 pub fn gicc_get_current_irq() -> (usize, usize) {
     let iar = GICC.iar();
     let irq = iar as usize;
-    // debug!("this is iar:{:#x}", iar);
+    debug!("this is iar:{:#x}", iar);
     // current_cpu().current_irq = irq;
     let irq = bit_extract(irq, 0, 10);
     let src = bit_extract(irq, 10, 3);
@@ -136,6 +136,7 @@ pub fn gicc_get_current_irq() -> (usize, usize) {
 // remove current_cpu().current_irq ,add an argument
 pub fn gicc_clear_current_irq( irq: usize, for_hypervisor: bool) {
     // let irq = current_cpu().current_irq as u32;
+    debug!("gicc clear current irq: {}", irq);
     let irq = irq as u32;
     if irq == 0 {
         return;
@@ -154,12 +155,19 @@ pub fn gicc_clear_current_irq( irq: usize, for_hypervisor: bool) {
 
 
 pub fn gic_glb_init() {
-    set_gic_lrs(gich_lrs_num());
+    debug!("====== glb_init start ======");
+    let gich_num = gich_lrs_num();
+    debug!("file: gicv3, gich_num: {}", gich_num);
+    set_gic_lrs(gich_num);
+    debug!("file: gicv3, GIC_LRS_NUM store: {}", gic_lrs());
     GICD.global_init();
+    debug!("====== glb_init ended ======");
 }
 
 pub fn gic_cpu_init() {
-    GICR.init(this_cpu_id());
+    let cpu_id = this_cpu_id();
+    debug!("this cpu id {}", cpu_id);
+    GICR.init(cpu_id);
     GICC.init();
 }
 

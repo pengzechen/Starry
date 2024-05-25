@@ -68,10 +68,10 @@ fn current_spxel_irq(ctx: &mut ContextFrame) {
 /// deal with lower aarch64 interruption exception
 #[no_mangle]
 fn lower_aarch64_irq(ctx: &mut ContextFrame) {
-    //debug!("IRQ routed to EL2!!!!!!!!!!!!!!!");
+    debug!("IRQ routed to EL2!!!!!!!!!!!!!!!");
     // read_timer_regs();
     let (irq, src) = gicc_get_current_irq();
-    //debug!("src {} id{}", src, irq);
+    debug!("src {} id{}", src, irq);
     crate::trap::handle_irq_extern_hv(irq, src, ctx);
 }
 
