@@ -1,6 +1,12 @@
 mod boot;
 
+#[cfg(all(feature = "irq", not(feature = "hv")))]
 pub mod generic_timer;
+
+#[cfg(all(feature = "irq", feature = "hv"))]
+pub mod generic_timer_hv;
+
+
 pub mod pl011;
 pub mod psci;
 

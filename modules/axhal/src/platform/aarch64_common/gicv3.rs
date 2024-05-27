@@ -16,7 +16,7 @@ use crate::cpu::this_cpu_id;
 
 use core::sync::atomic::Ordering;
 
-use crate::{irq::IrqHandler};
+use crate::irq::IrqHandler;
 
 // like gic v2
 pub const IPI_IRQ_NUM:               usize = 1;
