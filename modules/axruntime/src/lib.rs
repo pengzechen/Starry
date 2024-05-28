@@ -322,7 +322,7 @@ fn init_interrupt() {
 
         
         // axhal::GICD.lock().print_prio();
-// /* 
+/* 
         debug!("init hypervisor timer interrupt handler");
         use axhal::time::HYPERVISOR_TIMER_IRQ_NUM;    // 26
         // Setup timer interrupt handler
@@ -339,6 +339,7 @@ fn init_interrupt() {
                 deadline = now_ns + PERIODIC_INTERVAL_NANOS;
             }
             unsafe { NEXT_DEADLINE.write_current_raw(deadline + PERIODIC_INTERVAL_NANOS) };
+            debug!("this-----------");
             axhal::time::set_oneshot_timer(deadline);
         }
         
@@ -347,7 +348,7 @@ fn init_interrupt() {
             #[cfg(feature = "multitask")]
             axtask::on_timer_tick();
         });
-// */
+*/
     }
     
     // Enable IRQs before starting app

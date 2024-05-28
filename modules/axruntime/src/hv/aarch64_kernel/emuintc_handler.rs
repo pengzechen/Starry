@@ -458,3 +458,127 @@ pub fn gic_maintenance_handler() {
     }
 }
 
+
+
+
+// ================  GICR ==================
+
+const VGICR_REG_OFFSET_CLTR: usize = 0x0;
+const VGICR_REG_OFFSET_TYPER: usize = 0x8;
+const VGICR_REG_OFFSET_PROPBASER: usize = 0x70;
+const VGICR_REG_OFFSET_PENDBASER: usize = 0x78;
+const VGICR_REG_OFFSET_ISENABLER0: usize = 0x10100;
+const VGICR_REG_OFFSET_ISPENDR0: usize = 0x10200;
+const VGICR_REG_OFFSET_ISACTIVER0: usize = 0x10300;
+const VGICR_REG_OFFSET_ICENABLER0: usize = 0x10180;
+const VGICR_REG_OFFSET_ICPENDR0: usize = 0x10280;
+const VGICR_REG_OFFSET_ICACTIVER0: usize = 0x10380;
+const VGICR_REG_OFFSET_ICFGR0: usize = 0x10c00;
+const VGICR_REG_OFFSET_ICFGR1: usize = 0x10c04;
+
+#[derive(Debug)]
+enum GicrRegs {
+    CLTR = 0x0,
+    TYPER = 0x8,
+    ISENABLER0 = 0x10100,
+    ISPENDR0 = 0x10200,
+    ISACTIVER0 = 0x10300,
+    ICENABLER0 = 0x10180,
+    ICPENDR0 = 0x10280,
+    ICACTIVER0 = 0x10380,
+    ICFGR0 = 0x10c00,
+    ICFGR1 = 0x10c04,
+    Others,
+}
+
+impl From<usize> for GicrRegs {
+    fn from(val: usize) -> Self {
+        match val {
+            0x0 => Self::CLTR,
+            0x8 => Self::TYPER,
+            0x10100 => Self::ISENABLER0,
+            0x10200 => Self::ISPENDR0,
+            0x10300 => Self::ISACTIVER0,
+            0x10180 => Self::ICENABLER0,
+            0x10280 => Self::ICPENDR0,
+            0x10380 => Self::ICACTIVER0,
+            0x10c00 => Self::ICFGR0,
+            0x10c04 => Self::ICFGR1,
+            _ => Self::Others,
+        }
+    }
+}
+
+#[cfg(feature = "gic_v3")]
+pub fn emul_vgicr_handler(_emu_dev_id: usize, emu_ctx: &EmuContext) -> bool {
+    let vm: &mut VM<HyperCraftHalImpl, GuestPageTable> = active_vm();
+
+    let vgic = vm.vgic();
+
+    let vgicr_id = vgicr_get_id(emu_ctx);
+    let offset = emu_ctx.address & 0x1ffff;
+
+    trace!(
+        "current_cpu:{}emul_vgicr_handler addr:{:#x} reg {:?} offset {:#x} is write:{}, val:{:#x}",
+        current_cpu().cpu_id,
+        emu_ctx.address,
+        GicrRegs::from(offset),
+        offset,
+        emu_ctx.write,
+        current_cpu().get_gpr(emu_ctx.reg)
+    );
+
+    match offset {
+        VGICR_REG_OFFSET_CLTR => {
+            vgicr_emul_ctrl_access(emu_ctx);
+        }
+        VGICR_REG_OFFSET_TYPER => {
+            vgicr_emul_typer_access(&*vgic, emu_ctx, vgicr_id as usize);
+        }
+        VGICR_REG_OFFSET_ISENABLER0 => {
+            emu_isenabler_access(&*vgic, emu_ctx);
+        }
+        VGICR_REG_OFFSET_ISPENDR0 => {
+            emu_ispendr_access(&*vgic, emu_ctx);
+        }
+        VGICR_REG_OFFSET_ISACTIVER0 => {
+            emu_isactiver_access(&*vgic, emu_ctx);
+        }
+        VGICR_REG_OFFSET_ICENABLER0 => {
+            emu_icenabler_access(&*vgic, emu_ctx);
+        }
+        VGICR_REG_OFFSET_ICPENDR0 => {
+            emu_icpendr_access(&*vgic, emu_ctx);
+        }
+        VGICR_REG_OFFSET_ICACTIVER0 => {
+            emu_icactiver_access(&*vgic, emu_ctx);
+        }
+        VGICR_REG_OFFSET_ICFGR0 | VGICR_REG_OFFSET_ICFGR1 => {
+            emu_icfgr_access(&*vgic, emu_ctx);
+        }
+        VGICR_REG_OFFSET_PROPBASER => {
+            emu_probaser_access(&*vgic, emu_ctx);
+        }
+        VGICR_REG_OFFSET_PENDBASER => {
+            emu_pendbaser_access(&*vgic, emu_ctx);
+        }
+        _ => {
+            if (0x10400..0x10420).contains(&offset) {
+                emu_ipriorityr_access(&*vgic, emu_ctx);
+            } else if (0xffd0..0x10000).contains(&offset) {
+                vgicr_emul_pidr_access(emu_ctx, vgicr_id as usize);
+            } else {
+                emu_razwi(&*vgic, emu_ctx);
+            }
+        }
+    }
+    true
+}
+
+
+pub fn emu_vgicr_init(vm: &mut VM<HyperCraftHalImpl, GuestPageTable>, emu_dev_id: usize) {
+    let vigc = vm.emu_dev(vm.intc_dev_id()).clone();
+    vm.set_emu_devs(emu_dev_id, vigc);
+}
+
+

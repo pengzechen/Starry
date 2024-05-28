@@ -10,7 +10,7 @@ use lazy_init::LazyInit;
 use axhal::cpu::this_cpu_id;
 
 use super::emu::emu_register_dev;
-use super::emuintc_handler::{emu_intc_handler, emu_intc_init};
+use super::emuintc_handler::{emu_intc_handler, emu_intc_init, emul_vgicr_handler, emu_vgicr_init};
 use super::emuuart_handler::{emu_uart_handler, emu_uart_init};
 use super::interrupt::interrupt_vm_register;
 use crate::{GuestPageTable, HyperCraftHalImpl};
@@ -60,15 +60,28 @@ pub fn init_vm_emu_device(vm_id: usize) {
             // init emu intc
             let idx = 0;
             vm.set_intc_dev_id(idx);
+            
             emu_register_dev(
                 EmuDeviceType::EmuDeviceTGicd,
                 vm.vm_id,
                 idx,
                 0x8000000, // emu_dev.base_ipa,
-                0x1000,    // emu_dev.length,
+                0x10000,      // emu_dev.length,    // v3 10000, v2 1000
                 emu_intc_handler,
             );
             emu_intc_init(vm, idx);
+
+            let idx = 11;
+
+            emu_register_dev(
+                EmuDeviceType::EmuDeviceTGICR,
+                vm.vm_id,
+                idx,
+                0x80a0000,
+                0xfc0000,
+                emul_vgicr_handler,
+            );
+            emu_vgicr_init(vm, idx);
 
             if vm_id!=0 {
                 // init emu uart
@@ -101,7 +114,7 @@ pub fn init_vm_passthrough_device(vm_id: usize) {
             let mut irqs = Vec::new();
             irqs.push(33);  
             irqs.push(27);  // virtual timer
-            // irqs.push(30);
+            // irqs.push(26);
             irqs.push(32 + 0x28);
             irqs.push(32 + 0x29);
             irqs.push(0x3e + 0x11);  // what interrupt????

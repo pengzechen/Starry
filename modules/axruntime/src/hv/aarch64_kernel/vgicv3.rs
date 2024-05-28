@@ -1323,3 +1323,67 @@ pub fn vgicd_set_irouter(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: V
         drop(interrupt_lock);
     }
 }
+
+
+// ================ vGICR ==============
+
+pub fn vgicr_emul_typer_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx: &EmuContext, vgicr_id: usize) {
+    let cpu_priv = vgic.cpu_priv.lock();
+    if !emu_ctx.write {
+        current_cpu().set_gpr(emu_ctx.reg, cpu_priv[vgicr_id].vigcr.get_typer() as usize);
+    }
+}
+
+pub fn emu_probaser_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx: &EmuContext) {
+    if emu_ctx.write {
+        GICR.set_propbaser(current_cpu().cpu_id, current_cpu().get_gpr(emu_ctx.reg));
+    } else {
+        current_cpu().set_gpr(emu_ctx.reg, GICR.get_propbaser(current_cpu().cpu_id) as usize);
+    }
+}
+
+pub fn emu_pendbaser_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx: &EmuContext) {
+    if emu_ctx.write {
+        GICR.set_pendbaser(current_cpu().cpu_id, current_cpu().get_gpr(emu_ctx.reg));
+    } else {
+        current_cpu().set_gpr(emu_ctx.reg, GICR.get_pendbaser(current_cpu().cpu_id) as usize);
+    }
+}
+
+// pzc changed here
+pub fn vgicr_emul_pidr_access(emu_ctx: &EmuContext, vgicr_id: usize) {
+    if !emu_ctx.write {
+        // let pgicr_id = current_cpu()
+        //     .active_vcpu
+        //     .clone()
+        //     .unwrap()
+        //     .vm()
+        //     .unwrap()
+        //     .vcpuid_to_pcpuid(vgicr_id);
+        let pgicr_id = active_vm().vcpuid_to_pcpuid(vgicr_id).unwrap();
+        // if let Ok(pgicr_id) = pgicr_id {
+            current_cpu().set_gpr(
+                emu_ctx.reg,
+                GICR.get_id(pgicr_id as u32, ((emu_ctx.address & 0xff) - 0xd0) / 4) as usize,
+            );
+        // }
+    }
+}
+
+
+use core::mem::size_of;
+use arm_gicv3::GicRedistributor;
+
+
+#[inline(always)]
+pub fn vgicr_get_id(emu_ctx: &EmuContext) -> u32 {
+    ((emu_ctx.address - 0x80a0000) / size_of::<GicRedistributor>()) as u32
+}
+
+pub fn vgicr_emul_ctrl_access(emu_ctx: &EmuContext) {
+    if !emu_ctx.write {
+        current_cpu().set_gpr(emu_ctx.reg, GICR.get_ctrl(current_cpu().cpu_id as u32) as usize);
+    } else {
+        GICR.set_ctrlr(current_cpu().cpu_id, current_cpu().get_gpr(emu_ctx.reg));
+    }
+}

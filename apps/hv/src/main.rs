@@ -165,6 +165,7 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
         0x20000,
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
     )?;
+
     // v3 its
     gpt.map_region(
         0x8080000,
@@ -172,12 +173,14 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
         0x20000,
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
     )?;
-    gpt.map_region(
-        0x80a0000,
-        0x80a0000,
-        0xf60000,
-        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-    )?;
+
+    // v3 gicr
+    // gpt.map_region(
+    //     0x80a0000,
+    //     0x80a0000,
+    //     0xf60000,
+    //     MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
+    // )?;
 
     debug!("map gicd gicr");
 
