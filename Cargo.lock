@@ -239,6 +239,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "arm_gicv3"
+version = "0.1.0"
+dependencies = [
+ "log",
+ "spin 0.9.8",
+ "tock-registers",
+]
+
+[[package]]
 name = "arm_pl011"
 version = "0.1.0"
 dependencies = [
@@ -399,6 +408,7 @@ version = "0.1.0"
 dependencies = [
  "aarch64-cpu",
  "arm_gic",
+ "arm_gicv3",
  "arm_pl011",
  "axalloc",
  "axconfig",
@@ -529,6 +539,7 @@ name = "axruntime"
 version = "0.1.0"
 dependencies = [
  "arm_gic",
+ "arm_gicv3",
  "axalloc",
  "axconfig",
  "axdisplay",
@@ -1286,6 +1297,7 @@ version = "0.1.0"
 dependencies = [
  "aarch64-cpu",
  "arm_gic",
+ "arm_gicv3",
  "arrayvec",
  "cortex-a",
  "lazy_init",

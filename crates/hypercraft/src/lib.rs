@@ -12,7 +12,7 @@
     unused_imports,
     unused_assignments
 )]
-#![deny(missing_docs, warnings)]
+// #![deny(missing_docs, warnings)]
 
 #![feature(naked_functions, asm_const, negative_impls, stdsimd, inline_const, concat_idents)]
 
@@ -46,7 +46,16 @@ pub use memory::{
 };
 pub use vcpus::VmCpus;
 
-pub use arch::{VcpusArray, IrqState};
+pub use arch::VcpusArray;
+#[cfg(not(feature = "gic_v3"))]
+pub use arch::gic::IrqState;
+#[cfg(not(feature = "gic_v3"))]
+pub use arch::gic;
+
+#[cfg(feature = "gic_v3")]
+pub use arch::gicv3::IrqState;
+#[cfg(feature = "gic_v3")]
+pub use arch::gicv3;
 
 /// The error type for hypervisor operation failures.
 #[derive(Debug, PartialEq)]

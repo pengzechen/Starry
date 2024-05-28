@@ -86,9 +86,22 @@ else
   qemu_args-$(ACCEL) += -cpu host -accel kvm
 endif
 
+# ifeq ($(HV), y)
+#   qemu_args += -machine virtualization=on
+# endif
+
 ifeq ($(HV), y)
-  qemu_args += -machine virtualization=on
+  ifeq ($(ARCH), aarch64)
+    qemu_args-y := \
+        -m 3G -smp $(SMP) $(qemu_args-$(ARCH)) \
+    	  -device loader,file=$(GUEST_DTB),addr=0x70000000,force-raw=on \
+        -device loader,file=$(GUEST_BIN),addr=0x70200000,force-raw=on \
+        -machine virtualization=on,gic-version=3,secure=on -nographic
+  endif
+else
+  qemu_args-y := -m 128M -smp $(SMP) $(qemu_args-$(ARCH))
 endif
+
 
 define run_qemu
   @printf "    $(CYAN_C)Running$(END_C) on qemu...\n"

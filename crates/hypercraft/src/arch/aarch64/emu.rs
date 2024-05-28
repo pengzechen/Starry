@@ -3,7 +3,12 @@ use alloc::vec::Vec;
 use core::fmt::{Display, Formatter};
 use spin::Mutex;
 
-use super::vgic::Vgic;
+
+#[cfg(not(feature = "gic_v3"))]
+use super::vgic::Vgic;  // temp use
+#[cfg(feature = "gic_v3")]
+use super::vgicv3::Vgic;
+
 use super::vuart::Vuart;
 use crate::{HyperCraftHal, GuestPageTableTrait};
 

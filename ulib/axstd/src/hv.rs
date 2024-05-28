@@ -1,8 +1,8 @@
 //! Hypervisor related functions
 
 pub use axhal::mem::{phys_to_virt, virt_to_phys, PhysAddr};
-pub use axruntime::GuestPageTable;
-pub use axruntime::HyperCraftHalImpl;
+// pub use axruntime::GuestPageTable;
+// pub use axruntime::HyperCraftHalImpl;
 pub use hypercraft::GuestPageTableTrait;
 
 pub use hypercraft::HyperError as Error;
@@ -18,3 +18,6 @@ pub use axruntime::{
     is_vcpu_init_ok, is_vcpu_primary_ok,
     run_vm_vcpu, 
 };
+
+pub use axruntime::GuestPageTable;
+pub use axruntime::HyperCraftHalImpl;

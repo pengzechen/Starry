@@ -5,7 +5,12 @@ use core::fmt::Formatter;
 use cortex_a::registers::*;
 
 use crate::{msr, mrs};
+
+#[cfg(not(feature = "gic_v3"))]
 use crate::arch::gic::GicState;
+#[cfg(feature = "gic_v3")]
+use crate::arch::gicv3::GicState;
+
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]

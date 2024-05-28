@@ -38,12 +38,38 @@ extern crate log;
 /// The kernel process ID, which is always 1.
 pub const KERNEL_PROCESS_ID: u64 = 1;
 
+#[cfg(not(all(feature = "hv", feature = "irq", feature = "gic_v3")))]
 pub use platform::aarch64_common::gic::{ 
     gicc_get_current_irq, gicc_clear_current_irq, deactivate_irq, gic_is_priv, gic_lrs, interrupt_cpu_ipi_send, 
     GIC_SPI_MAX, IPI_IRQ_NUM, GICV, GICH, GIC, GICD_BASE,  MAINTENANCE_IRQ_NUM, HYPERVISOR_TIMER_IRQ_NUM
 };
 
+#[cfg(feature = "gic_v3")]
+pub use platform::aarch64_common::gicv3;
+
 pub use platform::aarch64_common::pl011::UART;
+
+
+#[cfg(all(feature = "hv", feature = "irq", not(feature = "gic_v3")))]
+pub use platform::aarch64_common::gic::{
+    gicc_get_current_irq, deactivate_irq, interrupt_cpu_ipi_send, 
+    gic_is_priv, gic_lrs, gicc_clear_current_irq, gicv_clear_current_irq,
+    GICH, GICD, GICV, GICC, GICD_BASE, GIC_SPI_MAX,
+    IPI_IRQ_NUM, MAINTENANCE_IRQ_NUM,
+};
+
+#[cfg(all(feature = "hv", feature = "irq", feature = "gic_v3"))]
+pub use platform::aarch64_common::gicv3::{
+    gicc_get_current_irq, deactivate_irq, interrupt_cpu_ipi_send, 
+    gic_lrs, gicc_clear_current_irq,
+    GICD, GICC, GICH, GIC_SPI_MAX, IPI_IRQ_NUM, MAINTENANCE_IRQ_NUM, HYPERVISOR_TIMER_IRQ_NUM
+};
+
+// #[cfg(feature = "gic_v3")]
+// pub use platform::aarch64_common::gicv3;
+
+#[cfg(all(feature = "hv"))]
+// pub use platform::aarch64_common::pl011::UART;
 
 mod platform;
 

@@ -106,8 +106,12 @@ pub fn smc_call(x0: u32, x1: usize, x2: usize, x3: usize) -> (usize, usize, usiz
         (r0, r1, r2, r3)
     }
 
-    #[cfg(not(target_arch = "aarch64"))]
-    error!("smc not supported");
+    // #[cfg(not(target_arch = "aarch64"))]
+    // error!("smc not supported");
+    #[cfg(not(target_arch = "aarch64"))]{
+        error!("smc not supported");
+        (0, 0, 0, 0)
+    }
 }
 
 

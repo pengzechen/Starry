@@ -26,4 +26,10 @@ memory_addr = { path = "../memory_addr" }
 cortex-a = "8.1.1"
 aarch64-cpu = "9.3"
 arm_gic = { path = "../arm_gic" }
+arm_gicv3 = { path = "../arm_gicv3" }
 smccc = "0.1.1"
+
+[features]
+
+gic_v3 = []
+default = ["gic_v3"]

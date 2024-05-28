@@ -16,7 +16,7 @@ use hypercraft::arch::vgic::{Vgic, VgicInt};
 use hypercraft::{IrqState, VCpu, VM};
 
 use crate::{GuestPageTable, HyperCraftHalImpl};
-// use hypercraft::{GuestPageTableTrait};
+use hypercraft::GuestPageTableTrait;
 // use hypercraft::{GuestPageTableTrait, HyperCraftHal};
 
 use super::vm_array::get_vm;
@@ -699,60 +699,6 @@ fn get_icfgr(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCra
     }
 }
 
-pub fn sgi_set_pend(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftHalImpl>, int_id: usize, pend: bool) {
-    // let begin = time_current_us();
-    if bit_extract(int_id, 0, 10) > GIC_SGIS_NUM {
-        return;
-    }
-
-    let interrupt_option = get_int(vgic, vcpu.clone(), bit_extract(int_id, 0, 10));
-    let source = bit_extract(int_id, 10, 5);
-
-    if let Some(interrupt) = interrupt_option {
-        let interrupt_lock = interrupt.lock.lock();
-        remove_lr(vgic, vcpu.clone(), interrupt.clone());
-        let vcpu_id = vcpu.vcpu_id;
-
-        let vgic_int_id = interrupt.id() as usize;
-        let pendstate = vgic.cpu_priv_sgis_pend(vcpu_id, vgic_int_id);
-        // let pendstate = cpu_priv[vcpu_id].sgis[vgic_int_id].pend;
-        let new_pendstate = if pend {
-            pendstate | (1 << source) as u8
-        } else {
-            pendstate & !(1 << source) as u8
-        };
-        if (pendstate ^ new_pendstate) != 0 {
-            // cpu_priv[vcpu_id].sgis[vgic_int_id].pend = new_pendstate;
-            vgic.set_cpu_priv_sgis_pend(vcpu_id, vgic_int_id, new_pendstate);
-            let state = interrupt.state().to_num();
-            if new_pendstate != 0 {
-                interrupt.set_state(IrqState::num_to_state(state | 1));
-            } else {
-                interrupt.set_state(IrqState::num_to_state(state & !1));
-            }
-
-            update_int_list(vgic, vcpu.clone(), interrupt.clone());
-
-            // debug!("state {}", interrupt.state().to_num());
-            match interrupt.state() {
-                IrqState::IrqSInactive => {
-                    debug!("inactive");
-                }
-                _ => {
-                    add_lr(vgic, vcpu, interrupt.clone());
-                }
-            }
-        }
-        drop(interrupt_lock);
-    } else {
-        debug!(
-            "sgi_set_pend: interrupt {} is None",
-            bit_extract(int_id, 0, 10)
-        );
-    }
-    // let end = time_current_us();
-    // debug!("sgi_set_pend[{}]", end - begin);
-}
 
 fn set_priority(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftHalImpl>, int_id: usize, mut prio: u8) {
     let interrupt_option = get_int(vgic, vcpu.clone(), int_id);
@@ -885,6 +831,62 @@ fn get_target(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCr
     let interrupt_option = get_int(vgic, vcpu, int_id);
     return interrupt_option.unwrap().targets();
 }
+
+pub fn sgi_set_pend(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftHalImpl>, int_id: usize, pend: bool) {
+    // let begin = time_current_us();
+    if bit_extract(int_id, 0, 10) > GIC_SGIS_NUM {
+        return;
+    }
+
+    let interrupt_option = get_int(vgic, vcpu.clone(), bit_extract(int_id, 0, 10));
+    let source = bit_extract(int_id, 10, 5);
+
+    if let Some(interrupt) = interrupt_option {
+        let interrupt_lock = interrupt.lock.lock();
+        remove_lr(vgic, vcpu.clone(), interrupt.clone());
+        let vcpu_id = vcpu.vcpu_id;
+
+        let vgic_int_id = interrupt.id() as usize;
+        let pendstate = vgic.cpu_priv_sgis_pend(vcpu_id, vgic_int_id);
+        // let pendstate = cpu_priv[vcpu_id].sgis[vgic_int_id].pend;
+        let new_pendstate = if pend {
+            pendstate | (1 << source) as u8
+        } else {
+            pendstate & !(1 << source) as u8
+        };
+        if (pendstate ^ new_pendstate) != 0 {
+            // cpu_priv[vcpu_id].sgis[vgic_int_id].pend = new_pendstate;
+            vgic.set_cpu_priv_sgis_pend(vcpu_id, vgic_int_id, new_pendstate);
+            let state = interrupt.state().to_num();
+            if new_pendstate != 0 {
+                interrupt.set_state(IrqState::num_to_state(state | 1));
+            } else {
+                interrupt.set_state(IrqState::num_to_state(state & !1));
+            }
+
+            update_int_list(vgic, vcpu.clone(), interrupt.clone());
+
+            // debug!("state {}", interrupt.state().to_num());
+            match interrupt.state() {
+                IrqState::IrqSInactive => {
+                    debug!("inactive");
+                }
+                _ => {
+                    add_lr(vgic, vcpu, interrupt.clone());
+                }
+            }
+        }
+        drop(interrupt_lock);
+    } else {
+        debug!(
+            "sgi_set_pend: interrupt {} is None",
+            bit_extract(int_id, 0, 10)
+        );
+    }
+    // let end = time_current_us();
+    // debug!("sgi_set_pend[{}]", end - begin);
+}
+
 
 /// inject interrupt to vgic
 pub fn vgic_inject(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftHalImpl>, int_id: usize) {
@@ -1219,70 +1221,7 @@ pub fn emu_icfgr_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx:
     }
 }
 
-/// access emulated gicd sgi related registers
-pub fn emu_sgiregs_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx: &EmuContext) {
-    debug!("this is emu_sgiregs_access");
-    let idx = emu_ctx.reg;
-    let val = if emu_ctx.write {
-        current_cpu().get_gpr(idx)
-    } else {
-        0
-    };
-    let vm = active_vm();
 
-    // if the address is sgir (offset 0x0f00)
-    let cfg_bits = usize::from(axhal::GICD_BASE + 0x0f00) + 0x0f00;
-    if bit_extract(emu_ctx.address, 0, 12) == bit_extract(cfg_bits, 0, 12) {
-        if emu_ctx.write {
-            // TargetListFilter, bits [25:24] Determines how the Distributor processes the requested SGI.
-            let sgir_target_list_filter = bit_extract(val, 24, 2);
-            let mut trgtlist = 0;
-            match sgir_target_list_filter {
-                // 0b00 Forward the interrupt to the CPU interfaces specified by GICD_SGIR.CPUTargetList[23:16].
-                0 => {
-                    trgtlist = vgic_target_translate(vm, bit_extract(val, 16, 8) as u32, true)
-                        as usize;
-                }
-                // 0b01 Forward the interrupt to all CPU interfaces except that of the PE that requested the interrupt.
-                1 => {
-                    // todo: implement multi cpu for one vm
-                    // trgtlist = active_vm_ncpu() & !(1 << current_cpu().id);
-                }
-                // 0b10 Forward the interrupt only to the CPU interface of the PE that requested the interrupt.
-                2 => {
-                    trgtlist = 1 << current_cpu().cpu_id;
-                }
-                // 0b11 Reserved.
-                3 => {
-                    return;
-                }
-                _ => {}
-            }
-            // GICv2 only support 8 pe. doto sgi between multi core
-            /*
-            for i in 0..8 {
-                if trgtlist & (1 << i) != 0 {
-                    let m = IpiInitcMessage {
-                        event: InitcEvent::VgicdSetPend,
-                        vm_id: active_vm_id(),
-                        int_id: (bit_extract(val, 0, 8) | (active_vcpu_id() << 10)) as u16,
-                        val: true as u8,
-                    };
-                    if !ipi_send_msg(i, IpiType::IpiTIntc, IpiInnerMsg::Initc(m)) {
-                        debug!(
-                            "emu_sgiregs_access: Failed to send ipi message, target {} type {}",
-                            i, 0
-                        );
-                    }
-                }
-            }
-            */
-        }
-    } else {
-        // TODO: CPENDSGIR and SPENDSGIR access
-        debug!("unimplemented: CPENDSGIR and SPENDSGIR access");
-    }
-}
 
 /// access emulated gicd ipriorityr
 pub fn emu_ipriorityr_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx: &EmuContext) {
@@ -1333,40 +1272,6 @@ pub fn emu_ipriorityr_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu
     }
 }
 
-/// access emulated gicd itargetr
-pub fn emu_itargetr_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx: &EmuContext) {
-    debug!("[emu_itargetr_access] this is emu_itargetr_access");
-    let idx = emu_ctx.reg;
-    let mut val = if emu_ctx.write {
-        current_cpu().get_gpr(idx)
-    } else {
-        0
-    };
-    let first_int = (8 / GIC_TARGET_BITS) * bit_extract(emu_ctx.address, 0, 9);
-
-    if emu_ctx.write {
-        val = vgic_target_translate(active_vm(), val as u32, true) as usize;
-        for i in 0..emu_ctx.width {
-            set_target(vgic, 
-                current_cpu().get_active_vcpu().unwrap().clone(),
-                first_int + i,
-                bit_extract(val, GIC_TARGET_BITS * i, GIC_TARGET_BITS) as u8,
-            );
-        }
-    } else {
-        // debug!("read, first_int {}, width {}", first_int, emu_ctx.width);
-        for i in 0..emu_ctx.width {
-            // debug!("{}", get_target(vgic, active_vcpu().unwrap(), first_int + i));
-            val |= (get_target(vgic, current_cpu().get_active_vcpu().unwrap().clone(), first_int + i) as usize)
-                << (GIC_TARGET_BITS * i);
-        }
-        debug!("[emu_itargetr_access] after read val {}", val);
-        val = vgic_target_translate(active_vm(), val as u32, false) as usize;
-        let idx = emu_ctx.reg;
-        current_cpu().set_gpr(idx, val);
-    }
-    debug!("[emu_itargetr_access] in the end of emu_itargetr_access");
-}
 
 // End Of Interrupt maintenance interrupt asserted.
 pub fn handle_trapped_eoir(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftHalImpl>) {
@@ -1410,6 +1315,106 @@ pub fn handle_trapped_eoir(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu:
             1,
             true,
         );
+    }
+}
+
+
+/// access emulated gicd itargetr
+pub fn emu_itargetr_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx: &EmuContext) {
+    debug!("[emu_itargetr_access] this is emu_itargetr_access");
+    let idx = emu_ctx.reg;
+    let mut val = if emu_ctx.write {
+        current_cpu().get_gpr(idx)
+    } else {
+        0
+    };
+    let first_int = (8 / GIC_TARGET_BITS) * bit_extract(emu_ctx.address, 0, 9);
+
+    if emu_ctx.write {
+        val = vgic_target_translate(active_vm(), val as u32, true) as usize;
+        for i in 0..emu_ctx.width {
+            set_target(vgic, 
+                current_cpu().get_active_vcpu().unwrap().clone(),
+                first_int + i,
+                bit_extract(val, GIC_TARGET_BITS * i, GIC_TARGET_BITS) as u8,
+            );
+        }
+    } else {
+        // debug!("read, first_int {}, width {}", first_int, emu_ctx.width);
+        for i in 0..emu_ctx.width {
+            // debug!("{}", get_target(vgic, active_vcpu().unwrap(), first_int + i));
+            val |= (get_target(vgic, current_cpu().get_active_vcpu().unwrap().clone(), first_int + i) as usize)
+                << (GIC_TARGET_BITS * i);
+        }
+        debug!("[emu_itargetr_access] after read val {}", val);
+        val = vgic_target_translate(active_vm(), val as u32, false) as usize;
+        let idx = emu_ctx.reg;
+        current_cpu().set_gpr(idx, val);
+    }
+    debug!("[emu_itargetr_access] in the end of emu_itargetr_access");
+}
+
+/// access emulated gicd sgi related registers
+pub fn emu_sgiregs_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx: &EmuContext) {
+    debug!("this is emu_sgiregs_access");
+    let idx = emu_ctx.reg;
+    let val = if emu_ctx.write {
+        current_cpu().get_gpr(idx)
+    } else {
+        0
+    };
+    let vm = active_vm();
+
+    // if the address is sgir (offset 0x0f00)
+    if bit_extract(emu_ctx.address, 0, 12) == bit_extract(usize::from(axhal::GICD_BASE + 0x0f00) + 0x0f00, 0, 12) {
+        if emu_ctx.write {
+            // TargetListFilter, bits [25:24] Determines how the Distributor processes the requested SGI.
+            let sgir_target_list_filter = bit_extract(val, 24, 2);
+            let mut trgtlist = 0;
+            match sgir_target_list_filter {
+                // 0b00 Forward the interrupt to the CPU interfaces specified by GICD_SGIR.CPUTargetList[23:16].
+                0 => {
+                    trgtlist = vgic_target_translate(vm, bit_extract(val, 16, 8) as u32, true)
+                        as usize;
+                }
+                // 0b01 Forward the interrupt to all CPU interfaces except that of the PE that requested the interrupt.
+                1 => {
+                    // todo: implement multi cpu for one vm
+                    // trgtlist = active_vm_ncpu() & !(1 << current_cpu().id);
+                }
+                // 0b10 Forward the interrupt only to the CPU interface of the PE that requested the interrupt.
+                2 => {
+                    trgtlist = 1 << current_cpu().cpu_id;
+                }
+                // 0b11 Reserved.
+                3 => {
+                    return;
+                }
+                _ => {}
+            }
+            // GICv2 only support 8 pe. doto sgi between multi core
+            /*
+            for i in 0..8 {
+                if trgtlist & (1 << i) != 0 {
+                    let m = IpiInitcMessage {
+                        event: InitcEvent::VgicdSetPend,
+                        vm_id: active_vm_id(),
+                        int_id: (bit_extract(val, 0, 8) | (active_vcpu_id() << 10)) as u16,
+                        val: true as u8,
+                    };
+                    if !ipi_send_msg(i, IpiType::IpiTIntc, IpiInnerMsg::Initc(m)) {
+                        debug!(
+                            "emu_sgiregs_access: Failed to send ipi message, target {} type {}",
+                            i, 0
+                        );
+                    }
+                }
+            }
+            */
+        }
+    } else {
+        // TODO: CPENDSGIR and SPENDSGIR access
+        debug!("unimplemented: CPENDSGIR and SPENDSGIR access");
     }
 }
 

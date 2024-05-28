@@ -18,6 +18,11 @@ use tock_registers::interfaces::*;
 use super::exception_utils::*;
 // use crate::platform::aarch64_common::gic::*;
 
+#[cfg(not(feature = "gic_v3"))]
+use crate::platform::aarch64_common::gic::*;
+#[cfg(feature = "gic_v3")]
+use crate::platform::aarch64_common::gicv3::*;
+
 global_asm!(include_str!("exception.S"));
 
 extern "C" {

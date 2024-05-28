@@ -6,8 +6,10 @@ use spin::Mutex;
 
 use arm_gic::{GIC_LIST_REGS_NUM, GIC_PRIVATE_INT_NUM, GIC_SGIS_NUM};
 
+
 use super::gic::IrqState;
 use super::gic::*;
+
 use super::utils::{bit_extract, bit_get, bit_set, bitmap_find_nth, ptr_read_write};
 use super::vcpu::VCpu;
 use super::vm::VM;

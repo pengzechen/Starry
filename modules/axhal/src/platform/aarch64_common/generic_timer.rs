@@ -25,6 +25,18 @@ pub fn nanos_to_ticks(nanos: u64) -> u64 {
     unsafe { NANOS_TO_CNTPCT_RATIO.mul_trunc(nanos) }
 }
 
+
+/// Early stage initialization: stores the timer frequency.
+pub(crate) fn init_early() {
+    let freq = CNTFRQ_EL0.get();
+    unsafe {
+        CNTPCT_TO_NANOS_RATIO = Ratio::new(crate::time::NANOS_PER_SEC as u32, freq as u32);
+        NANOS_TO_CNTPCT_RATIO = CNTPCT_TO_NANOS_RATIO.inverse();
+    }
+}
+
+
+
 /// Set a one-shot timer.
 ///
 /// A timer interrupt will be triggered at the given deadline (in nanoseconds).
@@ -55,13 +67,6 @@ pub fn set_oneshot_timer(deadline_ns: u64) {
 }
 
 /// Early stage initialization: stores the timer frequency.
-pub(crate) fn init_early() {
-    let freq = CNTFRQ_EL0.get();
-    unsafe {
-        CNTPCT_TO_NANOS_RATIO = Ratio::new(crate::time::NANOS_PER_SEC as u32, freq as u32);
-        NANOS_TO_CNTPCT_RATIO = CNTPCT_TO_NANOS_RATIO.inverse();
-    }
-}
 
 use hypercraft::msr;
 pub(crate) fn init_percpu() {
@@ -77,6 +82,6 @@ pub(crate) fn init_percpu() {
         let tval = 0;
         msr!(CNTHP_CTL_EL2, ctl);
         msr!(CNTHP_TVAL_EL2, tval);
-        // crate::platform::irq::set_enable(crate::platform::irq::HYPERVISOR_TIMER_IRQ_NUM, true);
+        crate::platform::irq::set_enable(crate::platform::irq::HYPERVISOR_TIMER_IRQ_NUM, true);
     }
 }

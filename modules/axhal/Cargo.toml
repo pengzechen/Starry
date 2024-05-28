@@ -18,8 +18,11 @@ irq = []
 tls = ["alloc"]
 signal = []
 monolithic = ["paging", "dep:axfs_ramfs"]
-hv = ["paging", "irq"]
-default = ["hv"]
+hv = ["paging", "irq", "axconfig/hv", "percpu/hv", "arm_gic/hv"]
+
+gic_v3 = []
+default = ["gic_v3"]
+# default = ["hv"]
 
 [dependencies]
 log = "0.4"
@@ -61,6 +64,7 @@ aarch64-cpu = "9.3"
 tock-registers = "0.8"
 either = {version = "1.6", default-features = false}
 arm_gic = { path = "../../crates/arm_gic" }
+arm_gicv3 = { path = "../../crates/arm_gicv3" }
 arm_pl011 = { path = "../../crates/arm_pl011" }
 dw_apb_uart = { path = "../../crates/dw_apb_uart" }
 of = { path = "../../crates/of"}

@@ -2,6 +2,8 @@
 
 #![allow(dead_code)]
 
+use core::arch::asm;
+
 pub const PSCI_0_2_FN_BASE: u32 = 0x84000000;
 pub const PSCI_0_2_64BIT: u32 = 0x40000000;
 pub const PSCI_0_2_FN_CPU_SUSPEND: u32 = PSCI_0_2_FN_BASE + 1;
@@ -64,6 +66,7 @@ fn arm_smccc_smc(func: u32, arg0: usize, arg1: usize, arg2: usize) -> usize {
 }
 
 /// psci "hvc" method call
+// #[cfg(not(feature = "hv"))]
 fn psci_hvc_call(func: u32, arg0: usize, arg1: usize, arg2: usize) -> usize {
     let ret;
     unsafe {
@@ -74,6 +77,25 @@ fn psci_hvc_call(func: u32, arg0: usize, arg1: usize, arg2: usize) -> usize {
             in("x2") arg1,
             in("x3") arg2,
         )
+    }
+    ret
+}
+
+
+// #[cfg(feature = "hv")]
+fn psci_smc_call(func: u32, arg0: usize, arg1: usize, arg2: usize) -> usize {
+    debug!("this is smc call func:0x{:x}", func);
+    let mut ret = 0;
+    #[cfg(target_arch = "aarch64")]
+    unsafe {
+        asm!(
+            "smc #0",
+            inlateout("x0") func as usize => ret,
+            in("x1") arg0,
+            in("x2") arg1,
+            in("x3") arg2,
+            options(nomem, nostack)
+        );
     }
     ret
 }

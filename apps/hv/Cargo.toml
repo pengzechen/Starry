@@ -10,7 +10,7 @@ edition = "2021"
 # axstarry = { path = "../../ulib/axstarry" }
 lazy_init = { path = "../../crates/lazy_init" }
 axstd = { path = "../../ulib/axstd", features = ["alloc", "hv"] }
-page_table_entry = { path = "../../crates/page_table_entry" }
+page_table_entry = { path = "../../crates/page_table_entry",features = ["hv"]}
 fdt = {version = "0.1.5"}
 arrayvec = { version = "0.7.2", default-features = false }
 spin = "0.9"

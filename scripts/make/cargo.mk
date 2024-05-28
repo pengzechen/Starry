@@ -8,12 +8,25 @@ else
   verbose :=
 endif
 
+features-y :=
+
+ifeq ($(shell test $(SMP) -gt 1; echo $$?),0)
+  features-y += axstd/smp
+endif
+
+ifneq ($(filter $(LOG),off error warn info debug trace),)
+  features-y += axstd/log-level-$(LOG)
+else
+  $(error "LOG" must be one of "off", "error", "warn", "info", "debug", "trace")
+endif
+
 build_args-release := --release
 
 build_args := \
   --target $(TARGET) \
   --target-dir $(CURDIR)/target \
   $(build_args-$(MODE)) \
+  --features "$(features-y)" \
   $(verbose)
 
 RUSTFLAGS := -C link-arg=-T$(LD_SCRIPT) -C link-arg=-no-pie

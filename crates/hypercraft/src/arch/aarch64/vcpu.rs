@@ -197,6 +197,12 @@ impl <H:HyperCraftHal> VCpu<H> {
                                             .value;
     }
 
+    pub fn get_vmpidr(&self) -> usize {
+        // let inner = self.inner.inner_mut.lock();
+        // inner.vm_ctx.vmpidr_el2 as usize
+        self.regs.vm_system_regs.vmpidr_el2 as usize
+    }
+
 }
 
 #[inline(never)]

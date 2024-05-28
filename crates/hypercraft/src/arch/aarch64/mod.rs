@@ -1,7 +1,12 @@
 mod context_frame;
 mod cpu;
 mod vm;
-mod gic;
+
+#[cfg(not(feature = "gic_v3"))]
+pub mod gic;
+#[cfg(feature = "gic_v3")]
+pub mod gicv3;
+
 mod ept;
 mod vcpus_array;
 
@@ -11,8 +16,16 @@ pub mod hvc;
 pub mod vcpu;
 /// utils for aarch64
 pub mod utils;
+
+
 /// vitual gic
+#[cfg(not(feature = "gic_v3"))]
 pub mod vgic;
+/// virtual gicv3
+#[cfg(feature = "gic_v3")]
+pub mod vgicv3;
+
+
 /// virtual uart
 pub mod vuart;
 
@@ -25,9 +38,12 @@ pub use vcpu::VCpu;
 pub use vm::VM;
 pub use cpu::PerCpu;
 pub use vcpus_array::VcpusArray;
-
 pub use page_table::PageSize;
+
+#[cfg(not(feature = "gic_v3"))]
 pub use gic::IrqState;
+#[cfg(feature = "gic_v3")]
+pub use gicv3::IrqState;
 
 /// context frame for aarch64
 pub type ContextFrame = crate::arch::context_frame::Aarch64ContextFrame;

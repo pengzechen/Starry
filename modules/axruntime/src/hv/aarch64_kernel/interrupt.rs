@@ -2,7 +2,17 @@
 
 use super::{current_cpu, active_vm};
 use hypercraft::{VM, VCpu};
+//xh not sure
+#[cfg(not(feature = "gic_v3"))]
 use super::vgic::vgic_inject;
+#[cfg(feature = "gic_v3")]
+use super::vgicv3::vgic_inject;
+
+#[cfg(not(feature = "gic_v3"))]
+use super::vgic::vgic_set_hw_int;
+#[cfg(feature = "gic_v3")]
+use super::vgicv3::vgic_set_hw_int;
+
 use crate::{HyperCraftHalImpl, GuestPageTable};
 
 pub fn handle_virtual_interrupt(irq_num: usize, src: usize) {
@@ -51,8 +61,7 @@ pub fn handle_virtual_interrupt(irq_num: usize, src: usize) {
     //debug!( "interrupt_handler: core {} receive virtual int {}", current_cpu().cpu_id, irq_num );
 }
 
-pub fn interrupt_vm_inject(vm: &mut VM<HyperCraftHalImpl, GuestPageTable>, 
-    vcpu: VCpu<HyperCraftHalImpl>, irq_num: usize) {
+pub fn interrupt_vm_inject(vm: &mut VM<HyperCraftHalImpl, GuestPageTable>, vcpu: VCpu<HyperCraftHalImpl>, irq_num: usize) {
     //debug!("[interrupt_vm_inject] this is interrupt vm inject");
     let vgic = vm.vgic();
     // restore_vcpu_gic(current_cpu().active_vcpu.clone(), vcpu.clone());
@@ -71,7 +80,7 @@ pub fn interrupt_vm_inject(vm: &mut VM<HyperCraftHalImpl, GuestPageTable>,
 
 pub fn interrupt_vm_register(vm:& mut VM<HyperCraftHalImpl, GuestPageTable>, id: usize) -> bool {
     debug!("interrupt_vm_register id: {:#x}", id);
-    super::vgic::vgic_set_hw_int(vm, id);
+    vgic_set_hw_int(vm, id);
     vm.set_int_bit_map(id);
     true
 }

@@ -8,7 +8,14 @@ use crate::{GuestPageTableTrait, HyperCraftHal, HyperResult, VcpusArray, VmCpus}
 
 use super::emu::*;
 use super::utils::*;
-use super::vgic::*;
+
+
+#[cfg(not(feature = "gic_v3"))]
+use super::vgic::*;  
+#[cfg(feature = "gic_v3")]
+use super::vgicv3::*;
+
+
 use super::vuart::*;
 
 const VGIC_DEV_ID: usize = 0;

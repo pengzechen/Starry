@@ -6,12 +6,19 @@ pub mod mp;
 
 #[cfg(not(platform_family = "aarch64-raspi"))]
 pub mod psci;
-
+//xh not sure
 cfg_if::cfg_if! {
-    if #[cfg(feature = "irq")] {
+    if #[cfg(all(feature = "irq" , not(feature = "gic_v3")))] {
         pub mod gic;
         pub mod irq {
             pub use super::gic::*;
+        }
+    }
+
+    else if #[cfg(all(feature = "irq", feature = "gic_v3"))] {
+        pub mod gicv3;
+        pub mod irq {
+            pub use super::gicv3::*;
         }
     }
 }
@@ -106,3 +113,10 @@ pub fn platform_init_secondary() {
 pub fn platform_name() -> &'static str {
     of::machin_name()
 }
+
+
+#[cfg(all(feature = "irq", feature = "hv"))]
+pub mod generic_timer_hv;
+
+// #[cfg(all(feature = "irq", feature = "gic_v3"))]
+// pub mod gicv3;
