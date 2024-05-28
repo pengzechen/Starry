@@ -159,14 +159,7 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
     //     MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
     // )?;
 
-    gpt.map_region(
-        0x8000000,
-        0x8000000,
-        0x20000,
-        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-    )?;
-
-    // v3 its
+    // v3 its nimbos needn't
     gpt.map_region(
         0x8080000,
         0x8080000,
@@ -174,15 +167,7 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
     )?;
 
-    // v3 gicr
-    // gpt.map_region(
-    //     0x80a0000,
-    //     0x80a0000,
-    //     0xf60000,
-    //     MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-    // )?;
-
-    debug!("map gicd gicr");
+    debug!("map its");
 
     if let Some(pcie) = meta.pcie {
         gpt.map_region(
@@ -217,9 +202,9 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
     )?;
     debug!("map physical memeory");
 
-    let vaddr = 0x8010000;
-    let hpa = gpt.translate(vaddr)?;
-    debug!("translate vaddr: {:#x}, hpa: {:#x}", vaddr, hpa);
+    // let vaddr = 0x8010000;
+    // let hpa = gpt.translate(vaddr)?;
+    // debug!("translate vaddr: {:#x}, hpa: {:#x}", vaddr, hpa);
 
     gpt.map_region(
         NIMBOS_KERNEL_BASE_VADDR,
@@ -309,5 +294,12 @@ initialize global allocator at: [0x4011_c000, 0x4800_0000)
 */
 
 /*
-
+cd existing_repo
+git remote rename origin old-origin
+git remote add origin https://gitlab.eduxiji.net/T202410054992503/project2210132-222878.git
+git push -u origin --all
+git push -u origin --tags
+@T202410054992503
+T202410054992503@eduxiji.net
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCJqdP6XHoRzvEivVIsRIIb3EVrhe3OQmS0YE8KteOUidE0SXt8nZokGQSyKzx3mCNynNW2Db7nbAG6r8mMzYKx1IbvzBJzZDIjoBdQeCGJru/NH+CMs3zI8SfsLdQz43ieLRw9y4NXWA3P1oFuanwGuCgl9Zl96lSXaSUvT4sHTg46At1VgSddODQXjz6BoyTgnIai5c7OCVkpS5IUEKDl/Z5i2TwcD/5lKL4rZy5MRmKCUDw41i9n8EhPnCpSIAqv1zVRhj4hxZTfDMOUiBy0/aQ3KJW1Dws0YyuqDeMOsfgVTKBxywVQedc09wkGbeKS93OCPsHLL78cbquOwmCjUT/j3UVLHbUZQAqhd8mWgjlvtSsUu6ga6Xcst5mptf1cCmIcNy41CIzxZlnS+h6CHdizE27CHlpgFcoQUBnnTKMSRBMNNFfTxwsWDf9npvHA6AvFk00LjvZOGGFL5892IVV29QOYh+70eGN2GUUePV5MH48tF8A8hkFFaaMhw/0= 927068267@qq.com
 */
