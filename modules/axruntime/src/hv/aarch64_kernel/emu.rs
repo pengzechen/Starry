@@ -17,7 +17,8 @@ pub fn emu_handler(emu_ctx: &EmuContext) -> bool {
 
     for emu_dev in &*emu_devs_list {
         let active_vcpu = current_cpu().get_active_vcpu().unwrap();
-        if active_vcpu.vm_id == emu_dev.vm_id && in_range(ipa, emu_dev.ipa, emu_dev.size - 1) {
+        if active_vcpu.vm_id == emu_dev.vm_id && 
+            in_range(ipa, emu_dev.ipa, emu_dev.size - 1) {
             let handler = emu_dev.handler;
             let id = emu_dev.id;
             drop(emu_devs_list);
@@ -32,14 +33,9 @@ pub fn emu_handler(emu_ctx: &EmuContext) -> bool {
     return false;
 }
 
-pub fn emu_register_dev(
-    emu_type: EmuDeviceType,
-    vm_id: usize,
-    dev_id: usize,
-    address: usize,
-    size: usize,
-    handler: EmuDevHandler,
-) {
+pub fn emu_register_dev( emu_type: EmuDeviceType, vm_id: usize, dev_id: usize, address: usize,
+    size: usize, handler: EmuDevHandler,) 
+{
     let mut emu_devs_list = EMU_DEVS_LIST.lock();
     if emu_devs_list.len() >= EMU_DEV_NUM_MAX {
         panic!("emu_register_dev: can't register more devs");
@@ -52,18 +48,12 @@ pub fn emu_register_dev(
         if in_range(address, emu_dev.ipa, emu_dev.size - 1)
             || in_range(emu_dev.ipa, address, size - 1)
         {
-            panic!("emu_register_dev: duplicated emul address region: prev address 0x{:x} size 0x{:x}, next address 0x{:x} size 0x{:x}", emu_dev.ipa, emu_dev.size, address, size);
+            panic!("emu_register_dev: duplicated emul address region: prev address 0x{:x} 
+                size 0x{:x}, next address 0x{:x} size 0x{:x}", emu_dev.ipa, emu_dev.size, address, size);
         }
     }
 
-    emu_devs_list.push(EmuDevEntry {
-        emu_type,
-        vm_id,
-        id: dev_id,
-        ipa: address,
-        size,
-        handler,
-    });
+    emu_devs_list.push(EmuDevEntry { emu_type, vm_id, id: dev_id, ipa: address, size, handler, });
 }
 
 pub fn emu_remove_dev(vm_id: usize, dev_id: usize, address: usize, size: usize) {
