@@ -1,5 +1,6 @@
 mod emu;
 mod emuintc_handler;
+mod emureg_handler;
 mod emuuart_handler;
 mod guest_psci;
 mod interrupt;

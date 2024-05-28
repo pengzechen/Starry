@@ -1387,3 +1387,49 @@ pub fn vgicr_emul_ctrl_access(emu_ctx: &EmuContext) {
         GICR.set_ctrlr(current_cpu().cpu_id, current_cpu().get_gpr(emu_ctx.reg));
     }
 }
+
+
+// ==================== EMU reg ======================
+
+/*
+pub fn vgic_send_sgi_msg(vcpu: VCpu<HyperCraftHalImpl>, pcpu_mask: usize, int_id: usize) {
+    let m = IpiInitcMessage {
+        event: InitcEvent::Vgicdinject,
+        vm_id: vcpu.vm().clone().unwrap().id(),
+        int_id: int_id as u16,
+        val: true as u8,
+    };
+    for i in 0..PLAT_DESC.cpu_desc.num {
+        if (pcpu_mask & (1 << i)) != 0 {
+            ipi_send_msg(i, IpiType::IpiTIntc, IpiInnerMsg::Initc(m));
+        }
+    }
+}
+
+
+pub fn vgic_icc_sgir_handler(_emu_dev_id: usize, emu_ctx: &EmuContext) -> bool {
+    if emu_ctx.write {
+        let sgir = current_cpu().get_gpr(emu_ctx.reg);
+        let int_id = bit_extract(sgir, GICC_SGIR_SGIINTID_OFF, GICC_SGIR_SGIINTID_LEN);
+        let targtlist = if (sgir & GICC_SGIR_IRM_BIT) != 0 {
+            current_cpu().active_vcpu.clone().unwrap().vm().unwrap().ncpu() & !(1 << current_cpu().id)
+        } else {
+            let vm = match current_cpu().active_vcpu.clone().unwrap().vm() {
+                Some(tvm) => tvm,
+                None => {
+                    panic!("vgic_icc_sgir_handler: current vcpu.vm is none");
+                }
+            };
+            let mut vtarget = sgir & 0xffff;
+            // maybe surrort more cluseter (aff1 != 0)
+            if sgir & 0xff0000 != 0 && cfg!(feature = "rk3588") {
+                //for rk3588 the aff1
+                vtarget <<= (sgir & 0xf0000) >> 16;
+            }
+            vgic_target_translate(vm, vtarget as u32, true) as usize
+        };
+        vgic_send_sgi_msg(current_cpu().active_vcpu.clone().unwrap(), targtlist, int_id);
+    }
+    true
+}
+*/
