@@ -150,9 +150,9 @@ OUT_ELF := $(OUT_DIR)/$(APP_NAME)_$(PLATFORM_NAME).elf
 OUT_BIN := $(OUT_DIR)/$(APP_NAME)_$(PLATFORM_NAME).bin
 
 ifeq ($(HV), y)
-  ifneq ($(PLATFORM_NAME), aarch64-qemu-virt-hv)
-    $(error "HV only support arm arch")
-  endif
+  #ifneq ($(PLATFORM_NAME), aarch64-qemu-virt-hv)
+  #  $(error "HV only support arm arch")
+  #endif
 	LD_SCRIPT = $(CURDIR)/modules/axhal/linker_$(PLATFORM_NAME)_hv.lds
 endif
 

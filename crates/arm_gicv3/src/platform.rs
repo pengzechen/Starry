@@ -71,5 +71,5 @@ pub fn cpuid2mpidr(cpuid: usize) -> usize {
 }
 
 
-pub const GICD_BASE: usize = 0x08000000;
-pub const GICR_BASE: usize = 0x080a0000;
+pub const GICD_BASE: usize = 0xfe600000;
+pub const GICR_BASE: usize = 0xfe680000;

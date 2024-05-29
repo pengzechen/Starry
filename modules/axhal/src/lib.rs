@@ -47,7 +47,7 @@ pub use platform::aarch64_common::gic::{
 #[cfg(feature = "gic_v3")]
 pub use platform::aarch64_common::gicv3;
 
-pub use platform::aarch64_common::pl011::UART;
+pub use platform::aarch64_common::dw_apb_uart::UART;
 
 
 #[cfg(all(feature = "hv", feature = "irq", not(feature = "gic_v3")))]

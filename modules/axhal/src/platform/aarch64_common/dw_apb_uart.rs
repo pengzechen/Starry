@@ -7,7 +7,7 @@ use spinlock::SpinNoIrq;
 
 const UART_BASE: PhysAddr = PhysAddr::from(axconfig::UART_PADDR);
 
-static UART: SpinNoIrq<DW8250> = SpinNoIrq::new(DW8250::new(phys_to_virt(UART_BASE).as_usize()));
+pub static UART: SpinNoIrq<DW8250> = SpinNoIrq::new(DW8250::new(phys_to_virt(UART_BASE).as_usize()));
 
 /// Writes a byte to the console.
 pub fn putchar(c: u8) {

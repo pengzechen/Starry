@@ -101,6 +101,8 @@ pub fn emu_uarticr_access(vuart: &mut Vuart, emu_ctx: &EmuContext) {
 }
 
 pub fn emu_uarthardcode_access(vuart: &mut Vuart, emu_ctx: &EmuContext) {
+    /*  ==== rk3588 要实现相应的串口虚拟化  ===== */
+    /*
     let offset = emu_ctx.address & 0xfff;
     let val = if offset == 0x0fe0 {
         UART.lock().get_periphid0()
@@ -124,6 +126,7 @@ pub fn emu_uarthardcode_access(vuart: &mut Vuart, emu_ctx: &EmuContext) {
     debug!("[emu_uarthardcode_access] offset:{:#x} is write:{} reg:{} val:{:#x}", offset, emu_ctx.write, emu_ctx.reg, val);
     let idx = emu_ctx.reg;
     current_cpu().set_gpr(idx, val as usize);
+    */
 }
 
 /* 
