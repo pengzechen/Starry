@@ -155,14 +155,15 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
     gpt.map_region(
         0x8000000,
         0x8000000,
-        0x2000,
+        0x2_0000,
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
     )?;
 
+    // its
     gpt.map_region(
         0x8080000,
         0x8080000,
-        0x20000,
+        0x2_0000,
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
     )?;
 
