@@ -277,7 +277,7 @@ fn remap_kernel_memory() -> Result<(), axhal::paging::PagingError> {
 
 #[cfg(feature = "irq")]
 fn init_interrupt() {
-    #[cfg(not(all(target_arch = "aarch64", feature = "hv")))]
+    #[cfg(not(feature = "hv"))]
     {
         use axhal::time::TIMER_IRQ_NUM;
 

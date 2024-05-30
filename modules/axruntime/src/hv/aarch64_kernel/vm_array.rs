@@ -10,7 +10,11 @@ use lazy_init::LazyInit;
 use axhal::cpu::this_cpu_id;
 
 use super::emu::emu_register_dev;
-use super::emuintc_handler::{emu_intc_handler, emu_intc_init, emul_vgicr_handler, emu_vgicr_init};
+use super::emuintc_handler::{emu_intc_handler, emu_intc_init, emu_vgicr_init};
+
+#[cfg(feature = "gic_v3")]
+use super::emuintc_handler::emul_vgicr_handler;
+
 use super::emureg_handler::{vgic_icc_sre_handler, emu_register_reg, EmuRegType};
 use super::emuuart_handler::{emu_uart_handler, emu_uart_init};
 use super::interrupt::interrupt_vm_register;
@@ -72,20 +76,21 @@ pub fn init_vm_emu_device(vm_id: usize) {
             );
             emu_intc_init(vm, idx);
 
-            let idx = 11;
+            #[cfg(feature = "gic_v3")]{
+                let idx = 11;
+                emu_register_dev(
+                    EmuDeviceType::EmuDeviceTGICR,
+                    vm.vm_id,
+                    idx,
+                    0x80a0000,  // ipa
+                    0x2_0000,
+                    emul_vgicr_handler,
+                );
+                emu_vgicr_init(vm, idx);
 
-            emu_register_dev(
-                EmuDeviceType::EmuDeviceTGICR,
-                vm.vm_id,
-                idx,
-                0x80a0000,  // ipa
-                0x2_0000,
-                emul_vgicr_handler,
-            );
-            emu_vgicr_init(vm, idx);
-
-            emu_register_reg(EmuRegType::SysReg, arm_gicv3::ICC_SRE_ADDR, vgic_icc_sre_handler);
-            // emu_register_reg(EmuRegType::SysReg, emu_dev.base_ipa, vgic_icc_sgir_handler);
+                emu_register_reg(EmuRegType::SysReg, arm_gicv3::ICC_SRE_ADDR, vgic_icc_sre_handler);
+                // emu_register_reg(EmuRegType::SysReg, emu_dev.base_ipa, vgic_icc_sgir_handler);
+            }
 
             if vm_id!=0 {
                 // init emu uart

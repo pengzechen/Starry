@@ -152,12 +152,19 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
     */
     // map gicc to gicv. the address is qemu setting, it is different from real hardware
     // gicv3 needn't
-    // gpt.map_region(
-    //     0x8010000,
-    //     0x8040000,
-    //     0x2000,
-    //     MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-    // )?;
+    gpt.map_region(
+        0x8010000,
+        0x8040000,
+        0x2000,
+        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
+    )?;
+    // gicv3 needn't
+    gpt.map_region(
+        0x8020000,
+        0x8020000,
+        0x20000,
+        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
+    )?;
 
     // v3 its nimbos needn't
     gpt.map_region(

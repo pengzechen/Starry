@@ -2,6 +2,9 @@
 
 features-y := libax/platform-$(PLATFORM)
 
+#$(shell ...)：这是Makefile的一个函数，用于执行括号内的shell命令并返回其输出。
+#test $(SMP) -gt 1：这是一个shell命令，用于测试变量SMP的值是否大于1。-gt表示“greater than”。
+#echo $$?：$$?是shell中表示前一个命令的退出状态码（exit status）。如果test $(SMP) -gt 1为真，则退出状态码为0，否则为非零。
 ifeq ($(shell test $(SMP) -gt 1; echo $$?),0)
   features-y += libax/smp
 endif
@@ -12,15 +15,15 @@ else
   $(error "LOG" must be one of "off", "error", "warn", "info", "debug", "trace")
 endif
 
-features-$(FS) += libax/fs
-features-$(NET) += libax/net
-features-$(GRAPHIC) += libax/display
-features-$(HV) += libax/hv 
-
-
-ifeq ($(ARCH), aarch64)
-  features-$(HV) += libax/irq
+ifeq ($(GIC_V3), y)
+  features-y += libax/gic_v3
 endif
+
+
+features-$(FS)        += libax/fs
+features-$(NET)       += libax/net
+features-$(GRAPHIC)   += libax/display
+features-$(HV)        += libax/hv 
 
 ifeq ($(BUS),pci)
   features-y += libax/bus-pci
@@ -44,8 +47,8 @@ else ifeq ($(APP_LANG),rust)
 endif
 
 build_args-release := --release
-build_args-c := --crate-type staticlib
-build_args-rust :=
+build_args-c       := --crate-type staticlib
+build_args-rust    :=
 
 build_args := \
   --target $(TARGET) \

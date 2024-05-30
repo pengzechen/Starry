@@ -1,19 +1,22 @@
 # Arguments
-ARCH ?= aarch64
-SMP ?= 1
-MODE ?= release
-LOG ?= warn
+ARCH   ?= aarch64
+SMP    ?= 1
+MODE   ?= release
+LOG    ?= warn
 
-A ?= apps/hv
-APP ?= $(A)
+A            ?= apps/hv
+APP          ?= $(A)
 APP_FEATURES ?=
-DISK_IMG ?= disk.img
+DISK_IMG     ?= disk.img
+GIC_V3       ?= n
 
-FS ?= n
-NET ?= n
-GRAPHIC ?= n
-BUS ?= mmio
-HV ?= n
+
+FS        ?= n
+NET       ?= n
+GRAPHIC   ?= n
+BUS       ?= mmio
+HV        ?= n
+
 
 QEMU_LOG ?= n
 NET_DUMP ?= n
@@ -30,26 +33,30 @@ endif
 
 # Platform
 ifeq ($(ARCH), aarch64)
-  ACCEL ?= n
+  ACCEL    ?= n
   PLATFORM ?= qemu-virt-aarch64
-  TARGET := aarch64-unknown-none-softfloat
+  TARGET   := aarch64-unknown-none-softfloat
 else
   $(error "ARCH" must be "aarch64")
 endif
 
+# export关键字可以将一个变量导出到环境中，使得在该Makefile中执行的所有命令
+#（以及由这些命令调用的任何子命令）都能够访问该变量
 export ARCH
+export GIC_V3
 export PLATFORM
 export SMP
 export MODE
 export LOG
 
+
 # Binutils
 ifeq ($(APP_LANG), c)
   CROSS_COMPILE ?= $(ARCH)-linux-musl-
-  CC := $(CROSS_COMPILE)gcc
-  AR := $(CROSS_COMPILE)ar
+  CC     := $(CROSS_COMPILE)gcc
+  AR     := $(CROSS_COMPILE)ar
   RANLIB := $(CROSS_COMPILE)ranlib
-  LD := rust-lld -flavor gnu
+  LD     := rust-lld -flavor gnu
 endif
 
 OBJDUMP ?= rust-objdump -d --print-imm-hex --x86-asm-syntax=intel

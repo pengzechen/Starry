@@ -29,7 +29,7 @@ platform-qemu-virt-aarch64 = [
 gic_v3  = []
 
 
-default = ["gic_v3", "hv", "irq"]
+default = []
 
 
 [dependencies]

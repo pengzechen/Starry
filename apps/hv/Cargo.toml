@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 lazy_init = { path = "../../crates/lazy_init" }
 
-libax = { path = "../../ulib/libax", features = ["alloc", "hv"] }
+libax = { path = "../../ulib/libax", features = ["alloc", "hv", "irq"] }
 page_table_entry = { path = "../../crates/page_table_entry", features = ["hv"] }
 
 fdt = {version = "0.1.5"}
