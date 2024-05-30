@@ -3,13 +3,10 @@ pub mod mem;
 #[cfg(feature = "smp")]
 pub mod mp;
 
-#[cfg(all(feature = "irq", not(feature = "gic_v3")))]
 pub mod irq {
+    #[cfg(all(feature = "irq", not(feature = "gic_v3")))]
     pub use crate::platform::aarch64_common::gic::*;
-}
-
-#[cfg(all(feature = "irq", feature = "gic_v3"))]
-pub mod irq {
+    #[cfg(all(feature = "irq", feature = "gic_v3"))]
     pub use crate::platform::aarch64_common::gicv3::*;
 }
 
@@ -38,11 +35,12 @@ extern "C" {
 }
 
 pub(crate) unsafe extern "C" fn rust_entry(cpu_id: usize, dtb: usize) {
+    console::putchar(b'q');
     crate::mem::clear_bss();
     crate::arch::set_exception_vector_base(exception_vector_base as usize);
     crate::cpu::init_primary(cpu_id);
-    super::aarch64_common::pl011::init_early();             // 初始化锁
-    super::aarch64_common::generic_timer_hv::init_early();     // 读寄存器 初始化频率  // 临时添加
+    console::init_early();             // 初始化锁
+    time::init_early();     // 读寄存器 初始化频率 
     rust_main(cpu_id, dtb);
 }
 
@@ -61,14 +59,16 @@ pub fn platform_init() {
     super::aarch64_common::gic::init_primary();
     #[cfg(all(feature = "irq", feature = "gic_v3"))]
     super::aarch64_common::gicv3::init_primary();
-    super::aarch64_common::generic_timer_hv::init_percpu();                             // 临时添加
-    super::aarch64_common::pl011::init();
+    time::init_percpu();                           
+    console::init();
 }
 
 /// Initializes the platform devices for secondary CPUs.
 #[cfg(feature = "smp")]
 pub fn platform_init_secondary() {
-    #[cfg(feature = "irq")]
+    #[cfg(all(feature = "irq", not(feature = "gic_v3")))]
     super::aarch64_common::gic::init_secondary();
-    super::aarch64_common::generic_timer::init_percpu();
+    #[cfg(all(feature = "irq", feature = "gic_v3"))]
+    super::aarch64_common::gicv3::init_secondary();
+    time::init_percpu();
 }
