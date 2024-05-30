@@ -37,7 +37,6 @@ use arm_gicv3::gic_is_priv;
 use hypercraft::arch::utils::bit_extract;
 use hypercraft::arch::utils::bit_get;
 use hypercraft::gicv3::gic_set_state;
-use axhal::cpu::this_cpu_id;
 
 use axhal::gicv3::gic_lrs;
 
@@ -161,7 +160,7 @@ fn vgic_owns(vcpu: VCpu<HyperCraftHalImpl>, interrupt: VgicInt<HyperCraftHalImpl
 // remove_lr uses
 fn gich_get_lr(interrupt: VgicInt<HyperCraftHalImpl, GuestPageTable>) 
         -> Option<usize> {
-    let cpu_id = this_cpu_id();
+    let cpu_id = current_cpu().cpu_id;
     let phys_id = interrupt.owner_phys_id().unwrap();
 
     if !interrupt.in_lr() || phys_id != cpu_id {
@@ -181,7 +180,7 @@ fn vgic_get_state(interrupt: VgicInt<HyperCraftHalImpl, GuestPageTable>)
         -> usize {
     let mut state = interrupt.state().to_num();
 
-    if interrupt.in_lr() && interrupt.owner_phys_id().unwrap() == this_cpu_id() {
+    if interrupt.in_lr() && interrupt.owner_phys_id().unwrap() == current_cpu().cpu_id {
         let lr_option = gich_get_lr(interrupt.clone());
         if let Some(lr_val) = lr_option {
             state = bit_extract(lr_val, GICH_LR_STATE_OFF, GICH_LR_STATE_LEN);

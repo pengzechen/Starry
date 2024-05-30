@@ -7,29 +7,24 @@ use hypercraft::arch::utils::in_range;
 
 use super::current_cpu;
 
-pub const EMU_DEV_NUM_MAX: usize = 32;
-pub static EMU_DEVS_LIST: Mutex<Vec<EmuDevEntry>> = Mutex::new(Vec::new());
+const EMU_DEV_NUM_MAX: usize = 32;
+static EMU_DEVS_LIST: Mutex<Vec<EmuDevEntry>> = Mutex::new(Vec::new());
 
 // TO CHECK
 pub fn emu_handler(emu_ctx: &EmuContext) -> bool {
     let ipa = emu_ctx.address;
     let emu_devs_list = EMU_DEVS_LIST.lock();
+    let active_vcpu = current_cpu().get_active_vcpu().unwrap();
 
     for emu_dev in &*emu_devs_list {
-        let active_vcpu = current_cpu().get_active_vcpu().unwrap();
-        if active_vcpu.vm_id == emu_dev.vm_id && 
-            in_range(ipa, emu_dev.ipa, emu_dev.size - 1) {
+        if active_vcpu.vm_id == emu_dev.vm_id && in_range(ipa, emu_dev.ipa, emu_dev.size - 1) {
             let handler = emu_dev.handler;
             let id = emu_dev.id;
             drop(emu_devs_list);
             return handler(id, emu_ctx);
         }
     }
-    debug!(
-        "emu_handler: no emul handler for Core {} data abort ipa 0x{:x}",
-        current_cpu().cpu_id,
-        ipa
-    );
+    debug!( "emu_handler: no emul handler for Core {} data abort ipa 0x{:x}", current_cpu().cpu_id, ipa );
     return false;
 }
 
@@ -68,8 +63,5 @@ pub fn emu_remove_dev(vm_id: usize, dev_id: usize, address: usize, size: usize) 
             return;
         }
     }
-    panic!(
-        "emu_remove_dev: emu dev not exist address 0x{:x} size 0x{:x}",
-        address, size
-    );
+    panic!( "emu_remove_dev: emu dev not exist address 0x{:x} size 0x{:x}", address, size );
 }

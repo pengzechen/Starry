@@ -303,3 +303,7 @@ git push -u origin --tags
 T202410054992503@eduxiji.net
 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCJqdP6XHoRzvEivVIsRIIb3EVrhe3OQmS0YE8KteOUidE0SXt8nZokGQSyKzx3mCNynNW2Db7nbAG6r8mMzYKx1IbvzBJzZDIjoBdQeCGJru/NH+CMs3zI8SfsLdQz43ieLRw9y4NXWA3P1oFuanwGuCgl9Zl96lSXaSUvT4sHTg46At1VgSddODQXjz6BoyTgnIai5c7OCVkpS5IUEKDl/Z5i2TwcD/5lKL4rZy5MRmKCUDw41i9n8EhPnCpSIAqv1zVRhj4hxZTfDMOUiBy0/aQ3KJW1Dws0YyuqDeMOsfgVTKBxywVQedc09wkGbeKS93OCPsHLL78cbquOwmCjUT/j3UVLHbUZQAqhd8mWgjlvtSsUu6ga6Xcst5mptf1cCmIcNy41CIzxZlnS+h6CHdizE27CHlpgFcoQUBnnTKMSRBMNNFfTxwsWDf9npvHA6AvFk00LjvZOGGFL5892IVV29QOYh+70eGN2GUUePV5MH48tF8A8hkFFaaMhw/0= 927068267@qq.com
 */
+
+/*
+cp ./nimbos.bin ~/cicv/arceos/apps/hv/guest/nimbos/ && rm ~/cicv/arceos/apps/hv/guest/nimbos/nimbos-aarch64-v3.bin && mv ~/cicv/arceos/apps/hv/guest/nimbos/nimbos.bin ~/cicv/arceos/apps/hv/guest/nimbos/nimbos-aarch64-v3.bin
+*/

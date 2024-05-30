@@ -518,7 +518,7 @@ pub fn emul_vgicr_handler(_emu_dev_id: usize, emu_ctx: &EmuContext) -> bool {
     let vgicr_id = vgicr_get_id(emu_ctx);
     let offset = emu_ctx.address & 0x1ffff;
 
-    trace!(
+    debug!(
         "current_cpu:{}emul_vgicr_handler addr:{:#x} reg {:?} offset {:#x} is write:{}, val:{:#x}",
         current_cpu().cpu_id,
         emu_ctx.address,

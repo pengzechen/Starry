@@ -79,7 +79,7 @@ pub fn init_vm_emu_device(vm_id: usize) {
                 vm.vm_id,
                 idx,
                 0x80a0000,  // ipa
-                0xfc0000,
+                0x2_0000,
                 emul_vgicr_handler,
             );
             emu_vgicr_init(vm, idx);
@@ -118,7 +118,7 @@ pub fn init_vm_passthrough_device(vm_id: usize) {
             let mut irqs = Vec::new();
             irqs.push(33);  
             irqs.push(27);  // virtual timer
-            irqs.push(26);
+            irqs.push(30);
             irqs.push(32 + 0x28);
             irqs.push(32 + 0x29);
             irqs.push(0x3e + 0x11);  // what interrupt????
