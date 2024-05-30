@@ -81,7 +81,7 @@ include scripts/make/cargo.mk
 include scripts/make/qemu.mk
 include scripts/make/build.mk
 include scripts/make/test.mk
-
+include scripts/make/rk3588.mk
 
 build: $(OUT_DIR) $(OUT_BIN)
 

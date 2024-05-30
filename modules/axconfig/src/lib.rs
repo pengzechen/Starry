@@ -17,41 +17,42 @@
 cfg_if::cfg_if! {
     // add `not(target_os = "none")` check to use in `build.rs`
     if #[cfg(all(
-        any(target_arch = "x86_64", not(target_os = "none")),
-        feature = "platform-pc-x86"
-    ))] {
-        #[rustfmt::skip]
-        #[path = "config_pc_x86.rs"]
-        mod config;
-    } else if #[cfg(all(
-        any(target_arch = "riscv32", target_arch = "riscv64", not(target_os = "none")),
-        feature = "platform-qemu-virt-riscv"
-    ))] {
-        #[rustfmt::skip]
-        #[path = "config_qemu_virt_riscv.rs"]
-        mod config;
-    } else if #[cfg(all(
-        any(target_arch = "aarch64", not(target_os = "none")),
-        feature = "platform-qemu-virt-aarch64", not(feature = "hv")
-    ))] {
+        any(target_arch = "aarch64", not(target_os = "none")), feature = "platform-qemu-virt-aarch64", not(feature = "hv")))] 
+    {
         #[rustfmt::skip]
         #[path = "config_qemu_virt_aarch64.rs"]
         mod config;
-    } else if #[cfg(all(
-        any(target_arch = "aarch64", not(target_os = "none")),
-        feature = "platform-qemu-virt-aarch64", feature = "hv"
-    ))] {
+    } 
+    else if #[cfg(all(
+        any(target_arch = "aarch64", not(target_os = "none")), feature = "platform-qemu-virt-aarch64", feature = "hv"))] 
+    {
         #[rustfmt::skip]
         #[path = "config_qemu_virt_aarch64_hv.rs"]
         mod config;
-    } else if #[cfg(all(
-        any(target_arch = "aarch64", not(target_os = "none")),
-        feature = "platform-raspi4-aarch64"
-    ))] {
+    } 
+    else if #[cfg(all(
+        any(target_arch = "aarch64", not(target_os = "none")), feature = "platform-rk3588-aarch64", not(feature = "hv")))] 
+    {
+        #[rustfmt::skip]
+        #[path = "config_rk3588_aarch64.rs"]
+        mod config;
+    } 
+    else if #[cfg(all(
+        any(target_arch = "aarch64", not(target_os = "none")), feature = "platform-rk3588-aarch64", feature = "hv"))] 
+    {
+        #[rustfmt::skip]
+        #[path = "config_rk3588_aarch64_hv.rs"]
+        mod config;
+    } 
+    else if #[cfg(all(
+        any(target_arch = "aarch64", not(target_os = "none")), feature = "platform-raspi4-aarch64" ))] 
+    {
         #[rustfmt::skip]
         #[path = "config_raspi4_aarch64.rs"]
         mod config;
-    } else {
+    } 
+    else 
+    {
         #[rustfmt::skip]
         #[path = "config_dummy.rs"]
         mod config;
