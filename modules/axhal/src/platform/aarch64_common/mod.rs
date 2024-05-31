@@ -6,7 +6,7 @@ pub mod generic_timer;
 #[cfg(all(feature = "irq", feature = "hv"))]
 pub mod generic_timer_hv;
 
-
+pub mod dw_apb_uart;
 pub mod pl011;
 pub mod psci;
 

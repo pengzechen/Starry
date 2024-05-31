@@ -137,6 +137,8 @@ unsafe fn init_mmu_el2() {
             + TCR_EL2::T0SZ.val(16),
     );
     */
+
+    idmap_device(0xfeb5_0000);
     
     // Set EL1 to 64bit.
     HCR_EL2.write(HCR_EL2::RW::EL1IsAarch64);
@@ -223,6 +225,22 @@ unsafe fn cache_invalidate(cache_level: usize) {
     );
 }
 
+use page_table_entry::{GenericPTE, MappingFlags};
+const BOOT_MAP_SHIFT: usize = 30; // 1GB
+const BOOT_MAP_SIZE: usize = 1 << BOOT_MAP_SHIFT; // 1GB
+
+pub(crate) unsafe fn idmap_device(phys_addr: usize) {
+    let aligned_address: usize = (phys_addr) & !(BOOT_MAP_SIZE - 1);
+    let l1_index = phys_addr >> BOOT_MAP_SHIFT;
+    if BOOT_PT_L1[l1_index].is_unused() {
+        BOOT_PT_L1[l1_index] = A64PTE::new_page(
+            PhysAddr::from(aligned_address),
+            MappingFlags::READ | MappingFlags::WRITE | MappingFlags::DEVICE,
+            true,
+        );
+    }
+}
+
 /// The earliest entry point for the primary CPU.
 #[naked]
 #[no_mangle]
@@ -273,6 +291,10 @@ unsafe extern "C" fn _start() -> ! {
         bic x1, x1, #0xf
         msr sctlr_el2, x1
 
+        mrs x8, currentel
+        cmp x8, #2 << 2
+        b.ne .
+
         // cache_invalidate(0): clear dl1$
         mov x0, #0
         bl  {cache_invalidate}
@@ -314,6 +336,21 @@ unsafe extern "C" fn _start() -> ! {
         entry = sym crate::platform::rust_entry,
         options(noreturn),
     );
+}
+
+/*
+        mov     x0, x19                 // call rust_entry(cpu_id, dtb)
+        mov     x1, x20
+        bl      {entry}
+        b       .
+*/
+
+pub(crate) unsafe extern "C" fn echo_d(_cpu_id: usize, _dtb: usize) {
+    core::arch::asm!("
+    mov     x8, #100  // d
+    mov x9, #0xfeb50000 //串口地址，需要变化
+    str x8, [x9]
+    ");
 }
 
 /// The earliest entry point for the secondary CPUs.

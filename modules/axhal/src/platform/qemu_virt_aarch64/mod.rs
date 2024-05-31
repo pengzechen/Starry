@@ -11,7 +11,8 @@ pub mod irq {
 }
 
 pub mod console {
-    pub use crate::platform::aarch64_common::pl011::*;
+    // pub use crate::platform::aarch64_common::pl011::*;
+    pub use crate::platform::aarch64_common::dw_apb_uart::*;   // 临时修改
 }
 
 pub mod time {

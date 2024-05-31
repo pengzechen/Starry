@@ -72,7 +72,7 @@ log-level-trace = ["axlog/log-level-trace"]
 
 # Platform
 platform-qemu-virt-aarch64 = ["axhal/platform-qemu-virt-aarch64", "bus-mmio"]
-platform-rk3588-aarch64 = ["axhal/platform-qemu-virt-aarch64", "bus-mmio"]
+platform-rk3588-aarch64 = ["axhal/platform-rk3588-aarch64", "bus-mmio"]
 
 default = ["axtask?/sched_fifo"]
 

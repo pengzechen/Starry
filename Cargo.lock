@@ -229,6 +229,7 @@ dependencies = [
  "cfg-if",
  "cortex-a",
  "crate_interface 0.1.1",
+ "dw_apb_uart",
  "handler_table",
  "hypercraft",
  "kernel_guard",
@@ -627,6 +628,13 @@ dependencies = [
  "driver_display",
  "driver_net",
  "virtio-drivers",
+]
+
+[[package]]
+name = "dw_apb_uart"
+version = "0.1.0"
+dependencies = [
+ "tock-registers",
 ]
 
 [[package]]

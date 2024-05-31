@@ -38,7 +38,7 @@ pub(crate) fn init_early() {
 /// Set a one-shot timer.
 ///
 /// A timer interrupt will be triggered at the given deadline (in nanoseconds).
-#[cfg(all(feature = "irq", not(feature = "hv")))]
+#[cfg(all(feature = "irq", feature = "hv"))]
 pub fn set_oneshot_timer(deadline_ns: u64) {
     let cnptct = CNTPCT_EL0.get();
     let cnptct_deadline = nanos_to_ticks(deadline_ns);

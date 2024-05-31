@@ -61,5 +61,10 @@ cfg_if::cfg_if! {
 
 pub use config::*;
 
+#[cfg(not(feature = "platform-rk3588-aarch64"))]
 /// End address of the whole physical memory.
 pub const PHYS_MEMORY_END: usize = PHYS_MEMORY_BASE + PHYS_MEMORY_SIZE;
+
+// 临时使用
+#[cfg(feature = "platform-rk3588-aarch64")]
+pub const PHYS_MEMORY_END: usize = 0x4800_0000;

@@ -16,13 +16,19 @@ irq     = []
 paging  = ["axalloc", "page_table"]
 hv      = [
     "paging", 
-    "platform-qemu-virt-aarch64", 
+    "platform-rk3588-aarch64", 
     "axconfig/hv", 
     "percpu/hv", 
     "arm_gic/hv"
 ]
+
 platform-qemu-virt-aarch64 = [
     "axconfig/platform-qemu-virt-aarch64",
+    "dep:page_table_entry", "dep:ratio",
+]
+
+platform-rk3588-aarch64 = [
+    "axconfig/platform-rk3588-aarch64",
     "dep:page_table_entry", "dep:ratio",
 ]
 
@@ -58,7 +64,7 @@ hypercraft = { path = "../../crates/hypercraft" }
 arm_gic = { path = "../../crates/arm_gic" }
 arm_gicv3 = { path = "../../crates/arm_gicv3" }
 arm_pl011 = { path = "../../crates/arm_pl011" }
-
+dw_apb_uart = { path = "../../crates/dw_apb_uart" }
 
 cortex-a = "8.1.1"
 spin = "0.9"
