@@ -150,7 +150,7 @@ pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
     info!("Primary CPU {} started, dtb = {:#x}.", cpu_id, dtb);
     info!("Found physcial memory regions:");
     for r in axhal::mem::memory_regions() {
-        info!(
+        ax_println!(
             "  [{:x?}, {:x?}) {} ({:?})",
             r.paddr,
             r.paddr + r.size,

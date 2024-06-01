@@ -36,7 +36,7 @@ gicd-paddr = "0xfe600000"
 gicc-paddr = "0xfe680000"
 
 # 没有用到临时添加 
-gich-paddr = "0x0000_0000"
+gich-paddr = "0x6666_0000"
 
 # PSCI
 psci-method = "smc"

@@ -39,7 +39,7 @@ fn gen_linker_script(arch: &str, platform: &str, is_hv: bool) -> Result<()> {
     let ld_content = ld_content.replace("%SMP%", &format!("{}", axconfig::SMP));
      
     let align: &str;
-    if is_hv && platform == "qemu-virt-aarch64" {
+    if (is_hv && platform == "qemu-virt-aarch64") || (is_hv && platform == "rk3588-aarch64") {
         align = r#"8K"#;
     } else {
         align = r#"4K"#;

@@ -1,0 +1,2 @@
+aarch64-linux-musl-readelf -a apps/hv/hv_rk3588-aarch64.elf > elf.txt &&\
+aarch64-linux-musl-objdump -x -d -S apps/hv/hv_rk3588-aarch64.elf > dis.txt
