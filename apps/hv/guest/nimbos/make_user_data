@@ -1,0 +1,17 @@
+# 获取 nimbos-aarch64-v3.dtb 的大小
+file1_size=$(stat -c%s "nimbos-aarch64-v3.dtb")
+
+# 计算需要填充的零字节数量
+padding_size=$((2 * 1048576 - file1_size))
+
+# 创建一个大小为 padding_size 的临时填充文件
+dd if=/dev/zero bs=1 count=$padding_size of=padding.bin
+
+# 将 nimbos-aarch64-v3.dtb 和 padding.bin 连接在一起
+cat nimbos-aarch64-v3.dtb padding.bin > intermediate.img
+
+# 将 intermediate.img 和 nimbos-aarch64-v3.bin 连接在一起，生成 final.img
+cat intermediate.img nimbos-aarch64-v3.bin > userdata.img
+
+# 清理临时文件
+rm padding.bin intermediate.img

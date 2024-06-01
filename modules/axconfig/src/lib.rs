@@ -67,4 +67,4 @@ pub const PHYS_MEMORY_END: usize = PHYS_MEMORY_BASE + PHYS_MEMORY_SIZE;
 
 // 临时使用
 #[cfg(feature = "platform-rk3588-aarch64")]
-pub const PHYS_MEMORY_END: usize = 0x4800_0000;
+pub const PHYS_MEMORY_END: usize = 0x4040_0000;   // start + 1G

@@ -20,12 +20,33 @@ mod aarch64_config;
 use alloc::vec::Vec;
 use page_table_entry::MappingFlags;
 
+// static NIMBOS_DTB: &[u8] = include_bytes!("../guest/nimbos/nimbos-aarch64-v3.dtb");
+
+fn test_userdata() {
+    // 地址转换为指针
+    let address: *const u8 = 0xcda000 as *const u8;
+
+    // 创建一个长度为10的数组来存储读取的数据
+    let mut buffer = [0u8; 10];
+
+    unsafe {
+        // 从指定地址读取10个字节
+        for i in 0..10 {
+            buffer[i] = *address.offset(i as isize);
+        }
+    }
+
+    // 输出读取的数据
+    debug!("{:?}", buffer);
+}
+
 #[no_mangle] fn main(hart_id: usize) {
     println!("Hello, hv!");
-
+    test_userdata();
     {
-        let vm1_kernel_entry = 0x7020_0000;
-        let vm1_dtb = 0x7000_0000;
+        let vm1_kernel_entry = 0xfd_a000;
+        let vm1_dtb = 0xcd_a000;
+        // let vm1_dtb = NIMBOS_DTB.as_ptr() as usize;
 
         // boot cpu
         PerCpu::<HyperCraftHalImpl>::init(0).unwrap(); 
@@ -35,6 +56,8 @@ use page_table_entry::MappingFlags;
         let gpt = setup_gpm(vm1_dtb, vm1_kernel_entry).unwrap();  
         let vcpu = percpu.create_vcpu(0, 0).unwrap();
         percpu.set_active_vcpu(Some(vcpu.clone()));
+
+        info!("percpu set ok");
 
         let vcpus = VcpusArray::new();
 
@@ -89,118 +112,22 @@ use page_table_entry::MappingFlags;
 pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
     let mut gpt = GuestPageTable::new()?;
     let meta = MachineMeta::parse(dtb);
-    /* 
-    for virtio in meta.virtio.iter() {
-        gpt.map_region(
-            virtio.base_address,
-            virtio.base_address,
-            0x1000, 
-            MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-        )?;
-        debug!("finish one virtio");
-    }
-    */
-    // hard code for virtio_mmio
+
+    // hard code for virtio_mmio dw8250
     gpt.map_region(
-        0xa000000,
-        0xa000000,
-        0x4000,
+        0xfeb50000,
+        0xfeb50000,
+        0x1000,
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
     )?;
     debug!("map virtio");   // ok
     
-    if kernel_entry == 0x7020_0000 {
-        if let Some(pl011) = meta.pl011 {
-            gpt.map_region(
-                pl011.base_address,
-                pl011.base_address,
-                pl011.size,
-                MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-            )?;
-        }
-        debug!("map pl011");
-    }
-    
-    if let Some(pl031) = meta.pl031 {
-        gpt.map_region(
-            pl031.base_address,
-            pl031.base_address,
-            pl031.size,
-            MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-        )?;
-    }
-    debug!("map pl031");
-    if let Some(pl061) = meta.pl061 {
-        gpt.map_region(
-            pl061.base_address,
-            pl061.base_address,
-            pl061.size,
-            MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-        )?;
-    }
-    debug!("map pl061");
-
-    /* 
-    for intc in meta.intc.iter() {
-        gpt.map_region(
-            intc.base_address,
-            intc.base_address,
-            intc.size,
-            MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-        )?;
-    }
-    */
-    // map gicc to gicv. the address is qemu setting, it is different from real hardware
-    // gicv3 needn't
-    gpt.map_region(
-        0x8010000,
-        0x8040000,
-        0x2000,
-        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-    )?;
-    // gicv3 needn't
-    gpt.map_region(
-        0x8020000,
-        0x8020000,
-        0x20000,
-        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-    )?;
-
-    // v3 its nimbos needn't
-    gpt.map_region(
-        0x8080000,
-        0x8080000,
-        0x20000,
-        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-    )?;
-
-    debug!("map its");
-
-    if let Some(pcie) = meta.pcie {
-        gpt.map_region(
-            pcie.base_address,
-            pcie.base_address,
-            pcie.size,
-            MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-        )?;
-    }
-    debug!("map pcie");
-
-    for flash in meta.flash.iter() {
-        gpt.map_region(
-            flash.base_address,
-            flash.base_address,
-            flash.size,
-            MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-        )?;
-    }
-    debug!("map flash");
-
-    info!(
+    debug!(
         "physical memory: [{:#x}: {:#x})",
         meta.physical_memory_offset,
         meta.physical_memory_offset + meta.physical_memory_size
     );
+
     gpt.map_region(
         meta.physical_memory_offset,
         meta.physical_memory_offset,
