@@ -12,6 +12,9 @@ cfg_if::cfg_if! {
     }
 }
 
+#[cfg(feature = "ext4_rs")]
+pub mod ext4;
+
 #[cfg(feature = "devfs")]
 pub use axfs_devfs as devfs;
 

@@ -45,6 +45,7 @@ fd = []
 fs = ["axruntime/fs", "arceos_api/fs", "fd"]
 fatfs = ["axfeat/fatfs"]
 ext4fs = ["axfeat/ext4fs", "dep:axlibc"]
+ext4_rs = ["axfeat/ext4_rs"]
 
 # Signal
 signal = ["axfeat/signal", "dep:axsignal"]

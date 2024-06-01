@@ -337,6 +337,7 @@ dependencies = [
  "cfg-if",
  "crate_interface",
  "driver_block",
+ "ext4_rs",
  "fatfs",
  "lazy_init",
  "log",
@@ -1131,6 +1132,15 @@ name = "eventfd"
 version = "0.1.0"
 dependencies = [
  "bitflags 2.4.0",
+]
+
+[[package]]
+name = "ext4_rs"
+version = "1.0.0"
+source = "git+https://github.com/yuoo655/ext4_rs.git?rev=6bcc7f5#6bcc7f5d6382ba1940f29f9a15869f35fe77b5c0"
+dependencies = [
+ "bitflags 2.4.0",
+ "log",
 ]
 
 [[package]]

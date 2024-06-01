@@ -46,6 +46,9 @@ else ifneq ($(findstring monolithic,$(APP)),)
   ifeq ($(filter ext4fs,$(FEATURES)),)
     override FEATURES += fatfs
   endif
+  ifeq ($(filter ext4_rs,$(FEATURES)),)
+    override FEATURES += ext4_rs
+  endif
 endif
 
 override FEATURES := $(strip $(FEATURES))
