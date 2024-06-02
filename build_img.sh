@@ -3,7 +3,7 @@
 # 	MacOS  : brew install dosfstools
 # 	Ubuntu : apt-get install dosfstools
 #	Usage:
-# 		build_img.sh -m [arch] -fs [ext4|fat32] -file [testcast] -s [size]
+# 		build_img.sh -a [arch] -fs [ext4|fat32] -file [testcast] -s [size]
 ################################################################
 # default setting
 arch=x86_64
@@ -14,91 +14,62 @@ FILE=
 display_help()
 {
 	echo ""
-	echo "./build_img.sh -m [arch] -fs [filesystem] -file [testcast]"
+	echo "./build_img.sh -a [arch] -fs [filesystem] -file [testcast]"
+	# 若不指定参数，则使用默认的测例
+	echo "  -a | --arch		architecture: x86_64|riscv64|aarch64", default is x86_64
+	echo "  -fs | --filesystem	filesystem: ext4|fat32", default is fat32
+	echo "  -file | --testcase  If not specified, use the default testcases for different architectures."
 	echo "  -s | --size		size of the disk image in 4MB batch size, default is set to 30, which means 120MB disk image"
+	echo "  default testcases:"
+	echo "    x86_64: x86_64_linux_musl"
+	echo "    riscv64: riscv64_linux_musl"
+	echo "    aarch64: aarch64-linux-musl"
+	echo "  -h | --help		display help"
 	echo ""
 	exit 1
 }
 
-while [ -n "$1" ]; do
+# 可能接受四类参数 -a [arch] -fs [filesystem] -file [testcast] -s [size]
+# 但是不一定只有一个参数，所以使用 while 循环
+while [ "$1" != "" ]; do
 	case $1 in
-		-m)
-			shift
-			arch="$1"
-			;;
-		-fs)
-			shift
-			fs="$1"
-			;;
-		-file)
-			shift
-			FILE="$1"
-			;;
-		-s | --size )
-			shift
-			size=$1
-			;;
-		riscv64)
-			arch=riscv64
-			;;
-		x86_64)
-			arch=x86_64
-			;;
-		aarch64)
-			arch=aarch64
-			;;
-		fat32)
-			fs=fat32
-			;;
-		ext4)
-			fs=ext4
-			;;
-		sdcard)
-			FILE=sdcard
-			;;
-		gcc)
-			FILE=gcc
-			;;
-		redis)
-			FILE=redis
-			;;
-		testsuits-x86_64-linux-musl)
-			FILE=testsuits-x86_64-linux-musl
-			;;
-		ZLM)
-			FILE=ZLM
-			;;
-		libc-dynamic)
-			FILE=libc-dynamic
-			;;
-		libc-static)
-			FILE=libc-static
-			;;
-		*)
-			display_help
-			;;
+		-a | --arch )	shift
+						arch=$1
+						;;
+		-fs | --filesystem )	shift
+						fs=$1
+						;;
+		-file | --testcase )	shift
+						FILE=$1
+						;;
+		-s | --size )		shift
+						size=$1
+						;;
+		-h | --help )		display_help
+						exit
+						;;
+		* )					display_help
+						exit 1
 	esac
 	shift
 done
 
-
 if [ -z "$FILE" ]; then # use default testcases
 	if [ "$arch" = "riscv64" ]; then
-		FILE=sdcard
+		FILE=riscv64_linux_musl
 	elif [ "$arch" = "x86_64" ]; then
-		FILE=testsuits-x86_64-linux-musl
+		FILE=x86_64_linux_musl
 	elif [ "$arch" = "aarch64" ]; then
-		FILE=aarch64
+		FILE=aarch64-linux-musl
 	else
+		echo "Unknown architecture: $arch"
 		exit 1
 	fi
 fi
 
-if [ "$FILE" = "testsuits-x86_64-linux-musl" ] && [ ! -e testcases/$FILE ]; then # auto download
-	wget https://github.com/oscomp/testsuits-for-oskernel/releases/download/final-x86_64/$FILE.tgz
-	tar zxvf $FILE.tgz
-	mv $FILE testcases/$FILE -f
-	rm $FILE.tgz
+# 如果 testcases 下对应测例不存在，执行 submodules 拉取
+if [ ! -d "./testcases/$FILE" ]; then
+	git submodule update --init --recursive
 fi
 
 rm -f disk.img
@@ -106,9 +77,13 @@ dd if=/dev/zero of=disk.img bs=4M count=$size
 
 if [ "$fs" = "ext4" ]; then
 	mkfs.ext4 -t ext4 disk.img
-else
+else if [ "$fs" = "fat32" ]; then
 	fs=fat32
 	mkfs.vfat -F 32 disk.img
+else
+	echo "Unknown filesystem: $fs"
+	exit 1
+fi
 fi
 
 mkdir -p mnt
