@@ -65,6 +65,20 @@ SECTIONS
     
     ekernel = .;
 
+    sguest = .;
+    .guest : ALIGN(8K) {
+        sguest_dtb = .;
+        *(.guest.dtb)
+        eguest_dtb = .;
+        . = ALIGN(8K);
+
+        sguest_kernel = .;
+        *(.guest.kernel)
+        eguest_kernel = .;
+        . = ALIGN(8K);
+    }
+    eguest = .;
+
 	/DISCARD/ : {
         *(.comment) *(.gnu*) *(.note*) *(.eh_frame*)
     }

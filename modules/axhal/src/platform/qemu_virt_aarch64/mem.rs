@@ -15,9 +15,9 @@ pub(crate) fn memory_region_at(idx: usize) -> Option<MemRegion> {
         Ordering::Equal => {
             // free memory
             extern "C" {
-                fn ekernel();
+                fn eguest();
             }
-            let start = virt_to_phys((ekernel as usize).into()).align_up_4k();
+            let start = virt_to_phys((eguest as usize).into()).align_up_4k();
             let end = PhysAddr::from(axconfig::PHYS_MEMORY_END).align_down_4k();
             Some(MemRegion {
                 paddr: start,
@@ -35,6 +35,10 @@ const BOOT_MAP_SIZE: usize = 1 << BOOT_MAP_SHIFT; // 1GB
 
 pub(crate) unsafe fn init_boot_page_table( boot_pt_l0: &mut [A64PTE; 512], boot_pt_l1: &mut [A64PTE; 512],) 
 {
+    extern "C" {
+        fn skernel();
+    }
+
     let aligned_address = (skernel as usize) & !(BOOT_MAP_SIZE - 1);
     let l1_index = (skernel as usize) >> BOOT_MAP_SHIFT;
 
@@ -48,10 +52,7 @@ pub(crate) unsafe fn init_boot_page_table( boot_pt_l0: &mut [A64PTE; 512], boot_
     );
 }
 
-extern "C" {
-    fn skernel();
-    fn ekernel();
-}
+
 
 /*
  * *************  rk3588 *************

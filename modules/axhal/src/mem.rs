@@ -141,6 +141,12 @@ pub(crate) fn common_memory_region_at(idx: usize) -> Option<MemRegion> {
             flags: MemRegionFlags::RESERVED | MemRegionFlags::READ | MemRegionFlags::WRITE,
             name: ".bss",
         },
+        6 => MemRegion {
+            paddr: virt_to_phys((sguest as usize).into()),
+            size: eguest as usize - sguest as usize,
+            flags: MemRegionFlags::RESERVED | MemRegionFlags::READ | MemRegionFlags::WRITE,
+            name: ".guest",
+        },
         i if i < 6 + mmio_regions.len() => MemRegion {
             paddr: mmio_regions[i - 6].0.into(),
             size: mmio_regions[i - 6].1,
@@ -177,4 +183,7 @@ extern "C" {
     fn boot_stack_top();
     fn percpu_start();
     fn percpu_end();
+
+    fn sguest();
+    fn eguest();
 }
