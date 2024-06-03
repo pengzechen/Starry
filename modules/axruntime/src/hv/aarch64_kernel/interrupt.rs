@@ -4,14 +4,14 @@ use super::{current_cpu, active_vm};
 use hypercraft::{VM, VCpu};
 //xh not sure
 #[cfg(not(feature = "gic_v3"))]
-use super::vgic::vgic_inject;
+use super::vgic::{vgic_inject, vgic_set_hw_int};
 #[cfg(feature = "gic_v3")]
-use super::vgicv3::vgic_inject;
+use super::vgicv3::{vgic_inject, vgic_set_hw_int};
 
-#[cfg(not(feature = "gic_v3"))]
-use super::vgic::vgic_set_hw_int;
-#[cfg(feature = "gic_v3")]
-use super::vgicv3::vgic_set_hw_int;
+// #[cfg(not(feature = "gic_v3"))]
+// use super::vgic::vgic_set_hw_int;
+// #[cfg(feature = "gic_v3")]
+// use super::vgicv3::vgic_set_hw_int;
 
 use crate::{HyperCraftHalImpl, GuestPageTable};
 

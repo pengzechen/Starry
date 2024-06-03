@@ -343,7 +343,7 @@ impl Sgis {
 
 
 /// VGIC Redistributor
-struct Vgicr {
+pub struct Vgicr {
     inner: Arc<Mutex<VgicrInner>>,
     pub lock: Arc<Mutex<()>>,
 }
@@ -401,7 +401,7 @@ impl VgicrInner {
 
 /// VGIC CPU Private data
 pub struct  VgicCpuPriv <H: HyperCraftHal, G: GuestPageTableTrait>{
-    vigcr: Vgicr,
+    pub vigcr: Vgicr,
     // gich: GicHypervisorInterfaceBlock,
     curr_lrs: [u16; GIC_LIST_REGS_NUM],
     sgis: [Sgis; GIC_SGIS_NUM],

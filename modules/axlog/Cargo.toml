@@ -25,6 +25,11 @@ log = "0.4"
 spinlock = { path = "../../crates/spinlock" }
 crate_interface = { path = "../../crates/crate_interface" }
 chrono = { version = "0.4", optional = true }
+arm_gic = { path = "../../crates/arm_gic" }
+arm_gicv3 = { path = "../../crates/arm_gicv3" }
+arm_pl011 = { path = "../../crates/arm_pl011" }
+dw_apb_uart = { path = "../../crates/dw_apb_uart" }
+
 
 [dev-dependencies]
 axlog = { path = ".", features = ["std"] }

@@ -1,5 +1,6 @@
-use crate::mem::*;
+use crate::mem_map::*;
 use page_table_entry::{aarch64::A64PTE, GenericPTE, MappingFlags};
+use crate::platform::aarch64_common::mem::*;
 
 /// Number of physical memory regions.
 pub(crate) fn memory_regions_num() -> usize {

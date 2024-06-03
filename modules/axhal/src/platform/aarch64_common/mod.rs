@@ -4,6 +4,14 @@ mod boot;
 #[cfg(not(platform_family = "aarch64-raspi"))]
 pub mod mp;
 
+pub mod dw_apb_uart;
+pub mod pl011;
+pub mod console {
+    pub use super::dw_apb_uart::*;
+}
+
+// pub use crate::platform::aarch64_common::generic_timer_hv::init_percpu;
+
 #[cfg(not(platform_family = "aarch64-raspi"))]
 pub mod psci;
 //xh not sure
@@ -30,7 +38,7 @@ pub mod time {
 
 cfg_if::cfg_if! {
     if #[cfg(any(platform_family = "aarch64-bsta1000b", platform_family= "aarch64-rk3588j"))] {
-        mod dw_apb_uart;
+        pub mod dw_apb_uart;
         pub mod console {
             pub use super::dw_apb_uart::*;
         }
@@ -53,23 +61,23 @@ extern "C" {
 
 /// The earliest entry point for the secondary CPUs.
 pub(crate) unsafe extern "C" fn rust_entry(cpu_id: usize, dtb: usize) {
-    use crate::mem::phys_to_virt;
-    crate::mem::clear_bss();
+    use crate::mem_map::phys_to_virt;
+    crate::mem_map::clear_bss();
     crate::arch::set_exception_vector_base(exception_vector_base as usize);
     crate::cpu::init_primary(cpu_id);
 
     // init fdt
-    crate::platform::mem::idmap_device(dtb);
+    crate::platform::aarch64_common::mem::idmap_device(dtb);
     of::init_fdt_ptr(phys_to_virt(dtb.into()).as_usize() as *const u8);
     // HugeMap all device memory for allocator
     for m in of::memory_nodes() {
         for r in m.regions() {
-            crate::platform::mem::idmap_device(r.starting_address as usize);
+            crate::platform::aarch64_common::mem::idmap_device(r.starting_address as usize);
         }
     }
     
-    crate::platform::console::init_early();
-    crate::platform::time::init_early();
+    console::init_early();
+    time::init_early();
     // disable low address access
     crate::arch::write_page_table_root0(0.into());
     
@@ -88,15 +96,15 @@ pub(crate) unsafe extern "C" fn rust_entry_secondary(cpu_id: usize) {
 ///
 /// For example, the interrupt controller and the timer.
 pub fn platform_init() {
-    #[cfg(feature = "irq")]    crate::platform::irq::init_primary();
+    #[cfg(feature = "irq")]    crate::platform::gicv3::init_primary();
     
     info!("gic global local init ok!!");
-    
-    crate::platform::time::init_percpu();
+    use crate::platform::aarch64_common::generic_timer_hv::init_percpu;
+    init_percpu();
     
     info!("timer init ok!!");
     
-    #[cfg(feature = "irq")]    crate::platform::console::init_irq();
+    #[cfg(feature = "irq")]   console::init();
     
     info!("pl011 init ok!!");
 }
@@ -120,3 +128,11 @@ pub mod generic_timer_hv;
 
 // #[cfg(all(feature = "irq", feature = "gic_v3"))]
 // pub mod gicv3;
+
+
+
+
+// rk3588 这个地方暂时使用 qemu-virt 
+// mod qemu_virt_aarch64;
+// pub use self::qemu_virt_aarch64::*;
+    

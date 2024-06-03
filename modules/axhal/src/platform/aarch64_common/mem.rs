@@ -1,8 +1,8 @@
 use aarch64_cpu::{asm::barrier, registers::*};
 use tock_registers::interfaces::{ReadWriteable, Writeable};
 
-use crate::mem::virt_to_phys;
-use crate::mem::{MemRegion, MemRegionFlags, PhysAddr};
+use crate::mem_map::virt_to_phys;
+use crate::mem_map::{MemRegion, MemRegionFlags, PhysAddr};
 use page_table_entry::aarch64::{MemAttr, A64PTE};
 use page_table_entry::{GenericPTE, MappingFlags};
 
@@ -21,13 +21,13 @@ pub(crate) fn platform_regions() -> impl Iterator<Item = MemRegion> {
             })
             .chain(core::iter::once(fdt_region()))
             .chain(free_regions())
-            .chain(crate::mem::default_mmio_regions()),
+            .chain(crate::mem_map::default_mmio_regions()),
         )
     } else {
         Right(
             core::iter::once(fdt_region())
                 .chain(free_regions())
-                .chain(crate::mem::default_mmio_regions()),
+                .chain(crate::mem_map::default_mmio_regions()),
         )
     };
     iterator.into_iter()
@@ -86,8 +86,8 @@ fn free_regions() -> impl Iterator<Item = MemRegion> {
     });
 
     let hack_k_region = MemRegion {
-        paddr: virt_to_phys((_stext as usize).into()).align_up_4k(),
-        size: _ekernel as usize - _stext as usize,
+        paddr: virt_to_phys((stext as usize).into()).align_up_4k(),
+        size: ekernel as usize - stext as usize,
         flags: MemRegionFlags::FREE,
         name: "kernel memory",
     };
@@ -163,7 +163,7 @@ pub(crate)  unsafe fn init_mmu_el2() {
             + TCR_EL2::T0SZ.val(16),
     );
     */
-    
+    idmap_device(0xfeb5_0000);
     // Set EL1 to 64bit.
     HCR_EL2.write(HCR_EL2::RW::EL1IsAarch64);
 
@@ -252,10 +252,92 @@ pub(crate) unsafe fn init_boot_page_table_mem() {
 }
 
 extern "C" {
-    fn _stext();
-    fn _ekernel();
 }
 
 
+extern "C" {
+    fn stext();
+    fn etext();
+    fn srodata();
+    fn erodata();
+    fn sdata();
+    fn edata();
+    fn sbss();
+    fn ebss();
+    fn boot_stack();
+    fn boot_stack_top();
+    fn percpu_start();
+    fn percpu_end();
+    fn skernel();
+    fn ekernel();
 
+    fn sguest();
+    fn eguest();
+
+}
+
+#[allow(dead_code)]
+pub(crate) const fn common_memory_regions_num() -> usize {
+    6 + axconfig::MMIO_REGIONS.len()
+}
+
+#[allow(dead_code)]
+pub(crate) fn common_memory_region_at(idx: usize) -> Option<MemRegion> {
+    let mmio_regions = axconfig::MMIO_REGIONS;
+    let r = match idx {
+        0 => MemRegion {
+            paddr: virt_to_phys((stext as usize).into()),
+            size: etext as usize - stext as usize,
+            flags: MemRegionFlags::RESERVED | MemRegionFlags::READ | MemRegionFlags::EXECUTE,
+            name: ".text",
+        },
+        1 => MemRegion {
+            paddr: virt_to_phys((srodata as usize).into()),
+            size: erodata as usize - srodata as usize,
+            flags: MemRegionFlags::RESERVED | MemRegionFlags::READ,
+            name: ".rodata",
+        },
+        2 => MemRegion {
+            paddr: virt_to_phys((sdata as usize).into()),
+            size: edata as usize - sdata as usize,
+            flags: MemRegionFlags::RESERVED | MemRegionFlags::READ | MemRegionFlags::WRITE,
+            name: ".data",
+        },
+        3 => MemRegion {
+            paddr: virt_to_phys((percpu_start as usize).into()),
+            size: percpu_end as usize - percpu_start as usize,
+            flags: MemRegionFlags::RESERVED | MemRegionFlags::READ | MemRegionFlags::WRITE,
+            name: ".percpu",
+        },
+        4 => MemRegion {
+            paddr: virt_to_phys((boot_stack as usize).into()),
+            size: boot_stack_top as usize - boot_stack as usize,
+            flags: MemRegionFlags::RESERVED | MemRegionFlags::READ | MemRegionFlags::WRITE,
+            name: "boot stack",
+        },
+        5 => MemRegion {
+            paddr: virt_to_phys((sbss as usize).into()),
+            size: ebss as usize - sbss as usize,
+            flags: MemRegionFlags::RESERVED | MemRegionFlags::READ | MemRegionFlags::WRITE,
+            name: ".bss",
+        },
+        6 => MemRegion {
+            paddr: virt_to_phys((sguest as usize).into()),
+            size: eguest as usize - sguest as usize,
+            flags: MemRegionFlags::RESERVED | MemRegionFlags::READ | MemRegionFlags::WRITE,
+            name: ".guest",
+        },
+        i if i < 6 + mmio_regions.len() => MemRegion {
+            paddr: mmio_regions[i - 6].0.into(),
+            size: mmio_regions[i - 6].1,
+            flags: MemRegionFlags::RESERVED
+                | MemRegionFlags::DEVICE
+                | MemRegionFlags::READ
+                | MemRegionFlags::WRITE,
+            name: "mmio",
+        },
+        _ => return None,
+    };
+    Some(r)
+}
 

@@ -7,8 +7,8 @@ fn main() {
         gen_linker_script(&arch, platform).unwrap();
     }
 
-    println!("cargo:rustc-cfg=platform=\"{}\"", platform);
-    println!("cargo:rustc-cfg=platform_family=\"{}\"", axconfig::FAMILY);
+    // println!("cargo:rustc-cfg=platform=\"{}\"", platform);
+    // println!("cargo:rustc-cfg=platform_family=\"{}\"", axconfig::FAMILY);
 }
 
 fn gen_linker_script(arch: &str, platform: &str) -> Result<()> {

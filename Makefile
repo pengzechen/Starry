@@ -28,11 +28,11 @@
 #     - `GW`: Gateway IPv4 address (default is 10.0.2.2 for QEMU user netdev)
 
 # General options
-ARCH ?= x86_64
+ARCH ?= aarch64
 PLATFORM ?=
 SMP ?= 1
 MODE ?= release
-LOG ?= off
+LOG ?= debug
 V ?=
 
 # App options
@@ -52,6 +52,7 @@ NET ?= y
 GRAPHIC ?= n
 BUS ?= mmio
 HV ?= n
+GIC_V3 ?= y
 
 DISK_IMG ?= disk.img
 QEMU_LOG ?= n
@@ -76,51 +77,61 @@ else
 endif
 
 # Architecture, platform and target
-ifneq ($(filter $(MAKECMDGOALS),unittest unittest_no_fail_fast),)
-  PLATFORM_NAME :=
-else ifneq ($(PLATFORM),)
-  # `PLATFORM` is specified, override the `ARCH` variables
-  builtin_platforms := $(patsubst platforms/%.toml,%,$(wildcard platforms/*))
-  ifneq ($(filter $(PLATFORM),$(builtin_platforms)),)
-    # builtin platform
-    PLATFORM_NAME := $(PLATFORM)
-    _arch := $(word 1,$(subst -, ,$(PLATFORM)))
-  else ifneq ($(wildcard $(PLATFORM)),)
-    # custom platform, read the "platform" field from the toml file
-    PLATFORM_NAME := $(shell cat $(PLATFORM) | sed -n 's/^platform = "\([a-z0-9A-Z_\-]*\)"/\1/p')
-    _arch := $(shell cat $(PLATFORM) | sed -n 's/^arch = "\([a-z0-9A-Z_\-]*\)"/\1/p')
-  else
-    $(error "PLATFORM" must be one of "$(builtin_platforms)" or a valid path to a toml file)
-  endif
-  ifeq ($(origin ARCH),command line)
-    ifneq ($(ARCH),$(_arch))
-      $(error "ARCH=$(ARCH)" is not compatible with "PLATFORM=$(PLATFORM)")
-    endif
-  endif
-  ARCH := $(_arch)
+# ifneq ($(filter $(MAKECMDGOALS),unittest unittest_no_fail_fast),)
+#   PLATFORM_NAME :=
+# else ifneq ($(PLATFORM),)
+#   # `PLATFORM` is specified, override the `ARCH` variables
+#   builtin_platforms := $(patsubst platforms/%.toml,%,$(wildcard platforms/*))
+#   ifneq ($(filter $(PLATFORM),$(builtin_platforms)),)
+#     # builtin platform
+#     PLATFORM_NAME := $(PLATFORM)
+#     _arch := $(word 1,$(subst -, ,$(PLATFORM)))
+#   else ifneq ($(wildcard $(PLATFORM)),)
+#     # custom platform, read the "platform" field from the toml file
+#     PLATFORM_NAME := $(shell cat $(PLATFORM) | sed -n 's/^platform = "\([a-z0-9A-Z_\-]*\)"/\1/p')
+#     _arch := $(shell cat $(PLATFORM) | sed -n 's/^arch = "\([a-z0-9A-Z_\-]*\)"/\1/p')
+#   else
+#     $(error "PLATFORM" must be one of "$(builtin_platforms)" or a valid path to a toml file)
+#   endif
+#   ifeq ($(origin ARCH),command line)
+#     ifneq ($(ARCH),$(_arch))
+#       $(error "ARCH=$(ARCH)" is not compatible with "PLATFORM=$(PLATFORM)")
+#     endif
+#   endif
+#   ARCH := $(_arch)
+# endif
+
+ifeq ($(ARCH), aarch64)
+  ACCEL    ?= n
+  PLATFORM ?= qemu-virt-aarch64
+  TARGET   := aarch64-unknown-none-softfloat
+else
+  $(error "ARCH" must be "aarch64")
 endif
 
-ifeq ($(ARCH), x86_64)
-  # Don't enable kvm for WSL/WSL2.
-  # ACCEL ?= $(if $(findstring -microsoft, $(shell uname -r | tr '[:upper:]' '[:lower:]')),n,y)
-  ACCEL ?= n # TODO: 开启 kvm 会导致一些异常，以后再去追踪
-  PLATFORM_NAME ?= x86_64-qemu-q35
-  TARGET := x86_64-unknown-none
-  BUS := pci
-else ifeq ($(ARCH), riscv64)
-  ACCEL ?= n
-  PLATFORM_NAME ?= riscv64-qemu-virt
-  TARGET := riscv64gc-unknown-none-elf
-else ifeq ($(ARCH), aarch64)
-  ACCEL ?= n
-  PLATFORM_NAME ?= aarch64-qemu-virt
-  TARGET := aarch64-unknown-none-softfloat
-else
-  $(error "ARCH" must be one of "x86_64", "riscv64", or "aarch64")
-endif
+
+# ifeq ($(ARCH), x86_64)
+#   # Don't enable kvm for WSL/WSL2.
+#   # ACCEL ?= $(if $(findstring -microsoft, $(shell uname -r | tr '[:upper:]' '[:lower:]')),n,y)
+#   ACCEL ?= n # TODO: 开启 kvm 会导致一些异常，以后再去追踪
+#   PLATFORM_NAME ?= x86_64-qemu-q35
+#   TARGET := x86_64-unknown-none
+#   BUS := pci
+# else ifeq ($(ARCH), riscv64)
+#   ACCEL ?= n
+#   PLATFORM_NAME ?= riscv64-qemu-virt
+#   TARGET := riscv64gc-unknown-none-elf
+# else ifeq ($(ARCH), aarch64)
+#   ACCEL ?= n
+#   PLATFORM_NAME ?= aarch64-qemu-virt
+#   TARGET := aarch64-unknown-none-softfloat
+# else
+#   $(error "ARCH" must be one of "x86_64", "riscv64", or "aarch64")
+# endif
 
 $(info "PLATFORM: $(PLATFORM) PLATFORM_NAME: $(PLATFORM_NAME)")
 
+export GIC_V3
 export AX_ARCH=$(ARCH)
 export AX_PLATFORM=$(PLATFORM_NAME)
 export AX_SMP=$(SMP)
@@ -150,16 +161,16 @@ OUT_ELF := $(OUT_DIR)/$(APP_NAME)_$(PLATFORM_NAME).elf
 OUT_BIN := $(OUT_DIR)/$(APP_NAME)_$(PLATFORM_NAME).bin
 
 ifeq ($(HV), y)
-  ifneq ($(PLATFORM_NAME), aarch64-qemu-virt-hv)
-    $(error "HV only support arm arch")
-  endif
-	LD_SCRIPT = $(CURDIR)/modules/axhal/linker_$(PLATFORM_NAME)_hv.lds
+  # ifneq ($(PLATFORM_NAME), aarch64-qemu-virt-hv)
+  #   $(error "HV only support arm arch")
+  # endif
+	LD_SCRIPT = $(CURDIR)/modules/axhal/linker_$(PLATFORM)_hv.lds
 endif
 
 
 
 all: build
-
+include scripts/make/rk3588.mk
 include scripts/make/utils.mk
 include scripts/make/build.mk
 include scripts/make/qemu.mk

@@ -11,6 +11,8 @@ use arm_gicv3::bit_extract;
 use arm_gicv3::GIC_LRS_NUM;
 
 pub use arm_gicv3::GIC_INTS_MAX as MAX_IRQ_COUNT;
+use arm_gic::translate_irq;
+use arm_gic::InterruptType;
 
 use crate::cpu::this_cpu_id;
 
@@ -22,6 +24,8 @@ use crate::irq::IrqHandler;
 pub const IPI_IRQ_NUM:               usize = 1;
 pub const HYPERVISOR_TIMER_IRQ_NUM:  usize = 26;
 pub const MAINTENANCE_IRQ_NUM:       usize = 25;
+
+// pub const UART_IRQ_NUM: usize = translate_irq(axconfig::UART_IRQ, InterruptType::SPI).unwrap();
 
 // 来自v2
 /// The timer IRQ number.

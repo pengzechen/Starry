@@ -1,5 +1,5 @@
-use crate::platform::mem::init_mmu;
-use crate::platform::mem::init_mmu_el2;
+use crate::platform::aarch64_common::mem::init_mmu;
+use crate::platform::aarch64_common::mem::init_mmu_el2;
 
 use aarch64_cpu::{asm, asm::barrier, registers::*};
 use axconfig::TASK_STACK_SIZE;
@@ -83,8 +83,8 @@ unsafe fn switch_to_el2() {
 use page_table_entry::aarch64::A64PTE;
 use memory_addr::PhysAddr;
 
-use crate::platform::mem::BOOT_PT_L0;
-use crate::platform::mem::init_boot_page_table_mem;
+use crate::platform::aarch64_common::mem::BOOT_PT_L0;
+use crate::platform::aarch64_common::mem::init_boot_page_table_mem;
 
 
 extern "C" { fn exception_vector_base_el2(); }
@@ -213,7 +213,7 @@ unsafe extern "C" fn _start() -> ! {
         cache_invalidate = sym cache_invalidate,
         exception_vector_base_el2 = sym exception_vector_base_el2,
         start = sym _start,
-        idmap_kernel = sym crate::platform::mem::idmap_kernel,
+        idmap_kernel = sym crate::platform::aarch64_common::mem::idmap_kernel,
         init_mmu_el2 = sym init_mmu_el2,
         switch_to_el2 = sym switch_to_el2,
         enable_fp = sym enable_fp,

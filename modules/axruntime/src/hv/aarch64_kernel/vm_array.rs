@@ -12,9 +12,16 @@ use lazy_init::LazyInit;
 use axhal::cpu::this_cpu_id;
 
 use super::emu::emu_register_dev;
-use super::emuintc_handler::{emu_intc_handler, emu_intc_init};
+// use super::emuintc_handler::{emu_intc_handler, emu_intc_init, emul_vgicr_handler, emu_vgicr_init};
+use super::emuintc_handler::{emu_intc_handler, emu_intc_init, emu_vgicr_init};
+
+#[cfg(feature = "gic_v3")]
+use super::emuintc_handler::emul_vgicr_handler;
+
+use super::emureg_handler::{vgic_icc_sre_handler, emu_register_reg, EmuRegType};
 use super::emuuart_handler::{emu_uart_handler, emu_uart_init};
 use super::interrupt::interrupt_vm_register;
+
 use crate::{GuestPageTable, HyperCraftHalImpl};
 
 const VCPU_CNT: usize = 2;
@@ -74,6 +81,23 @@ pub fn init_vm_emu_device(vm_id: usize) {
             );
             emu_intc_init(vm, idx);
 
+            #[cfg(feature = "gic_v3")]{
+
+            let idx = 11;
+
+            emu_register_dev(
+                EmuDeviceType::EmuDeviceTGICR,
+                vm.vm_id,
+                idx,
+                0x80a0000,
+                0x2_0000,
+                emul_vgicr_handler,
+            );
+            emu_vgicr_init(vm, idx);
+            emu_register_reg(EmuRegType::SysReg, arm_gicv3::ICC_SRE_ADDR, vgic_icc_sre_handler);
+
+            }
+
             if vm_id!=0 {
                 // init emu uart
                 let idx = 1;
@@ -82,10 +106,12 @@ pub fn init_vm_emu_device(vm_id: usize) {
                     vm.vm_id,
                     idx,
                     0x9000000, // emu_dev.base_ipa,
-                    0x1000,    // emu_dev.length,
+                    0x10000,    // emu_dev.length,
                     emu_uart_handler,
                 );
                 emu_uart_init(vm, idx);
+
+
             }
 
         }
@@ -105,7 +131,7 @@ pub fn init_vm_passthrough_device(vm_id: usize) {
             let mut irqs = Vec::new();
             irqs.push(33);  
             irqs.push(27);  // virtual timer
-            // irqs.push(30);
+            irqs.push(30);
             irqs.push(32 + 0x28);
             irqs.push(32 + 0x29);
             irqs.push(0x3e + 0x11);  // what interrupt????

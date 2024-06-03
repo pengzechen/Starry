@@ -8,7 +8,7 @@ else
   verbose :=
 endif
 
-features-y :=
+features-y := axstd/platform-$(PLATFORM)
 
 ifeq ($(shell test $(SMP) -gt 1; echo $$?),0)
   features-y += axstd/smp
@@ -19,6 +19,17 @@ ifneq ($(filter $(LOG),off error warn info debug trace),)
 else
   $(error "LOG" must be one of "off", "error", "warn", "info", "debug", "trace")
 endif
+
+ifeq ($(GIC_V3), y)
+  features-y += axstd/gic_v3
+endif
+
+
+
+features-$(FS)        += axstd/fs
+features-$(NET)       += axstd/net
+features-$(GRAPHIC)   += axstd/display
+features-$(HV)        += axstd/hv 
 
 build_args-release := --release
 

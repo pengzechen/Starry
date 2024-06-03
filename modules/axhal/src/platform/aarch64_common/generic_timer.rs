@@ -40,7 +40,8 @@ pub(crate) fn init_early() {
 /// Set a one-shot timer.
 ///
 /// A timer interrupt will be triggered at the given deadline (in nanoseconds).
-#[cfg(all(feature = "irq", not(feature = "hv")))]
+// xh not sure
+#[cfg(all(feature = "irq", feature = "hv"))]
 pub fn set_oneshot_timer(deadline_ns: u64) {
     let cnptct = CNTPCT_EL0.get();
     let cnptct_deadline = nanos_to_ticks(deadline_ns);
@@ -53,7 +54,8 @@ pub fn set_oneshot_timer(deadline_ns: u64) {
     }
 }
 
-#[cfg(all(feature = "irq", feature = "hv"))]
+// xh not sure
+#[cfg(all(feature = "irq", not(feature = "hv")))]
 pub fn set_oneshot_timer(deadline_ns: u64) {
     let cnptct = CNTPCT_EL0.get();
     let cnptct_deadline = nanos_to_ticks(deadline_ns);
@@ -82,6 +84,6 @@ pub(crate) fn init_percpu() {
         let tval = 0;
         msr!(CNTHP_CTL_EL2, ctl);
         msr!(CNTHP_TVAL_EL2, tval);
-        crate::platform::irq::set_enable(crate::platform::irq::HYPERVISOR_TIMER_IRQ_NUM, true);
+        crate::platform::irq::set_enable(crate::platform::gicv3::HYPERVISOR_TIMER_IRQ_NUM, true);
     }
 }

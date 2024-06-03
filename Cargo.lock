@@ -291,6 +291,7 @@ dependencies = [
 name = "axconfig"
 version = "0.1.0"
 dependencies = [
+ "cfg-if",
  "serde",
  "toml_edit",
 ]
@@ -465,10 +466,14 @@ dependencies = [
 name = "axlog"
 version = "0.1.0"
 dependencies = [
+ "arm_gic",
+ "arm_gicv3",
+ "arm_pl011",
  "axlog",
  "cfg-if",
  "chrono",
  "crate_interface",
+ "dw_apb_uart",
  "log",
  "spinlock",
 ]

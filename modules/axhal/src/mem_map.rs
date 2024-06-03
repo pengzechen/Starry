@@ -72,27 +72,27 @@ pub const fn phys_to_virt(paddr: PhysAddr) -> VirtAddr {
 
 /// Returns an iterator over all physical memory regions.
 pub fn memory_regions() -> impl Iterator<Item = MemRegion> {
-    kernel_image_regions().chain(crate::platform::mem::platform_regions())
+    kernel_image_regions().chain(crate::platform::aarch64_common::mem::platform_regions())
 }
 
 /// Returns the memory regions of the kernel image (code and data sections).
 fn kernel_image_regions() -> impl Iterator<Item = MemRegion> {
     [
         MemRegion {
-            paddr: virt_to_phys((_stext as usize).into()),
-            size: _etext as usize - _stext as usize,
+            paddr: virt_to_phys((stext as usize).into()),
+            size: etext as usize - stext as usize,
             flags: MemRegionFlags::RESERVED | MemRegionFlags::READ | MemRegionFlags::EXECUTE,
             name: ".text",
         },
         MemRegion {
-            paddr: virt_to_phys((_srodata as usize).into()),
-            size: _erodata as usize - _srodata as usize,
+            paddr: virt_to_phys((srodata as usize).into()),
+            size: erodata as usize - srodata as usize,
             flags: MemRegionFlags::RESERVED | MemRegionFlags::READ,
             name: ".rodata",
         },
         MemRegion {
-            paddr: virt_to_phys((_sdata as usize).into()),
-            size: _edata as usize - _sdata as usize,
+            paddr: virt_to_phys((sdata as usize).into()),
+            size: edata as usize - sdata as usize,
             flags: MemRegionFlags::RESERVED | MemRegionFlags::READ | MemRegionFlags::WRITE,
             name: ".data .tdata .tbss .percpu",
         },
@@ -103,8 +103,8 @@ fn kernel_image_regions() -> impl Iterator<Item = MemRegion> {
             name: "boot stack",
         },
         MemRegion {
-            paddr: virt_to_phys((_sbss as usize).into()),
-            size: _ebss as usize - _sbss as usize,
+            paddr: virt_to_phys((sbss as usize).into()),
+            size: ebss as usize - sbss as usize,
             flags: MemRegionFlags::RESERVED | MemRegionFlags::READ | MemRegionFlags::WRITE,
             name: ".bss",
         },
@@ -129,7 +129,7 @@ pub(crate) fn default_mmio_regions() -> impl Iterator<Item = MemRegion> {
 /// Returns the default free memory regions (kernel image end to physical memory end).
 #[allow(dead_code)]
 pub(crate) fn default_free_regions() -> impl Iterator<Item = MemRegion> {
-    let start = virt_to_phys((_ekernel as usize).into()).align_up_4k();
+    let start = virt_to_phys((ekernel as usize).into()).align_up_4k();
     let end = PhysAddr::from(axconfig::PHYS_MEMORY_END).align_down_4k();
     core::iter::once(MemRegion {
         paddr: start,
@@ -157,21 +157,21 @@ pub(crate) fn extend_free_regions() -> impl Iterator<Item = MemRegion> {
 #[allow(dead_code)]
 pub(crate) fn clear_bss() {
     unsafe {
-        core::slice::from_raw_parts_mut(_sbss as usize as *mut u8, _ebss as usize - _sbss as usize)
+        core::slice::from_raw_parts_mut(sbss as usize as *mut u8, ebss as usize - sbss as usize)
             .fill(0);
     }
 }
 
 extern "C" {
-    fn _stext();
-    fn _etext();
-    fn _srodata();
-    fn _erodata();
-    fn _sdata();
-    fn _edata();
-    fn _sbss();
-    fn _ebss();
-    fn _ekernel();
+    fn stext();
+    fn etext();
+    fn srodata();
+    fn erodata();
+    fn sdata();
+    fn edata();
+    fn sbss();
+    fn ebss();
+    fn ekernel();
     fn boot_stack();
     fn boot_stack_top();
 }

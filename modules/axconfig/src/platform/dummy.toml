@@ -1,9 +1,7 @@
 # Architecture identifier.
 arch = "unknown"
 # Platform identifier.
-platform = "rk3588-aarch64"
-# Platform family.
-family = "dummy"
+platform = "dummy"
 
 # Base address of the whole physical memory.
 phys-memory-base = "0"
@@ -13,7 +11,6 @@ phys-memory-size = "0"
 kernel-base-paddr = "0"
 # Base virtual address of the kernel image.
 kernel-base-vaddr = "0"
-
 # Linear mapping offset, for quick conversions between physical and virtual
 # addresses.
 phys-virt-offset = "0"
@@ -30,28 +27,3 @@ pci-ranges = []
 
 # Timer interrupt frequency in Hz.
 timer-frequency = "0"
-
-# Stack size of each task.
-task-stack-size = "0x40000"   # 256 K
-
-# Number of timer ticks per second (Hz). A timer tick may contain several timer
-# interrupts.
-ticks-per-sec = "100"
-
-# Number of CPUs
-smp = "1"
-
-# Testcase memory start address.
-testcase-memory-start = "0"
-# Testcase memory size.
-testcase-memory-size = "0"
-# The base address of the user heap.
-user-heap-base = "0"
-# The base address of the user stack. And the stack bottom is `user-stack-top + max-user-stack-size`.
-user-stack-top = "0"
-# The size of the user heap.
-max-user-heap-size = "0"
-# The size of the user stack.
-max-user-stack-size = "0"
-# The base address of the signal trampoline.
-signal-trampoline = "0"

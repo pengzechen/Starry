@@ -10,11 +10,11 @@ static PERCPU_AREA_BASE: spin::once::Once<usize> = spin::once::Once::new();
 #[doc(cfg(not(feature = "sp-naive")))]
 pub fn percpu_area_size() -> usize {
     extern "C" {
-        fn _percpu_load_start();
-        fn _percpu_load_end();
+        fn __percpu_offset_start();
+        fn __percpu_offset_end();
     }
     use percpu_macros::percpu_symbol_offset;
-    percpu_symbol_offset!(_percpu_load_end) - percpu_symbol_offset!(_percpu_load_start)
+    percpu_symbol_offset!(__percpu_offset_end) - percpu_symbol_offset!(__percpu_offset_start)
 }
 
 /// Returns the base address of the per-CPU data area on the given CPU.
@@ -25,9 +25,9 @@ pub fn percpu_area_base(cpu_id: usize) -> usize {
     cfg_if::cfg_if! {
         if #[cfg(target_os = "none")] {
             extern "C" {
-                fn _percpu_start();
+                fn percpu_start();
             }
-            let base = _percpu_start as usize;
+            let base = percpu_start as usize;
         } else {
             let base = *PERCPU_AREA_BASE.get().unwrap();
         }

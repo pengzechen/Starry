@@ -28,7 +28,7 @@ pub mod mp {
 
 pub mod mem {
     /// Returns platform-specific memory regions.
-    pub(crate) fn platform_regions() -> impl Iterator<Item = crate::mem::MemRegion> {
+    pub(crate) fn platform_regions() -> impl Iterator<Item = crate::mem_map::MemRegion> {
         core::iter::empty()
     }
 }

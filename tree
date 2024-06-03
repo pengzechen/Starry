@@ -1,0 +1,701 @@
+allocator v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/allocator)
+├── bitmap-allocator v0.1.0 (https://github.com/rcore-os/bitmap-allocator.git?rev=88e871a#88e871a5)
+│   └── bit_field v0.10.2
+├── buddy_system_allocator v0.9.0
+├── rlsf v0.2.1
+│   ├── cfg-if v1.0.0
+│   ├── const-default v1.0.0
+│   ├── libc v0.2.147
+│   └── svgbobdoc v0.3.0 (proc-macro)
+│       ├── base64 v0.13.1
+│       ├── proc-macro2 v1.0.69
+│       │   └── unicode-ident v1.0.11
+│       ├── quote v1.0.33
+│       │   └── proc-macro2 v1.0.69 (*)
+│       ├── syn v1.0.109
+│       │   ├── proc-macro2 v1.0.69 (*)
+│       │   ├── quote v1.0.33 (*)
+│       │   └── unicode-ident v1.0.11
+│       └── unicode-width v0.1.10
+└── slab_allocator v0.3.1 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/slab_allocator)
+    └── buddy_system_allocator v0.9.0
+[dev-dependencies]
+├── allocator v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/allocator) (*)
+├── criterion v0.5.1
+│   ├── anes v0.1.6
+│   ├── cast v0.3.0
+│   ├── ciborium v0.2.1
+│   │   ├── ciborium-io v0.2.1
+│   │   ├── ciborium-ll v0.2.1
+│   │   │   ├── ciborium-io v0.2.1
+│   │   │   └── half v1.8.2
+│   │   └── serde v1.0.185
+│   │       └── serde_derive v1.0.185 (proc-macro)
+│   │           ├── proc-macro2 v1.0.69 (*)
+│   │           ├── quote v1.0.33 (*)
+│   │           └── syn v2.0.39
+│   │               ├── proc-macro2 v1.0.69 (*)
+│   │               ├── quote v1.0.33 (*)
+│   │               └── unicode-ident v1.0.11
+│   ├── clap v4.3.23
+│   │   └── clap_builder v4.3.23
+│   │       ├── anstyle v1.0.1
+│   │       └── clap_lex v0.5.0
+│   ├── criterion-plot v0.5.0
+│   │   ├── cast v0.3.0
+│   │   └── itertools v0.10.5
+│   │       └── either v1.9.0
+│   ├── is-terminal v0.4.9
+│   │   └── rustix v0.38.8
+│   │       ├── bitflags v2.4.0
+│   │       └── linux-raw-sys v0.4.5
+│   ├── itertools v0.10.5 (*)
+│   ├── num-traits v0.2.16
+│   │   [build-dependencies]
+│   │   └── autocfg v1.1.0
+│   ├── once_cell v1.18.0
+│   ├── oorandom v11.1.3
+│   ├── plotters v0.3.5
+│   │   ├── num-traits v0.2.16 (*)
+│   │   ├── plotters-backend v0.3.5
+│   │   └── plotters-svg v0.3.5
+│   │       └── plotters-backend v0.3.5
+│   ├── rayon v1.7.0
+│   │   ├── either v1.9.0
+│   │   └── rayon-core v1.11.0
+│   │       ├── crossbeam-channel v0.5.8
+│   │       │   ├── cfg-if v1.0.0
+│   │       │   └── crossbeam-utils v0.8.16
+│   │       │       └── cfg-if v1.0.0
+│   │       ├── crossbeam-deque v0.8.3
+│   │       │   ├── cfg-if v1.0.0
+│   │       │   ├── crossbeam-epoch v0.9.15
+│   │       │   │   ├── cfg-if v1.0.0
+│   │       │   │   ├── crossbeam-utils v0.8.16 (*)
+│   │       │   │   ├── memoffset v0.9.0
+│   │       │   │   │   [build-dependencies]
+│   │       │   │   │   └── autocfg v1.1.0
+│   │       │   │   └── scopeguard v1.2.0
+│   │       │   │   [build-dependencies]
+│   │       │   │   └── autocfg v1.1.0
+│   │       │   └── crossbeam-utils v0.8.16 (*)
+│   │       ├── crossbeam-utils v0.8.16 (*)
+│   │       └── num_cpus v1.16.0
+│   │           └── libc v0.2.147
+│   ├── regex v1.9.3
+│   │   ├── regex-automata v0.3.6
+│   │   │   └── regex-syntax v0.7.4
+│   │   └── regex-syntax v0.7.4
+│   ├── serde v1.0.185 (*)
+│   ├── serde_derive v1.0.185 (proc-macro) (*)
+│   ├── serde_json v1.0.105
+│   │   ├── itoa v1.0.9
+│   │   ├── ryu v1.0.15
+│   │   └── serde v1.0.185 (*)
+│   ├── tinytemplate v1.2.1
+│   │   ├── serde v1.0.185 (*)
+│   │   └── serde_json v1.0.105 (*)
+│   └── walkdir v2.3.3
+│       └── same-file v1.0.6
+└── rand v0.8.5
+    ├── libc v0.2.147
+    ├── rand_chacha v0.3.1
+    │   ├── ppv-lite86 v0.2.17
+    │   └── rand_core v0.6.4
+    │       └── getrandom v0.2.10
+    │           ├── cfg-if v1.0.0
+    │           └── libc v0.2.147
+    └── rand_core v0.6.4 (*)
+
+arceos-bwbench v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/apps/net/bwbench)
+├── axnet v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axnet)
+│   ├── axdriver v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axdriver)
+│   │   ├── axalloc v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axalloc)
+│   │   │   ├── allocator v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/allocator) (*)
+│   │   │   ├── axerrno v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/axerrno)
+│   │   │   │   └── log v0.4.19
+│   │   │   ├── cfg-if v1.0.0
+│   │   │   ├── log v0.4.19
+│   │   │   ├── memory_addr v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/memory_addr)
+│   │   │   └── spinlock v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/spinlock)
+│   │   │       ├── cfg-if v1.0.0
+│   │   │       └── kernel_guard v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/kernel_guard)
+│   │   │           ├── cfg-if v1.0.0
+│   │   │           └── crate_interface v0.1.1 (proc-macro) (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/crate_interface)
+│   │   │               ├── proc-macro2 v1.0.69 (*)
+│   │   │               ├── quote v1.0.33 (*)
+│   │   │               └── syn v2.0.39 (*)
+│   │   ├── axconfig v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axconfig)
+│   │   │   [build-dependencies]
+│   │   │   ├── serde v1.0.185
+│   │   │   └── toml_edit v0.19.14
+│   │   │       ├── indexmap v2.0.0
+│   │   │       │   ├── equivalent v1.0.1
+│   │   │       │   └── hashbrown v0.14.0
+│   │   │       ├── toml_datetime v0.6.3
+│   │   │       └── winnow v0.5.14
+│   │   ├── axhal v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axhal)
+│   │   │   ├── axalloc v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axalloc) (*)
+│   │   │   ├── axconfig v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axconfig) (*)
+│   │   │   ├── axfs_ramfs v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/axfs_ramfs)
+│   │   │   │   ├── axerrno v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/axerrno) (*)
+│   │   │   │   ├── axfs_vfs v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/axfs_vfs)
+│   │   │   │   │   ├── axerrno v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/axerrno) (*)
+│   │   │   │   │   ├── bitflags v2.4.0
+│   │   │   │   │   └── log v0.4.19
+│   │   │   │   ├── lazy_static v1.4.0
+│   │   │   │   │   └── spin v0.5.2
+│   │   │   │   ├── log v0.4.19
+│   │   │   │   └── spin v0.9.8
+│   │   │   │       └── lock_api v0.4.10
+│   │   │   │           └── scopeguard v1.2.0
+│   │   │   │           [build-dependencies]
+│   │   │   │           └── autocfg v1.1.0
+│   │   │   ├── axlog v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axlog)
+│   │   │   │   ├── cfg-if v1.0.0
+│   │   │   │   ├── chrono v0.4.26
+│   │   │   │   │   ├── iana-time-zone v0.1.57
+│   │   │   │   │   ├── num-traits v0.2.16 (*)
+│   │   │   │   │   └── time v0.1.45
+│   │   │   │   │       └── libc v0.2.147
+│   │   │   │   ├── crate_interface v0.1.1 (proc-macro) (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/crate_interface) (*)
+│   │   │   │   ├── log v0.4.19
+│   │   │   │   └── spinlock v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/spinlock) (*)
+│   │   │   │   [dev-dependencies]
+│   │   │   │   └── axlog v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axlog) (*)
+│   │   │   ├── bitflags v2.4.0
+│   │   │   ├── cfg-if v1.0.0
+│   │   │   ├── cortex-a v8.1.1
+│   │   │   │   └── tock-registers v0.8.1
+│   │   │   ├── crate_interface v0.1.1 (proc-macro) (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/crate_interface) (*)
+│   │   │   ├── handler_table v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/handler_table)
+│   │   │   ├── hypercraft v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/hypercraft)
+│   │   │   │   ├── aarch64-cpu v9.3.1
+│   │   │   │   │   └── tock-registers v0.8.1
+│   │   │   │   ├── arm_gic v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/arm_gic)
+│   │   │   │   │   ├── aarch64-cpu v9.3.1 (*)
+│   │   │   │   │   ├── bitflags v2.4.0
+│   │   │   │   │   ├── cfg-if v1.0.0
+│   │   │   │   │   ├── log v0.4.19
+│   │   │   │   │   └── tock-registers v0.8.1
+│   │   │   │   ├── arm_gicv3 v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/arm_gicv3)
+│   │   │   │   │   ├── log v0.4.19
+│   │   │   │   │   ├── spin v0.9.8 (*)
+│   │   │   │   │   └── tock-registers v0.8.1
+│   │   │   │   ├── arrayvec v0.7.4
+│   │   │   │   ├── cortex-a v8.1.1 (*)
+│   │   │   │   ├── lazy_init v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/lazy_init)
+│   │   │   │   ├── log v0.4.19
+│   │   │   │   ├── memoffset v0.9.0 (*)
+│   │   │   │   ├── memory_addr v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/memory_addr)
+│   │   │   │   ├── page_table v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/page_table)
+│   │   │   │   │   ├── log v0.4.19
+│   │   │   │   │   ├── memory_addr v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/memory_addr)
+│   │   │   │   │   └── page_table_entry v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/page_table_entry)
+│   │   │   │   │       ├── aarch64-cpu v9.3.1 (*)
+│   │   │   │   │       ├── bitflags v2.4.0
+│   │   │   │   │       ├── memory_addr v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/memory_addr)
+│   │   │   │   │       └── x86_64 v0.14.10
+│   │   │   │   │           ├── bit_field v0.10.2
+│   │   │   │   │           ├── bitflags v1.3.2
+│   │   │   │   │           ├── rustversion v1.0.14 (proc-macro)
+│   │   │   │   │           └── volatile v0.4.6
+│   │   │   │   ├── page_table_entry v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/page_table_entry) (*)
+│   │   │   │   ├── smccc v0.1.1
+│   │   │   │   ├── spin v0.9.8 (*)
+│   │   │   │   ├── spinlock v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/spinlock) (*)
+│   │   │   │   └── tock-registers v0.8.1
+│   │   │   ├── kernel_guard v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/kernel_guard) (*)
+│   │   │   ├── lazy_init v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/lazy_init)
+│   │   │   ├── log v0.4.19
+│   │   │   ├── memory_addr v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/memory_addr)
+│   │   │   ├── page_table v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/page_table) (*)
+│   │   │   ├── page_table_entry v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/page_table_entry) (*)
+│   │   │   ├── percpu v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/percpu)
+│   │   │   │   ├── cfg-if v1.0.0
+│   │   │   │   ├── percpu_macros v0.1.0 (proc-macro) (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/percpu_macros)
+│   │   │   │   │   ├── proc-macro2 v1.0.69 (*)
+│   │   │   │   │   ├── quote v1.0.33 (*)
+│   │   │   │   │   └── syn v2.0.39 (*)
+│   │   │   │   ├── spin v0.9.8 (*)
+│   │   │   │   └── x86 v0.52.0
+│   │   │   │       ├── bit_field v0.10.2
+│   │   │   │       ├── bitflags v1.3.2
+│   │   │   │       └── raw-cpuid v10.7.0
+│   │   │   │           └── bitflags v1.3.2
+│   │   │   ├── ratio v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/ratio)
+│   │   │   ├── raw-cpuid v11.0.1
+│   │   │   │   └── bitflags v2.4.0
+│   │   │   ├── riscv v0.10.1
+│   │   │   │   ├── bit_field v0.10.2
+│   │   │   │   ├── critical-section v1.1.2
+│   │   │   │   └── embedded-hal v0.2.7
+│   │   │   │       ├── nb v0.1.3
+│   │   │   │       │   └── nb v1.1.0
+│   │   │   │       └── void v1.0.2
+│   │   │   ├── spin v0.9.8 (*)
+│   │   │   ├── spinlock v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/spinlock) (*)
+│   │   │   ├── static_assertions v1.1.0
+│   │   │   ├── x2apic v0.4.2
+│   │   │   │   ├── bit v0.1.1
+│   │   │   │   ├── bitflags v1.3.2
+│   │   │   │   ├── paste v1.0.14 (proc-macro)
+│   │   │   │   ├── raw-cpuid v10.7.0 (*)
+│   │   │   │   └── x86_64 v0.14.10 (*)
+│   │   │   ├── x86 v0.52.0 (*)
+│   │   │   └── x86_64 v0.14.10 (*)
+│   │   │   [build-dependencies]
+│   │   │   └── axconfig v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axconfig) (*)
+│   │   ├── cfg-if v1.0.0
+│   │   ├── driver_block v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/driver_block)
+│   │   │   ├── driver_common v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/driver_common)
+│   │   │   └── log v0.4.19
+│   │   ├── driver_common v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/driver_common)
+│   │   ├── driver_display v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/driver_display)
+│   │   │   └── driver_common v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/driver_common)
+│   │   ├── driver_net v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/driver_net)
+│   │   │   ├── driver_common v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/driver_common)
+│   │   │   ├── log v0.4.19
+│   │   │   └── spin v0.9.8 (*)
+│   │   ├── driver_virtio v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/driver_virtio)
+│   │   │   ├── driver_block v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/driver_block) (*)
+│   │   │   ├── driver_common v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/driver_common)
+│   │   │   ├── driver_net v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/driver_net) (*)
+│   │   │   └── virtio-drivers v0.7.1 (https://github.com/rcore-os/virtio-drivers.git?rev=4b60f5d#4b60f5d3)
+│   │   │       ├── bitflags v2.4.0
+│   │   │       ├── log v0.4.19
+│   │   │       └── zerocopy v0.7.26
+│   │   │           ├── byteorder v1.4.3
+│   │   │           └── zerocopy-derive v0.7.26 (proc-macro)
+│   │   │               ├── proc-macro2 v1.0.69 (*)
+│   │   │               ├── quote v1.0.33 (*)
+│   │   │               └── syn v2.0.39 (*)
+│   │   └── log v0.4.19
+│   ├── axerrno v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/axerrno) (*)
+│   ├── axhal v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axhal) (*)
+│   ├── axio v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/axio)
+│   │   └── axerrno v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/axerrno) (*)
+│   ├── axsync v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axsync)
+│   │   ├── axtask v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axtask)
+│   │   │   ├── axconfig v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axconfig) (*)
+│   │   │   ├── axhal v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axhal) (*)
+│   │   │   ├── axlog v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axlog) (*)
+│   │   │   ├── axsignal v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axsignal)
+│   │   │   │   ├── axhal v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axhal) (*)
+│   │   │   │   ├── bitflags v2.4.0
+│   │   │   │   ├── cfg-if v1.0.0
+│   │   │   │   └── numeric-enum-macro v0.2.0 (https://github.com/mexus/numeric-enum-macro#20aef288)
+│   │   │   ├── cfg-if v1.0.0
+│   │   │   ├── crate_interface v0.1.1 (proc-macro) (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/crate_interface) (*)
+│   │   │   ├── kernel_guard v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/kernel_guard) (*)
+│   │   │   ├── lazy_init v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/lazy_init)
+│   │   │   ├── log v0.4.19
+│   │   │   ├── memory_addr v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/memory_addr)
+│   │   │   ├── numeric-enum-macro v0.2.0 (https://github.com/mexus/numeric-enum-macro#20aef288)
+│   │   │   ├── percpu v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/percpu) (*)
+│   │   │   ├── scheduler v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/scheduler)
+│   │   │   │   └── linked_list v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/linked_list)
+│   │   │   ├── spinlock v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/spinlock) (*)
+│   │   │   └── timer_list v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/timer_list)
+│   │   │   [dev-dependencies]
+│   │   │   ├── axhal v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axhal) (*)
+│   │   │   ├── axtask v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axtask) (*)
+│   │   │   └── rand v0.8.5 (*)
+│   │   └── spinlock v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/spinlock) (*)
+│   │   [dev-dependencies]
+│   │   ├── axsync v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axsync) (*)
+│   │   ├── axtask v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axtask) (*)
+│   │   └── rand v0.8.5 (*)
+│   ├── axtask v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axtask) (*)
+│   ├── cfg-if v1.0.0
+│   ├── driver_net v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/driver_net) (*)
+│   ├── lazy_init v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/lazy_init)
+│   ├── log v0.4.19
+│   ├── smoltcp v0.11.0 (https://github.com/rcore-os/smoltcp.git?rev=b7134a3#b7134a31)
+│   │   ├── bitflags v1.3.2
+│   │   ├── byteorder v1.4.3
+│   │   ├── cfg-if v1.0.0
+│   │   ├── heapless v0.8.0
+│   │   │   ├── hash32 v0.3.1
+│   │   │   │   └── byteorder v1.4.3
+│   │   │   └── stable_deref_trait v1.2.0
+│   │   ├── log v0.4.19
+│   │   └── managed v0.8.0
+│   └── spin v0.9.8 (*)
+└── axstd v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/ulib/axstd)
+    ├── arceos_api v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/api/arceos_api)
+    │   ├── axalloc v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axalloc) (*)
+    │   ├── axconfig v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axconfig) (*)
+    │   ├── axerrno v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/axerrno) (*)
+    │   ├── axfeat v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/api/axfeat)
+    │   │   ├── axalloc v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axalloc) (*)
+    │   │   ├── axdriver v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axdriver) (*)
+    │   │   ├── axfs v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axfs)
+    │   │   │   ├── axconfig v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axconfig) (*)
+    │   │   │   ├── axdriver v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axdriver) (*)
+    │   │   │   ├── axerrno v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/axerrno) (*)
+    │   │   │   ├── axfs_devfs v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/axfs_devfs)
+    │   │   │   │   ├── axfs_vfs v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/axfs_vfs) (*)
+    │   │   │   │   ├── log v0.4.19
+    │   │   │   │   ├── rand v0.8.5 (*)
+    │   │   │   │   └── spin v0.9.8 (*)
+    │   │   │   ├── axfs_ramfs v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/axfs_ramfs) (*)
+    │   │   │   ├── axfs_vfs v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/axfs_vfs) (*)
+    │   │   │   ├── axio v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/axio) (*)
+    │   │   │   ├── axsync v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axsync) (*)
+    │   │   │   ├── bitflags v2.4.0
+    │   │   │   ├── capability v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/capability)
+    │   │   │   │   ├── axerrno v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/axerrno) (*)
+    │   │   │   │   └── bitflags v2.4.0
+    │   │   │   ├── cfg-if v1.0.0
+    │   │   │   ├── driver_block v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/driver_block) (*)
+    │   │   │   ├── fatfs v0.4.0 (https://github.com/rafalh/rust-fatfs?rev=a3a834e#a3a834ef)
+    │   │   │   │   ├── bitflags v1.3.2
+    │   │   │   │   └── log v0.4.19
+    │   │   │   ├── lazy_init v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/lazy_init)
+    │   │   │   └── log v0.4.19
+    │   │   │   [dev-dependencies]
+    │   │   │   ├── axdriver v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axdriver) (*)
+    │   │   │   ├── axsync v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axsync) (*)
+    │   │   │   ├── axtask v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axtask) (*)
+    │   │   │   └── driver_block v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/driver_block) (*)
+    │   │   ├── axhal v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axhal) (*)
+    │   │   ├── axlog v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axlog) (*)
+    │   │   ├── axnet v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axnet) (*)
+    │   │   ├── axprocess v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axprocess)
+    │   │   │   ├── axalloc v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axalloc) (*)
+    │   │   │   ├── axconfig v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axconfig) (*)
+    │   │   │   ├── axerrno v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/axerrno) (*)
+    │   │   │   ├── axfs v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axfs) (*)
+    │   │   │   ├── axhal v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axhal) (*)
+    │   │   │   ├── axio v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/axio) (*)
+    │   │   │   ├── axlog v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axlog) (*)
+    │   │   │   ├── axmem v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axmem)
+    │   │   │   │   ├── axalloc v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axalloc) (*)
+    │   │   │   │   ├── axconfig v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axconfig) (*)
+    │   │   │   │   ├── axerrno v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/axerrno) (*)
+    │   │   │   │   ├── axfs v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axfs) (*)
+    │   │   │   │   ├── axhal v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axhal) (*)
+    │   │   │   │   ├── axio v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/axio) (*)
+    │   │   │   │   ├── elf_parser v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/elf_parser)
+    │   │   │   │   │   ├── axerrno v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/axerrno) (*)
+    │   │   │   │   │   ├── cfg-if v1.0.0
+    │   │   │   │   │   ├── log v0.4.19
+    │   │   │   │   │   ├── memory_addr v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/memory_addr)
+    │   │   │   │   │   ├── page_table_entry v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/page_table_entry) (*)
+    │   │   │   │   │   └── xmas-elf v0.9.0
+    │   │   │   │   │       └── zero v0.1.3
+    │   │   │   │   ├── log v0.4.19
+    │   │   │   │   ├── page_table_entry v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/page_table_entry) (*)
+    │   │   │   │   ├── riscv v0.10.1 (*)
+    │   │   │   │   ├── spinlock v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/spinlock) (*)
+    │   │   │   │   └── xmas-elf v0.9.0 (*)
+    │   │   │   ├── axsignal v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axsignal) (*)
+    │   │   │   ├── axsync v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axsync) (*)
+    │   │   │   ├── axtask v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axtask) (*)
+    │   │   │   ├── bitflags v2.4.0
+    │   │   │   ├── cfg-if v1.0.0
+    │   │   │   ├── crate_interface v0.1.1 (proc-macro) (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/crate_interface) (*)
+    │   │   │   ├── elf_parser v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/elf_parser) (*)
+    │   │   │   ├── lazy_static v1.4.0 (*)
+    │   │   │   ├── riscv v0.10.1 (*)
+    │   │   │   ├── spinlock v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/spinlock) (*)
+    │   │   │   └── xmas-elf v0.9.0 (*)
+    │   │   ├── axruntime v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axruntime)
+    │   │   │   ├── arm_gic v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/arm_gic) (*)
+    │   │   │   ├── arm_gicv3 v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/arm_gicv3) (*)
+    │   │   │   ├── axalloc v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axalloc) (*)
+    │   │   │   ├── axconfig v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axconfig) (*)
+    │   │   │   ├── axdriver v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axdriver) (*)
+    │   │   │   ├── axfs v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axfs) (*)
+    │   │   │   ├── axhal v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axhal) (*)
+    │   │   │   ├── axlog v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axlog) (*)
+    │   │   │   ├── axmem v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axmem) (*)
+    │   │   │   ├── axnet v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axnet) (*)
+    │   │   │   ├── axprocess v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axprocess) (*)
+    │   │   │   ├── axtask v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axtask) (*)
+    │   │   │   ├── cfg-if v1.0.0
+    │   │   │   ├── cortex-a v8.1.1 (*)
+    │   │   │   ├── crate_interface v0.1.1 (proc-macro) (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/crate_interface) (*)
+    │   │   │   ├── hypercraft v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/hypercraft) (*)
+    │   │   │   ├── kernel_guard v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/kernel_guard) (*)
+    │   │   │   ├── lazy_init v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/lazy_init)
+    │   │   │   ├── page_table v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/page_table) (*)
+    │   │   │   ├── page_table_entry v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/page_table_entry) (*)
+    │   │   │   ├── percpu v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/percpu) (*)
+    │   │   │   ├── smccc v0.1.1
+    │   │   │   └── spin v0.9.8 (*)
+    │   │   ├── axsync v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axsync) (*)
+    │   │   └── axtask v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axtask) (*)
+    │   ├── axfs v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axfs) (*)
+    │   ├── axhal v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axhal) (*)
+    │   ├── axio v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/axio) (*)
+    │   ├── axlog v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axlog) (*)
+    │   ├── axnet v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axnet) (*)
+    │   ├── axruntime v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axruntime) (*)
+    │   └── axtask v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axtask) (*)
+    ├── axerrno v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/axerrno) (*)
+    ├── axfeat v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/api/axfeat) (*)
+    ├── axhal v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axhal) (*)
+    ├── axio v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/axio) (*)
+    ├── axlog v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axlog) (*)
+    ├── axruntime v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axruntime) (*)
+    ├── hypercraft v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/hypercraft) (*)
+    └── spinlock v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/spinlock) (*)
+
+arceos-display v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/apps/display)
+└── embedded-graphics v0.8.1
+    ├── az v1.2.1
+    ├── byteorder v1.4.3
+    ├── embedded-graphics-core v0.4.0
+    │   ├── az v1.2.1
+    │   └── byteorder v1.4.3
+    ├── float-cmp v0.9.0
+    │   └── num-traits v0.2.16 (*)
+    └── micromath v2.0.0
+
+arceos-echoserver v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/apps/net/echoserver)
+
+arceos-exception v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/apps/exception)
+
+arceos-helloworld v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/apps/helloworld)
+
+arceos-httpclient v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/apps/net/httpclient)
+
+arceos-httpserver v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/apps/net/httpserver)
+
+arceos-hv v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/apps/hv)
+├── arrayvec v0.7.4
+├── axstd v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/ulib/axstd) (*)
+├── fdt v0.1.5
+├── lazy_init v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/lazy_init)
+├── log v0.4.19
+├── page_table_entry v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/page_table_entry) (*)
+└── spin v0.9.8 (*)
+
+arceos-memtest v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/apps/memtest)
+└── rand v0.8.5 (*)
+
+arceos-parallel v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/apps/task/parallel)
+└── rand v0.8.5 (*)
+
+arceos-priority v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/apps/task/priority)
+
+arceos-shell v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/apps/fs/shell)
+
+arceos-sleep v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/apps/task/sleep)
+
+arceos-tls v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/apps/task/tls)
+└── axhal v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axhal) (*)
+
+arceos-udpserver v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/apps/net/udpserver)
+
+arceos-yield v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/apps/task/yield)
+
+arceos_api v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/api/arceos_api) (*)
+
+arceos_posix_api v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/api/arceos_posix_api)
+├── axconfig v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axconfig) (*)
+├── axerrno v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/axerrno) (*)
+├── axfeat v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/api/axfeat) (*)
+├── axhal v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axhal) (*)
+├── axio v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/axio) (*)
+├── axlog v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axlog) (*)
+├── axruntime v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axruntime) (*)
+├── axsync v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axsync) (*)
+├── flatten_objects v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/flatten_objects)
+│   └── bitmaps v3.2.0
+├── lazy_static v1.4.0 (*)
+├── spin v0.9.8 (*)
+└── static_assertions v1.1.0
+[build-dependencies]
+└── bindgen v0.66.1
+    ├── bitflags v2.4.0
+    ├── cexpr v0.6.0
+    │   └── nom v7.1.3
+    │       ├── memchr v2.7.1
+    │       └── minimal-lexical v0.2.1
+    ├── clang-sys v1.6.1
+    │   ├── glob v0.3.1
+    │   ├── libc v0.2.147
+    │   └── libloading v0.7.4
+    │       └── cfg-if v1.0.0
+    │   [build-dependencies]
+    │   └── glob v0.3.1
+    ├── lazy_static v1.4.0
+    ├── lazycell v1.3.0
+    ├── log v0.4.19
+    ├── peeking_take_while v0.1.2
+    ├── prettyplease v0.2.12
+    │   ├── proc-macro2 v1.0.69 (*)
+    │   └── syn v2.0.39 (*)
+    ├── proc-macro2 v1.0.69 (*)
+    ├── quote v1.0.33 (*)
+    ├── regex v1.9.3
+    │   ├── regex-automata v0.3.6
+    │   │   └── regex-syntax v0.7.4
+    │   └── regex-syntax v0.7.4
+    ├── rustc-hash v1.1.0
+    ├── shlex v1.1.0
+    ├── syn v2.0.39 (*)
+    └── which v4.4.0
+        ├── either v1.9.0
+        └── libc v0.2.147
+
+arm_gic v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/arm_gic) (*)
+
+arm_gicv3 v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/arm_gicv3) (*)
+
+arm_pl011 v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/arm_pl011)
+└── tock-registers v0.8.1
+
+axalloc v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axalloc) (*)
+
+axconfig v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axconfig) (*)
+
+axdisplay v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axdisplay)
+├── axdriver v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axdriver) (*)
+├── axsync v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axsync) (*)
+├── driver_display v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/driver_display) (*)
+├── lazy_init v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/lazy_init)
+└── log v0.4.19
+
+axdriver v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axdriver) (*)
+
+axerrno v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/axerrno) (*)
+
+axfeat v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/api/axfeat) (*)
+
+axfs v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axfs) (*)
+
+axfs_devfs v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/axfs_devfs) (*)
+
+axfs_ramfs v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/axfs_ramfs) (*)
+
+axfs_vfs v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/axfs_vfs) (*)
+
+axhal v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axhal) (*)
+
+axio v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/axio) (*)
+
+axlibc v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/ulib/axlibc)
+├── arceos_posix_api v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/api/arceos_posix_api) (*)
+├── axerrno v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/axerrno) (*)
+├── axfeat v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/api/axfeat) (*)
+└── axio v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/axio) (*)
+[build-dependencies]
+└── bindgen v0.66.1 (*)
+
+axlog v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axlog) (*)
+
+axmem v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axmem) (*)
+
+axnet v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axnet) (*)
+
+axprocess v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axprocess) (*)
+
+axruntime v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axruntime) (*)
+
+axsignal v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axsignal) (*)
+
+axstarry v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/ulib/axstarry)
+├── arceos_api v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/api/arceos_api) (*)
+├── axconfig v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axconfig) (*)
+├── axerrno v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/axerrno) (*)
+├── axfeat v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/api/axfeat) (*)
+├── axfs v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axfs) (*)
+├── axhal v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axhal) (*)
+├── axlog v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axlog) (*)
+├── axmem v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axmem) (*)
+├── axnet v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axnet) (*)
+├── axprocess v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axprocess) (*)
+├── axruntime v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axruntime) (*)
+├── axsignal v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axsignal) (*)
+├── axsync v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axsync) (*)
+├── axtask v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axtask) (*)
+├── bitflags v2.4.0
+├── cfg-if v1.0.0
+├── crate_interface v0.1.1 (proc-macro) (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/crate_interface) (*)
+├── hypercraft v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/hypercraft) (*)
+├── kernel_guard v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/kernel_guard) (*)
+├── lazy_init v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/lazy_init)
+├── num_enum v0.5.11
+│   └── num_enum_derive v0.5.11 (proc-macro)
+│       ├── proc-macro2 v1.0.69 (*)
+│       ├── quote v1.0.33 (*)
+│       └── syn v1.0.109 (*)
+├── numeric-enum-macro v0.2.0 (https://github.com/mexus/numeric-enum-macro#20aef288)
+├── rand v0.8.5 (*)
+└── spinlock v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/spinlock) (*)
+
+axstd v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/ulib/axstd) (*)
+
+axsync v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axsync) (*)
+
+axtask v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/modules/axtask) (*)
+
+capability v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/capability) (*)
+
+crate_interface v0.1.1 (proc-macro) (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/crate_interface) (*)
+
+driver_block v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/driver_block) (*)
+
+driver_common v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/driver_common)
+
+driver_display v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/driver_display) (*)
+
+driver_net v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/driver_net) (*)
+
+driver_pci v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/driver_pci)
+└── virtio-drivers v0.7.1 (https://github.com/rcore-os/virtio-drivers.git?rev=4b60f5d#4b60f5d3) (*)
+
+driver_virtio v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/driver_virtio) (*)
+
+dw_apb_uart v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/dw_apb_uart)
+└── tock-registers v0.8.1
+
+elf_parser v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/elf_parser) (*)
+
+flatten_objects v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/flatten_objects) (*)
+
+handler_table v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/handler_table)
+
+hypercraft v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/hypercraft) (*)
+
+kernel_guard v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/kernel_guard) (*)
+
+lazy_init v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/lazy_init)
+
+linked_list v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/linked_list)
+
+memory_addr v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/memory_addr)
+
+monolithic_userboot v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/apps/monolithic_userboot)
+└── axstarry v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/ulib/axstarry) (*)
+
+of v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/of)
+├── fdt v0.1.5
+└── lazy_static v1.4.0 (*)
+
+page_table v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/page_table) (*)
+
+page_table_entry v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/page_table_entry) (*)
+
+percpu v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/percpu) (*)
+
+percpu_macros v0.1.0 (proc-macro) (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/percpu_macros) (*)
+
+ratio v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/ratio)
+
+scheduler v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/scheduler) (*)
+
+slab_allocator v0.3.1 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/slab_allocator) (*)
+
+spinlock v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/spinlock) (*)
+
+timer_list v0.1.0 (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/timer_list)
+
+tuple_for_each v0.1.0 (proc-macro) (/mnt/xh/hypervisor_dev/starry_hv_rk3588/crates/tuple_for_each)
+├── proc-macro2 v1.0.69 (*)
+├── quote v1.0.33 (*)
+└── syn v2.0.39 (*)

@@ -2,7 +2,7 @@ use core::marker::PhantomData;
 use core::ptr::NonNull;
 
 use axalloc::global_allocator;
-use axhal::mem::{phys_to_virt, virt_to_phys};
+use axhal::mem_map::{phys_to_virt, virt_to_phys};
 use cfg_if::cfg_if;
 use driver_common::{BaseDriverOps, DevResult, DeviceType};
 use driver_virtio::{BufferDirection, PhysAddr, VirtIoHal};

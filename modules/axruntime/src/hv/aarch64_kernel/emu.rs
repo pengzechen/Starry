@@ -7,13 +7,14 @@ use hypercraft::arch::utils::in_range;
 
 use super::current_cpu;
 
-pub const EMU_DEV_NUM_MAX: usize = 32;
-pub static EMU_DEVS_LIST: Mutex<Vec<EmuDevEntry>> = Mutex::new(Vec::new());
+const EMU_DEV_NUM_MAX: usize = 32;
+static EMU_DEVS_LIST: Mutex<Vec<EmuDevEntry>> = Mutex::new(Vec::new());
 
 // TO CHECK
 pub fn emu_handler(emu_ctx: &EmuContext) -> bool {
     let ipa = emu_ctx.address;
     let emu_devs_list = EMU_DEVS_LIST.lock();
+    let active_vcpu = current_cpu().get_active_vcpu().unwrap();
 
     for emu_dev in &*emu_devs_list {
         let active_vcpu = current_cpu().get_active_vcpu().unwrap();

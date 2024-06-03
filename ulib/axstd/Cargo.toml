@@ -25,6 +25,8 @@ smp = ["axfeat/smp", "spinlock/smp"]
 # Floating point/SIMD
 fp_simd = ["axfeat/fp_simd"]
 
+gic_v3 = ["axhal/gic_v3", "axruntime/gic_v3", "hypercraft?/gic_v3"]
+
 # Interrupts
 irq = ["arceos_api/irq", "axfeat/irq"]
 
@@ -70,6 +72,7 @@ log-level-trace = ["axfeat/log-level-trace"]
 
 # Hypervisor
 hv = ["dep:hypercraft", "axruntime/hv"]
+platform-rk3588-aarch64 = ["axhal/platform-rk3588-aarch64", "bus-mmio"]
 
 [dependencies]
 axfeat = { path = "../../api/axfeat" }

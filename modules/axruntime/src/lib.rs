@@ -134,6 +134,7 @@ fn is_init_ok() -> bool {
 /// and the secondary CPUs call [`rust_main_secondary`].
 #[cfg_attr(not(test), no_mangle)]
 pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
+    ax_println!("this is a test segment");
     ax_println!("{}", LOGO);
     ax_println!(
         "\
@@ -156,10 +157,10 @@ pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
     axlog::set_max_level(option_env!("AX_LOG").unwrap_or("")); // no effect if set `log-level-*` features
     info!("Logging is enabled.");
     info!("Primary CPU {} started, dtb = {:#x}.", cpu_id, dtb);
-    info!("Platform name {}.", axhal::platform_name());
+    // info!("Platform name {}.", axhal::platform_name());
 
     info!("Found physcial memory regions:");
-    for r in axhal::mem::memory_regions() {
+    for r in axhal::mem_map::memory_regions() {
         info!(
             "  [{:x?}, {:x?}) {} ({:?})",
             r.paddr,
@@ -255,7 +256,7 @@ pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
 
 #[cfg(feature = "alloc")]
 fn init_allocator() {
-    use axhal::mem::{memory_regions, phys_to_virt, MemRegionFlags};
+    use axhal::mem_map::{memory_regions, phys_to_virt, MemRegionFlags};
 
     info!("Initialize global memory allocator...");
     info!("  use {} allocator.", axalloc::global_allocator().name());
@@ -290,7 +291,7 @@ cfg_if::cfg_if! {
         pub static KERNEL_PAGE_TABLE: LazyInit<PageTable> = LazyInit::new();
 
         fn remap_kernel_memory() -> Result<(), axhal::paging::PagingError> {
-            use axhal::mem::{memory_regions, phys_to_virt};
+            use axhal::mem_map::{memory_regions, phys_to_virt};
             if axhal::cpu::this_cpu_is_bsp() {
                 let mut kernel_page_table = PageTable::try_new()?;
                 for r in memory_regions() {
@@ -378,7 +379,7 @@ fn init_interrupt() {
 
         
         // axhal::GICD.lock().print_prio();
-///* 
+/* 
         debug!("init hypervisor timer interrupt handler");
         use axhal::time::HYPERVISOR_TIMER_IRQ_NUM;
         // Setup timer interrupt handler
@@ -404,7 +405,7 @@ fn init_interrupt() {
             #[cfg(feature = "multitask")]
             axtask::on_timer_tick();
         });
-//*/
+*/
     }
 
     // Enable IRQs before starting app

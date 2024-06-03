@@ -4,7 +4,7 @@ use arm_pl011::pl011::Pl011Uart;
 use memory_addr::PhysAddr;
 use spinlock::SpinNoIrq;
 
-use crate::mem::phys_to_virt;
+use crate::mem_map::phys_to_virt;
 
 const UART_BASE: PhysAddr = PhysAddr::from(axconfig::UART_PADDR);
 
@@ -38,11 +38,11 @@ pub fn init_early() {
 
 /// Set UART IRQ Enable
 #[cfg(feature = "irq")]
-pub fn init_irq() {
+pub fn init() {
     info!("this is init pl011 irq");
     // not 33 temp change  axconfig::UART_IRQ
     // crate::irq::set_enable(crate::platform::irq::UART_IRQ_NUM, true);
-    crate::irq::set_enable(axconfig::UART_IRQ, true);
+    crate::irq::set_enable(axconfig::UART_IRQ_NUM, true);
 }
 
 /// UART IRQ Handler

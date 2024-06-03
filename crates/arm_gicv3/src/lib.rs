@@ -971,4 +971,10 @@ pub fn gic_set_pend(int_id: usize, pend: bool, gicr_id: u32) {
     }
 }
 
+// pub use platform::cpuid2mpidr;
 pub use platform::cpuid2mpidr;
+
+use regs::sysreg_enc_addr;
+
+pub const ICC_SRE_ADDR: usize = sysreg_enc_addr(3, 0, 12, 12, 5);
+pub const ICC_SGIR_ADDR: usize = sysreg_enc_addr(3, 0, 12, 11, 5);

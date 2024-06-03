@@ -152,26 +152,40 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
     }
     */
     // map gicc to gicv. the address is qemu setting, it is different from real hardware
+    // gpt.map_region(
+    //     0x8000000,
+    //     0x8000000,
+    //     0x2_0000,
+    //     MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
+    // )?;
+
     gpt.map_region(
-        0x8000000,
-        0x8000000,
+        0x8010000,
+        0x8040000,
         0x2000,
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
     )?;
-
+    // gicv3 needn't
     gpt.map_region(
-        0x8080000,
-        0x8080000,
+        0x8020000,
+        0x8020000,
         0x20000,
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
     )?;
 
     gpt.map_region(
-        0x80a0000,
-        0x80a0000,
-        0xf60000,
+        0x8080000,
+        0x8080000,
+        0x2_0000,
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
     )?;
+
+    // gpt.map_region(
+    //     0x80a0000,
+    //     0x80a0000,
+    //     0xf60000,
+    //     MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
+    // )?;
 
     debug!("gicd gicv gicr");
 
@@ -209,9 +223,9 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
     )?;
     debug!("map physical memeory");
 
-    let vaddr = 0x8010000;
-    let hpa = gpt.translate(vaddr)?;
-    debug!("translate vaddr: {:#x}, hpa: {:#x}", vaddr, hpa);
+    // let vaddr = 0x8010000;
+    // let hpa = gpt.translate(vaddr)?;
+    // debug!("translate vaddr: {:#x}, hpa: {:#x}", vaddr, hpa);
 
     gpt.map_region(
         NIMBOS_KERNEL_BASE_VADDR,

@@ -37,7 +37,7 @@ use arm_gicv3::gic_is_priv;
 use hypercraft::arch::utils::bit_extract;
 use hypercraft::arch::utils::bit_get;
 use hypercraft::gicv3::gic_set_state;
-use axhal::cpu::this_cpu_id;
+// use axhal::cpu::this_cpu_id;
 
 use axhal::gicv3::gic_lrs;
 
@@ -161,7 +161,8 @@ fn vgic_owns(vcpu: VCpu<HyperCraftHalImpl>, interrupt: VgicInt<HyperCraftHalImpl
 // remove_lr uses
 fn gich_get_lr(interrupt: VgicInt<HyperCraftHalImpl, GuestPageTable>) 
         -> Option<usize> {
-    let cpu_id = this_cpu_id();
+    // let cpu_id = this_cpu_id();
+    let cpu_id = current_cpu().cpu_id;
     let phys_id = interrupt.owner_phys_id().unwrap();
 
     if !interrupt.in_lr() || phys_id != cpu_id {
@@ -181,7 +182,7 @@ fn vgic_get_state(interrupt: VgicInt<HyperCraftHalImpl, GuestPageTable>)
         -> usize {
     let mut state = interrupt.state().to_num();
 
-    if interrupt.in_lr() && interrupt.owner_phys_id().unwrap() == this_cpu_id() {
+    if interrupt.in_lr() && interrupt.owner_phys_id().unwrap() == current_cpu().cpu_id {
         let lr_option = gich_get_lr(interrupt.clone());
         if let Some(lr_val) = lr_option {
             state = bit_extract(lr_val, GICH_LR_STATE_OFF, GICH_LR_STATE_LEN);
@@ -1321,5 +1322,67 @@ pub fn vgicd_set_irouter(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, vcpu: V
         }
         */
         drop(interrupt_lock);
+    }
+    
+}
+
+pub fn vgicr_emul_typer_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx: &EmuContext, vgicr_id: usize) {
+    let cpu_priv = vgic.cpu_priv.lock();
+    if !emu_ctx.write {
+        current_cpu().set_gpr(emu_ctx.reg, cpu_priv[vgicr_id].vigcr.get_typer() as usize);
+    }
+}
+
+pub fn emu_probaser_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx: &EmuContext) {
+    if emu_ctx.write {
+        GICR.set_propbaser(current_cpu().cpu_id, current_cpu().get_gpr(emu_ctx.reg));
+    } else {
+        current_cpu().set_gpr(emu_ctx.reg, GICR.get_propbaser(current_cpu().cpu_id) as usize);
+    }
+}
+
+pub fn emu_pendbaser_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx: &EmuContext) {
+    if emu_ctx.write {
+        GICR.set_pendbaser(current_cpu().cpu_id, current_cpu().get_gpr(emu_ctx.reg));
+    } else {
+        current_cpu().set_gpr(emu_ctx.reg, GICR.get_pendbaser(current_cpu().cpu_id) as usize);
+    }
+}
+
+// pzc changed here
+pub fn vgicr_emul_pidr_access(emu_ctx: &EmuContext, vgicr_id: usize) {
+    if !emu_ctx.write {
+        // let pgicr_id = current_cpu()
+        //     .active_vcpu
+        //     .clone()
+        //     .unwrap()
+        //     .vm()
+        //     .unwrap()
+        //     .vcpuid_to_pcpuid(vgicr_id);
+        let pgicr_id = active_vm().vcpuid_to_pcpuid(vgicr_id).unwrap();
+        // if let Ok(pgicr_id) = pgicr_id {
+            current_cpu().set_gpr(
+                emu_ctx.reg,
+                GICR.get_id(pgicr_id as u32, ((emu_ctx.address & 0xff) - 0xd0) / 4) as usize,
+            );
+        // }
+    }
+}
+
+
+use core::mem::size_of;
+use arm_gicv3::GicRedistributor;
+
+
+#[inline(always)]
+pub fn vgicr_get_id(emu_ctx: &EmuContext) -> u32 {
+    ((emu_ctx.address - 0x80a0000) / size_of::<GicRedistributor>()) as u32
+}
+
+pub fn vgicr_emul_ctrl_access(emu_ctx: &EmuContext) {
+    if !emu_ctx.write {
+        current_cpu().set_gpr(emu_ctx.reg, GICR.get_ctrl(current_cpu().cpu_id as u32) as usize);
+    } else {
+        GICR.set_ctrlr(current_cpu().cpu_id, current_cpu().get_gpr(emu_ctx.reg));
     }
 }

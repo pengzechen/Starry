@@ -32,4 +32,4 @@ smccc = "0.1.1"
 [features]
 
 gic_v3 = []
-default = ["gic_v3"]
+default = []

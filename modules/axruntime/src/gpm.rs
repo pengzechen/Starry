@@ -1,4 +1,4 @@
-use axhal::mem::{PhysAddr, VirtAddr};
+use axhal::mem_map::{PhysAddr, VirtAddr};
 
 use hypercraft::{GuestPageTableTrait, GuestPhysAddr, HyperError, HyperResult, NestedPageTable};
 

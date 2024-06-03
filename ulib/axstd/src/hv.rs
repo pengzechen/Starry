@@ -1,6 +1,6 @@
 //! Hypervisor related functions
 
-pub use axhal::mem::{phys_to_virt, virt_to_phys, PhysAddr};
+pub use axhal::mem_map::{phys_to_virt, virt_to_phys, PhysAddr};
 // pub use axruntime::GuestPageTable;
 // pub use axruntime::HyperCraftHalImpl;
 pub use hypercraft::GuestPageTableTrait;

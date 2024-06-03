@@ -25,9 +25,15 @@ qemu_args-aarch64 := \
   -kernel $(OUT_BIN)
 
 GUEST ?= linux
-ROOTFS = apps/hv/guest/$(GUEST)/rootfs-aarch64.img
-GUEST_DTB = apps/hv/guest/$(GUEST)/$(GUEST)-aarch64.dtb
-GUEST_BIN = apps/hv/guest/$(GUEST)/$(GUEST)-aarch64.bin
+ifeq ($(GIC_V3), y)
+    ROOTFS = apps/hv/guest/$(GUEST)/rootfs-aarch64.img
+    GUEST_DTB = apps/hv/guest/$(GUEST)/$(GUEST)-aarch64-v3.dtb
+    GUEST_BIN = apps/hv/guest/$(GUEST)/$(GUEST)-aarch64-v3.bin
+  else
+    ROOTFS = apps/hv/guest/$(GUEST)/rootfs-aarch64.img
+    GUEST_DTB = apps/hv/guest/$(GUEST)/$(GUEST)-aarch64.dtb
+    GUEST_BIN = apps/hv/guest/$(GUEST)/$(GUEST)-aarch64.bin
+endif
 
 # bitmap_allocator is hard coding, support max 4GB mem
 qemu_args-y := -m 3G -smp $(SMP) $(qemu_args-$(ARCH)) \
@@ -91,16 +97,37 @@ endif
 # endif
 
 ifeq ($(HV), y)
-  ifeq ($(ARCH), aarch64)
-    qemu_args-y := \
-        -m 3G -smp $(SMP) $(qemu_args-$(ARCH)) \
-    	  -device loader,file=$(GUEST_DTB),addr=0x70000000,force-raw=on \
-        -device loader,file=$(GUEST_BIN),addr=0x70200000,force-raw=on \
-        -machine virtualization=on,gic-version=3,secure=on -nographic
+qemu_args-y := \
+    -m 3G -smp $(SMP) $(qemu_args-$(ARCH)) \
+    -device loader,file=$(GUEST_DTB),addr=0x70000000,force-raw=on \
+    -device loader,file=$(GUEST_BIN),addr=0x70200000,force-raw=on 
+  ifeq ($(GIC_V3), y)
+    qemu_args-y += -machine virtualization=on,gic-version=3,secure=on
+  else
+    qemu_args-y += -machine virtualization=on,gic-version=2,secure=on
   endif
 else
   qemu_args-y := -m 128M -smp $(SMP) $(qemu_args-$(ARCH))
 endif
+
+
+ifeq ($(GUEST), linux)
+    qemu_args-$(HV) += \
+      -drive if=none,file=$(ROOTFS),format=raw,id=hd0 \
+	    -device virtio-blk-device,drive=hd0 \
+	    # -append "root=/dev/vda rw console=ttyAMA0"
+
+else ifeq ($(GUEST), rCore-Tutorial)
+  qemu_args-$(HV) += \
+    	-drive file=guest/rCore-Tutorial-v3/fs.img,if=none,format=raw,id=x0 \
+	    -device virtio-blk-device,drive=x0 \
+      -device virtio-gpu-device \
+      -device virtio-keyboard-device \
+      -device virtio-mouse-device \
+      -device virtio-net-device,netdev=net0 \
+      -netdev user,id=net0,hostfwd=udp::6200-:2000
+endif
+
 
 
 define run_qemu
@@ -112,3 +139,5 @@ define run_qemu_debug
   @printf "    $(CYAN_C)Debugging$(END_C) on qemu...\n"
   $(call run_cmd,$(QEMU),$(qemu_args-debug))
 endef
+
+

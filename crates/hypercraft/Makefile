@@ -31,12 +31,12 @@ PLATFORM 	?= qemu-virt-riscv
 ifeq ($(APP), hello_world)
 	features-y  := 
 else ifeq ($(APP), hv)
-	features-y  := libax/platform-$(PLATFORM)
-	features-y  += libax/log-level-$(LOG)
-	features-y  += libax/alloc
-	features-y  += libax/hv
-	features-y  += libax/paging
-	features-y  += libax/irq
+	features-y  := axstd/platform-$(PLATFORM)
+	features-y  += axstd/log-level-$(LOG)
+	features-y  += axstd/alloc
+	features-y  += axstd/hv
+	features-y  += axstd/paging
+	features-y  += axstd/irq
 endif
 
 

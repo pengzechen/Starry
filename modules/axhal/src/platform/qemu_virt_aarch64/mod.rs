@@ -38,7 +38,7 @@ extern "C" {
 }
 
 pub(crate) unsafe extern "C" fn rust_entry(cpu_id: usize, dtb: usize) {
-    crate::mem::clear_bss();
+    crate::mem_map::clear_bss();
     crate::arch::set_exception_vector_base(exception_vector_base as usize);
     crate::cpu::init_primary(cpu_id);
     super::aarch64_common::pl011::init_early();             // 初始化锁
