@@ -20,19 +20,24 @@ mod aarch64_config;
 use alloc::vec::Vec;
 use page_table_entry::MappingFlags;
 
-#[link_section = ".guest.dtb"]
+// #[link_section = ".guest.dtb"]
+// static NIMBOS_DTB: [u8; 7522] = *include_bytes!("../guest/nimbos/nimbos-aarch64-v3.dtb");
+// #[link_section = ".guest.kernel"]
+// static NIMBOS_KERNEL: [u8; 552960] = *include_bytes!("../../hv/guest/nimbos/nimbos-aarch64-v3.bin");
+
+#[link_section = ".guestdata.dtb"]
 static NIMBOS_DTB: [u8; 7522] = *include_bytes!("../guest/nimbos/nimbos-aarch64-v3.dtb");
-#[link_section = ".guest.kernel"]
+#[link_section = ".guestdata.kernel"]
 static NIMBOS_KERNEL: [u8; 552960] = *include_bytes!("../../hv/guest/nimbos/nimbos-aarch64-v3.bin");
 
 extern "C" {
-    fn sguest_dtb();
-    fn sguest_kernel();
+    fn __guest_dtb_start();
+    fn __guest_kernel_start();
 }
 
 fn test_dtbdata() {
     // 地址转换为指针
-    let address: *const u8 = sguest_dtb as usize as * const u8;
+    let address: *const u8 = __guest_dtb_start as usize as * const u8;
 
     // 创建一个长度为10的数组来存储读取的数据
     let mut buffer = [0u8; 20];
@@ -50,7 +55,7 @@ fn test_dtbdata() {
 
 fn test_kerneldata() {
     // 地址转换为指针
-    let address: *const u8 = NIMBOS_DTB.as_ptr();
+    let address: *const u8 = __guest_kernel_start as usize as * const u8;
 
     // 创建一个长度为10的数组来存储读取的数据
     let mut buffer = [0u8; 20];
@@ -71,9 +76,11 @@ fn test_kerneldata() {
     test_dtbdata();
     test_kerneldata();
     {
-        let vm1_kernel_entry = sguest_kernel as usize;
-        // let vm1_dtb = 0xcd_a000;
-        let vm1_dtb = sguest_dtb as usize;
+        // let vm1_kernel_entry = __guest_kernel_start as usize;
+        // let vm1_dtb = __guest_dtb_start as usize;
+
+        let vm1_kernel_entry = NIMBOS_KERNEL.as_ptr() as usize;
+        let vm1_dtb = NIMBOS_DTB.as_ptr() as usize;
 
         // boot cpu
         PerCpu::<HyperCraftHalImpl>::init(0).unwrap(); 
@@ -155,6 +162,14 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
         meta.physical_memory_offset + meta.physical_memory_size
     );
 
+    // gpt.map_region(
+    //     meta.physical_memory_offset,  //  7000_0000
+    //     meta.physical_memory_offset,  //  7000_0000
+    //     meta.physical_memory_size,         //   800_0000
+    //     MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE | MappingFlags::USER,
+    // )?;
+    // debug!("map physical memeory");
+
     gpt.map_region(
         meta.physical_memory_offset,  //  7000_0000
         meta.physical_memory_offset,  //  7000_0000
@@ -169,7 +184,7 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
 
     gpt.map_region(
         NIMBOS_KERNEL_BASE_VADDR,    // ffff_0000_4008_0000
-        kernel_entry,                // 7020_0000
+        kernel_entry,                // 4a0000
         meta.physical_memory_size,       //   800_0000
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE | MappingFlags::USER,
     )?;
