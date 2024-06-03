@@ -36,12 +36,26 @@ SECTIONS
         edata = .;
     }
 
+    __sguestdata = .;
+    .guestdata : ALIGN(4K) {
+        __guest_dtb_start = .;
+        *(.guestdata.dtb)
+        __guest_dtb_end = .;
+        . = ALIGN(4K);
+        __guest_kernel_start = .;
+        *(.guestdata.kernel)
+        __guest_kernel_end = .;
+        . = ALIGN(4K);
+    }
+    __eguestdata = .;
+
+    . = ALIGN(4K);
     percpu_start = .;
-    .percpu 0x0 : AT(percpu_start) ALIGN(4K) {
+    .percpu 0x0 : AT(percpu_start) {
         __percpu_offset_start = .;
         *(.percpu .percpu.*)
         __percpu_offset_end = .;
-        . = ALIGN(4K);
+        . = ALIGN(64);
         __percpu_size_aligned = .;
 
         . = __percpu_offset_start + __percpu_size_aligned * %SMP%;
