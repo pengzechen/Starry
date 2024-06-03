@@ -206,4 +206,4 @@ jobs:
           version: latest
           use-tool-cache: true
       - name: Bulld monolithic-userboot
-        run: ./build_img.sh ${{ matrix.arch }} & make ARCH=${{ matrix.arch }} A=apps/monolithic_userboot
+        run: ./build_img.sh -a ${{ matrix.arch }} & make ARCH=${{ matrix.arch }} A=apps/monolithic_userboot
