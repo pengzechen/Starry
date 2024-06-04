@@ -50,6 +50,13 @@ pub(crate) unsafe fn init_boot_page_table( boot_pt_l0: &mut [A64PTE; 512], boot_
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE,
         true,
     );
+
+    // 0x0000_4000_0000..0x0000_8000_0000, 1G block, normal memory
+    boot_pt_l1[1] = A64PTE::new_page(
+        PhysAddr::from(aligned_address+0x4000_0000),
+        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE,
+        true,
+    );
 }
 
 
