@@ -25,19 +25,25 @@ use page_table_entry::MappingFlags;
 // #[link_section = ".guest.kernel"]
 // static NIMBOS_KERNEL: [u8; 552960] = *include_bytes!("../../hv/guest/nimbos/nimbos-aarch64-v3.bin");
 
+const NIMBOS_DTB_SIZE: usize = 7522;
+const NIMBOS_KERNEL_SIZE: usize = 552960;
+// const NIMBOS_KERNEL_SIZE: usize = 292;
+
 #[link_section = ".guestdata.dtb"]
-static NIMBOS_DTB: [u8; 7522] = *include_bytes!("../guest/nimbos/nimbos-aarch64-v3.dtb");
+static NIMBOS_DTB: [u8; NIMBOS_DTB_SIZE] = *include_bytes!("../guest/nimbos/nimbos-aarch64-v3.dtb");
 #[link_section = ".guestdata.kernel"]
-static NIMBOS_KERNEL: [u8; 552960] = *include_bytes!("../../hv/guest/nimbos/nimbos-aarch64-v3.bin");
+static NIMBOS_KERNEL: [u8; NIMBOS_KERNEL_SIZE] = *include_bytes!("../guest/nimbos/nimbos-aarch64-v3.bin");
 
 extern "C" {
     fn __guest_dtb_start();
+    fn __guest_dtb_end();
     fn __guest_kernel_start();
+    fn __guest_kernel_end();
 }
 
 fn test_dtbdata() {
     // 地址转换为指针
-    let address: *const u8 = __guest_dtb_start as usize as * const u8;
+    let address: *const u8 = NIMBOS_DTB.as_ptr() as usize as * const u8;
 
     // 创建一个长度为10的数组来存储读取的数据
     let mut buffer = [0u8; 20];
@@ -55,7 +61,78 @@ fn test_dtbdata() {
 
 fn test_kerneldata() {
     // 地址转换为指针
-    let address: *const u8 = __guest_kernel_start as usize as * const u8;
+    let address: *const u8 = NIMBOS_KERNEL.as_ptr() as usize as * const u8;
+
+    // 创建一个长度为10的数组来存储读取的数据
+    let mut buffer = [0u8; 5];
+
+    unsafe {
+        // 从指定地址读取10个字节
+        for i in 0..5 {
+            buffer[i] = *address.offset(i as isize);
+        }
+    }
+
+    // 输出读取的数据
+    debug!("{:?}", buffer);
+}
+
+fn copy_high_data() {
+    const GUEST_DTB_START: usize    = 0x7000_0000;
+    const GUEST_KERNEL_START: usize = 0x7020_0000;         // qemu中的地址
+    const GUEST_MEM_SIZE: usize     = 128 * 1024 * 1024;   // 128 Mb
+
+    //  申请一块内存  大小为 guest kernel 大小
+    /*
+    let layout = Layout::from_size_align(NIMBOS_KERNEL_SIZE, 4096).unwrap();
+    let area_base: *mut u8 = unsafe { alloc::alloc::alloc_zeroed(layout) };
+    info!("layout size: {}", layout.size());
+    */
+
+    let mut tls_load_base = __guest_kernel_start as *mut u8;
+    let mut tls_load_size = __guest_kernel_end as usize - __guest_kernel_start as usize;
+    unsafe {
+        // copy data from .tbdata section
+        core::ptr::copy_nonoverlapping(
+            tls_load_base,
+            GUEST_KERNEL_START as * mut u8,
+            tls_load_size,
+        );
+    }
+
+    tls_load_base = __guest_dtb_start as *mut u8;
+    tls_load_size = __guest_dtb_end as usize - __guest_dtb_start as usize;
+    unsafe {
+        // copy data from .tbdata section
+        core::ptr::copy_nonoverlapping(
+            tls_load_base,
+            GUEST_DTB_START as * mut u8,
+            tls_load_size,
+        );
+    }
+}
+
+fn test_dtbdata2() {
+    // 地址转换为指针
+    let address: *const u8 = 0x7000_0000 as * const u8;
+
+    // 创建一个长度为10的数组来存储读取的数据
+    let mut buffer = [0u8; 5];
+
+    unsafe {
+        // 从指定地址读取10个字节
+        for i in 0..5 {
+            buffer[i] = *address.offset(i as isize);
+        }
+    }
+
+    // 输出读取的数据
+    debug!("{:?}", buffer);
+}
+
+fn test_kerneldata2() {
+    // 地址转换为指针
+    let address: *const u8 = 0x7020_0000 as * const u8;
 
     // 创建一个长度为10的数组来存储读取的数据
     let mut buffer = [0u8; 20];
@@ -75,12 +152,21 @@ fn test_kerneldata() {
     println!("Hello, hv!");
     test_dtbdata();
     test_kerneldata();
+    // 拷贝 gusetdata 的数据到 7000_0000 和 7020_0000
+    copy_high_data();
+
+    test_dtbdata2();
+    test_kerneldata2();
     {
         // let vm1_kernel_entry = __guest_kernel_start as usize;
         // let vm1_dtb = __guest_dtb_start as usize;
 
-        let vm1_kernel_entry = NIMBOS_KERNEL.as_ptr() as usize;
-        let vm1_dtb = NIMBOS_DTB.as_ptr() as usize;
+        // let vm1_kernel_entry = NIMBOS_KERNEL.as_ptr() as usize;
+        // let vm1_dtb = NIMBOS_DTB.as_ptr() as usize;
+
+        let vm1_dtb = 0x7000_0000;
+        let vm1_kernel_entry = 0x7020_0000;
+        
 
         // boot cpu
         PerCpu::<HyperCraftHalImpl>::init(0).unwrap(); 
@@ -147,47 +233,18 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
     let mut gpt = GuestPageTable::new()?;
     let meta = MachineMeta::parse(dtb);
 
-    // hard code for virtio_mmio dw8250
-    gpt.map_region(
-        0xfeb50000,
-        0xfeb50000,
-        0x1000,
-        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-    )?;
+    gpt.map_region( 0xFEB50000, 0xFEB50000, 0x1000,MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,) ?;
     debug!("map virtio");   // ok
-    
-    debug!(
-        "physical memory: [{:#x}: {:#x})",
-        meta.physical_memory_offset,
-        meta.physical_memory_offset + meta.physical_memory_size
-    );
-
-    // gpt.map_region(
-    //     meta.physical_memory_offset,  //  7000_0000
-    //     meta.physical_memory_offset,  //  7000_0000
-    //     meta.physical_memory_size,         //   800_0000
-    //     MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE | MappingFlags::USER,
-    // )?;
-    // debug!("map physical memeory");
+     
+    info!( "physical memory: [{:#x}: {:#x}]", meta.physical_memory_offset, meta.physical_memory_offset + meta.physical_memory_size );
 
     gpt.map_region(
-        meta.physical_memory_offset,  //  7000_0000
-        meta.physical_memory_offset,  //  7000_0000
-        meta.physical_memory_size,         //   800_0000
+        0x7020_0000,
+        0x7020_0000,
+        meta.physical_memory_size,
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE | MappingFlags::USER,
     )?;
     debug!("map physical memeory");
-
-    // let vaddr = 0x8010000;
-    // let hpa = gpt.translate(vaddr)?;
-    // debug!("translate vaddr: {:#x}, hpa: {:#x}", vaddr, hpa);
-
-    gpt.map_region(
-        NIMBOS_KERNEL_BASE_VADDR,    // ffff_0000_4008_0000
-        kernel_entry,                // 4a0000
-        meta.physical_memory_size,       //   800_0000
-        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE | MappingFlags::USER,
-    )?;
 
     Ok(gpt)
 }
