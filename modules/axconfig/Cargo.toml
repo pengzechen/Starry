@@ -20,6 +20,8 @@ serde = "1.0"
 [features]
 hv = []
 
+
+platform-aarch64-qemu-virt-hv = []
 platform-qemu-virt-aarch64 = []
 platform-raspi4-aarch64 = []
 platform-rk3588-aarch64 = []

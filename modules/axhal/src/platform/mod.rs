@@ -33,8 +33,10 @@
 // }
 
 
-pub(crate) mod aarch64_common;
-pub use self::aarch64_common::gicv3;
-mod qemu_virt_aarch64;
-pub use self::qemu_virt_aarch64::*;
-    
+
+// mod qemu_virt_aarch64;
+// pub use self::qemu_virt_aarch64::*;
+// pub use crate::platform::aarch64_common::*;
+
+pub mod aarch64_common;
+pub use crate::platform::aarch64_common::*;

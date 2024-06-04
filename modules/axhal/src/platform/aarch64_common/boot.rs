@@ -1,4 +1,4 @@
-use crate::platform::aarch64_common::mem::init_mmu;
+// use crate::platform::aarch64_common::mem::init_mmu;
 use crate::platform::aarch64_common::mem::init_mmu_el2;
 
 use aarch64_cpu::{asm, asm::barrier, registers::*};

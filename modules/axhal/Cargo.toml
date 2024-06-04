@@ -25,6 +25,9 @@ platform-rk3588-aarch64 = [
     "dep:page_table_entry", "dep:ratio",
 ]
 
+
+platform-aarch64-qemu-virt-hv = ["axconfig/platform-aarch64-qemu-virt-hv"]
+
 gic_v3 = []
 default = []
 # default = ["hv"]
@@ -49,10 +52,13 @@ handler_table = { path = "../../crates/handler_table" }
 crate_interface = { path = "../../crates/crate_interface" }
 axfs_ramfs = { path = "../../crates/axfs_ramfs", optional = true }
 riscv = "0.10"
-
+dw_apb_uart = { path = "../../crates/dw_apb_uart" }
+arm_pl011 = { path = "../../crates/arm_pl011" }
 hypercraft = { path = "../../crates/hypercraft" }
 cortex-a = "8.1.1"
 spin = "0.9"
+aarch64-cpu = "9.3"
+tock-registers = "0.8"
 
 [target.'cfg(target_arch = "x86_64")'.dependencies]
 x86 = "0.52"

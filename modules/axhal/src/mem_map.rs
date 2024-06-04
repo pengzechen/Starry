@@ -17,11 +17,11 @@ bitflags::bitflags! {
         /// Device memory. (e.g., MMIO regions)
         const DEVICE        = 1 << 4;
         /// Uncachable memory. (e.g., framebuffer)
-        const UNCACHED      = 1 << 5;
+        // const UNCACHED      = 1 << 5;
         /// Reserved memory, do not use for allocation.
-        const RESERVED      = 1 << 6;
+        const RESERVED      = 1 << 5;
         /// Free memory for allocation.
-        const FREE          = 1 << 7;
+        const FREE          = 1 << 6;
     }
 }
 
@@ -78,6 +78,39 @@ pub fn memory_regions() -> impl Iterator<Item = MemRegion> {
 /// Returns the memory regions of the kernel image (code and data sections).
 fn kernel_image_regions() -> impl Iterator<Item = MemRegion> {
     [
+        // MemRegion {
+        //     paddr: virt_to_phys((stext as usize).into()),
+        //     size: etext as usize - stext as usize,
+        //     flags: MemRegionFlags::RESERVED | MemRegionFlags::READ | MemRegionFlags::EXECUTE,
+        //     name: ".text",
+        // },
+        // MemRegion {
+        //     paddr: virt_to_phys((srodata as usize).into()),
+        //     size: erodata as usize - srodata as usize,
+        //     flags: MemRegionFlags::RESERVED | MemRegionFlags::READ,
+        //     name: ".rodata",
+        // },
+        // MemRegion {
+        //     paddr: virt_to_phys((sdata as usize).into()),
+        //     size: edata as usize - sdata as usize,
+        //     flags: MemRegionFlags::RESERVED | MemRegionFlags::READ | MemRegionFlags::WRITE,
+        //     name: ".data .tdata .tbss .percpu",
+        // },
+        // MemRegion {
+        //     paddr: virt_to_phys((boot_stack as usize).into()),
+        //     size: boot_stack_top as usize - boot_stack as usize,
+        //     flags: MemRegionFlags::RESERVED | MemRegionFlags::READ | MemRegionFlags::WRITE,
+        //     name: "boot stack",
+        // },
+        // MemRegion {
+        //     paddr: virt_to_phys((sbss as usize).into()),
+        //     size: ebss as usize - sbss as usize,
+        //     flags: MemRegionFlags::RESERVED | MemRegionFlags::READ | MemRegionFlags::WRITE,
+        //     name: ".bss",
+        // },
+
+
+
         MemRegion {
             paddr: virt_to_phys((stext as usize).into()),
             size: etext as usize - stext as usize,
@@ -94,7 +127,19 @@ fn kernel_image_regions() -> impl Iterator<Item = MemRegion> {
             paddr: virt_to_phys((sdata as usize).into()),
             size: edata as usize - sdata as usize,
             flags: MemRegionFlags::RESERVED | MemRegionFlags::READ | MemRegionFlags::WRITE,
-            name: ".data .tdata .tbss .percpu",
+            name: ".data",
+        },
+        MemRegion {
+            paddr: virt_to_phys((__sguestdata as usize).into()),
+            size: __eguestdata as usize - __sguestdata as usize,
+            flags: MemRegionFlags::RESERVED | MemRegionFlags::READ  | MemRegionFlags::EXECUTE,
+            name: ".guestdata",
+        },
+        MemRegion {
+            paddr: virt_to_phys((percpu_start as usize).into()),
+            size: percpu_end as usize - percpu_start as usize,
+            flags: MemRegionFlags::RESERVED | MemRegionFlags::READ | MemRegionFlags::WRITE,
+            name: ".percpu",
         },
         MemRegion {
             paddr: virt_to_phys((boot_stack as usize).into()),
@@ -108,6 +153,21 @@ fn kernel_image_regions() -> impl Iterator<Item = MemRegion> {
             flags: MemRegionFlags::RESERVED | MemRegionFlags::READ | MemRegionFlags::WRITE,
             name: ".bss",
         },
+        MemRegion {
+            paddr: virt_to_phys((sguest as usize).into()),
+            size: eguest as usize - sguest as usize,
+            flags: MemRegionFlags::RESERVED | MemRegionFlags::READ | MemRegionFlags::WRITE,
+            name: ".guest",
+        },
+        // MemRegion {
+        //     paddr: mmio_regions[i - 6].0.into(),
+        //     size: mmio_regions[i - 6].1,
+        //     flags: MemRegionFlags::RESERVED
+        //         | MemRegionFlags::DEVICE
+        //         | MemRegionFlags::READ
+        //         | MemRegionFlags::WRITE,
+        //     name: "mmio",
+        // },
     ]
     .into_iter()
 }
@@ -129,6 +189,7 @@ pub(crate) fn default_mmio_regions() -> impl Iterator<Item = MemRegion> {
 /// Returns the default free memory regions (kernel image end to physical memory end).
 #[allow(dead_code)]
 pub(crate) fn default_free_regions() -> impl Iterator<Item = MemRegion> {
+    debug!("this is a test default_free_regions");
     let start = virt_to_phys((ekernel as usize).into()).align_up_4k();
     let end = PhysAddr::from(axconfig::PHYS_MEMORY_END).align_down_4k();
     core::iter::once(MemRegion {
@@ -171,7 +232,16 @@ extern "C" {
     fn edata();
     fn sbss();
     fn ebss();
-    fn ekernel();
     fn boot_stack();
     fn boot_stack_top();
+    fn percpu_start();
+    fn percpu_end();
+
+    fn __sguestdata();
+    fn __eguestdata();
+
+    fn sguest();
+    fn eguest();
+    fn skernel();
+    fn ekernel();
 }

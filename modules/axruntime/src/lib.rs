@@ -267,20 +267,29 @@ fn init_allocator() {
         if r.flags.contains(MemRegionFlags::FREE) && r.size > max_region_size {
             max_region_size = r.size;
             max_region_paddr = r.paddr;
+            debug!("{:?} 270",r);
         }
     }
     for r in memory_regions() {
         if r.flags.contains(MemRegionFlags::FREE) && r.paddr == max_region_paddr {
             axalloc::global_init(phys_to_virt(r.paddr).as_usize(), r.size);
+            debug!("{:?} 276",r);
             break;
         }
     }
     for r in memory_regions() {
         if r.flags.contains(MemRegionFlags::FREE) && r.paddr != max_region_paddr {
+            debug!("{:?} 282",r);
+            if r.paddr == 0x1_f000_0000.into(){
+                break;
+            }
             axalloc::global_add_memory(phys_to_virt(r.paddr).as_usize(), r.size)
                 .expect("add heap memory region failed");
+            debug!("{:?} 285",r);
+
         }
     }
+    debug!("out 287");
 }
 
 cfg_if::cfg_if! {

@@ -24,7 +24,7 @@ cfg_if::cfg_if! {
         mod config;
     } 
     else if #[cfg(all(
-        any(target_arch = "aarch64", not(target_os = "none")), feature = "platform-qemu-virt-aarch64", feature = "hv"))] 
+        any(target_arch = "aarch64", not(target_os = "none")), feature = "platform-aarch64-qemu-virt-hv", feature = "hv"))] 
     {
         #[rustfmt::skip]
         #[path = "config_qemu_virt_aarch64_hv.rs"]

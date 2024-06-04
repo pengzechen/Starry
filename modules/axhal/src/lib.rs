@@ -38,15 +38,15 @@ extern crate log;
 /// The kernel process ID, which is always 1.
 pub const KERNEL_PROCESS_ID: u64 = 1;
 
-#[cfg(all(feature = "hv", feature = "irq", not(feature = "gic_v3")))]
-pub use platform::aarch64_common::gic::{
-    gicc_get_current_irq, deactivate_irq, interrupt_cpu_ipi_send, 
-    gic_is_priv, gic_lrs, gicc_clear_current_irq, gicv_clear_current_irq,
-    GICH, GICD, GICV, GICC, GICD_BASE, GIC_SPI_MAX,
-    IPI_IRQ_NUM, MAINTENANCE_IRQ_NUM,
-    GICH, GICD, GICV, GICC, GICD_BASE, 
-    GIC_SPI_MAX, IPI_IRQ_NUM, MAINTENANCE_IRQ_NUM, HYPERVISOR_TIMER_IRQ_NUM
-};
+// #[cfg(all(feature = "hv", feature = "irq", not(feature = "gic_v3")))]
+// pub use platform::aarch64_common::gic::{
+//     gicc_get_current_irq, deactivate_irq, interrupt_cpu_ipi_send, 
+//     gic_is_priv, gic_lrs, gicc_clear_current_irq, gicv_clear_current_irq,
+//     GICH, GICD, GICV, GICC, GICD_BASE, GIC_SPI_MAX,
+//     IPI_IRQ_NUM, MAINTENANCE_IRQ_NUM,
+//     GICH, GICD, GICV, GICC, GICD_BASE, 
+//     GIC_SPI_MAX, IPI_IRQ_NUM, MAINTENANCE_IRQ_NUM, HYPERVISOR_TIMER_IRQ_NUM
+// };
 
 // #[cfg(not(all(feature = "hv", feature = "irq", feature = "gic_v3")))]
 // pub use platform::aarch64_common::gic::{ 
@@ -63,7 +63,9 @@ pub use platform::aarch64_common::gic::{
 #[cfg(feature = "gic_v3")]
 pub use platform::aarch64_common::gicv3;
 
+//rk3588
 pub use platform::aarch64_common::dw_apb_uart::UART;
+// pub use platform::aarch64_common::pl011::UART;
 
 
 #[cfg(all(feature = "hv", feature = "irq", not(feature = "gic_v3")))]

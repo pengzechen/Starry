@@ -27,8 +27,8 @@ qemu_args-aarch64 := \
 GUEST ?= linux
 ifeq ($(GIC_V3), y)
     ROOTFS = apps/hv/guest/$(GUEST)/rootfs-aarch64.img
-    GUEST_DTB = apps/hv/guest/$(GUEST)/$(GUEST)-aarch64-v3.dtb
-    GUEST_BIN = apps/hv/guest/$(GUEST)/$(GUEST)-aarch64-v3.bin
+    GUEST_DTB = apps/hv/guest/$(GUEST)/$(GUEST)-aarch64.dtb
+    GUEST_BIN = apps/hv/guest/$(GUEST)/$(GUEST)-aarch64.bin
   else
     ROOTFS = apps/hv/guest/$(GUEST)/rootfs-aarch64.img
     GUEST_DTB = apps/hv/guest/$(GUEST)/$(GUEST)-aarch64.dtb
@@ -102,7 +102,7 @@ qemu_args-y := \
     -device loader,file=$(GUEST_DTB),addr=0x70000000,force-raw=on \
     -device loader,file=$(GUEST_BIN),addr=0x70200000,force-raw=on 
   ifeq ($(GIC_V3), y)
-    qemu_args-y += -machine virtualization=on,gic-version=3,secure=on
+    qemu_args-y += -machine virtualization=on,gic-version=3,secure=on -nographic
   else
     qemu_args-y += -machine virtualization=on,gic-version=2,secure=on
   endif

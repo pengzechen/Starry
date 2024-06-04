@@ -5,9 +5,17 @@ mod boot;
 pub mod mp;
 
 pub mod dw_apb_uart;
-pub mod pl011;
+// pub mod pl011;
+// rk3588
 pub mod console {
     pub use super::dw_apb_uart::*;
+}
+// pub mod console {
+//     pub use super::pl011::*;
+// }
+
+pub mod misc {
+    pub use crate::platform::aarch64_common::psci::system_off as terminate;
 }
 
 // pub use crate::platform::aarch64_common::generic_timer_hv::init_percpu;
@@ -61,6 +69,7 @@ extern "C" {
 
 /// The earliest entry point for the secondary CPUs.
 pub(crate) unsafe extern "C" fn rust_entry(cpu_id: usize, dtb: usize) {
+    console::putchar(b'x');
     use crate::mem_map::phys_to_virt;
     crate::mem_map::clear_bss();
     crate::arch::set_exception_vector_base(exception_vector_base as usize);
@@ -80,6 +89,7 @@ pub(crate) unsafe extern "C" fn rust_entry(cpu_id: usize, dtb: usize) {
     time::init_early();
     // disable low address access
     crate::arch::write_page_table_root0(0.into());
+    console::putchar(b'h');
     
     rust_main(cpu_id, dtb);
 }
@@ -135,4 +145,7 @@ pub mod generic_timer_hv;
 // rk3588 这个地方暂时使用 qemu-virt 
 // mod qemu_virt_aarch64;
 // pub use self::qemu_virt_aarch64::*;
+
+// pub(crate) mod aarch64_common;
+// pub use self::aarch64_common::gicv3;
     
