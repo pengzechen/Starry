@@ -46,6 +46,10 @@ SECTIONS
         *(.guestdata.kernel)
         __guest_kernel_end = .;
         . = ALIGN(4K);
+        __guest_mem_start = .;
+        *(.guestdata.mem)
+        __guest_mem_end = .;
+        . = ALIGN(4K);
     }
     __eguestdata = .;
 

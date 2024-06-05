@@ -128,7 +128,7 @@ fn is_init_ok() -> bool {
 
 #[cfg_attr(not(test), no_mangle)]
 pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
-    ax_println!("{}", LOGO);
+    //ax_println!("{}", LOGO);
     ax_println!(
         "\
         arch = {}\n\

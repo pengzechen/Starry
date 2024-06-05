@@ -26,13 +26,15 @@ use page_table_entry::MappingFlags;
 // static NIMBOS_KERNEL: [u8; 552960] = *include_bytes!("../../hv/guest/nimbos/nimbos-aarch64-v3.bin");
 
 const NIMBOS_DTB_SIZE: usize = 7522;
-const NIMBOS_KERNEL_SIZE: usize = 552960;
-// const NIMBOS_KERNEL_SIZE: usize = 292;
+// const NIMBOS_KERNEL_SIZE: usize = 552960;
+const NIMBOS_KERNEL_SIZE: usize = 292;
 
 #[link_section = ".guestdata.dtb"]
 static NIMBOS_DTB: [u8; NIMBOS_DTB_SIZE] = *include_bytes!("../guest/nimbos/nimbos-aarch64-v3.dtb");
 #[link_section = ".guestdata.kernel"]
 static NIMBOS_KERNEL: [u8; NIMBOS_KERNEL_SIZE] = *include_bytes!("../guest/nimbos/nimbos-aarch64-v3.bin");
+#[link_section = ".guestdata.mem"]
+static NIMBOS_MEM: [u8; 0x40000] = [0; 0x40000];
 
 extern "C" {
     fn __guest_dtb_start();
@@ -64,11 +66,11 @@ fn test_kerneldata() {
     let address: *const u8 = NIMBOS_KERNEL.as_ptr() as usize as * const u8;
 
     // 创建一个长度为10的数组来存储读取的数据
-    let mut buffer = [0u8; 5];
+    let mut buffer = [0u8; 20];
 
     unsafe {
         // 从指定地址读取10个字节
-        for i in 0..5 {
+        for i in 0..20 {
             buffer[i] = *address.offset(i as isize);
         }
     }
@@ -117,11 +119,11 @@ fn test_dtbdata2() {
     let address: *const u8 = 0x7000_0000 as * const u8;
 
     // 创建一个长度为10的数组来存储读取的数据
-    let mut buffer = [0u8; 5];
+    let mut buffer = [0u8; 20];
 
     unsafe {
         // 从指定地址读取10个字节
-        for i in 0..5 {
+        for i in 0..20 {
             buffer[i] = *address.offset(i as isize);
         }
     }
@@ -154,18 +156,19 @@ fn test_kerneldata2() {
     test_kerneldata();
     // 拷贝 gusetdata 的数据到 7000_0000 和 7020_0000
     copy_high_data();
+    debug!("{}", NIMBOS_MEM[0]);
 
-    test_dtbdata2();
-    test_kerneldata2();
+    //test_dtbdata2();
+    //test_kerneldata2();
     {
-        // let vm1_kernel_entry = __guest_kernel_start as usize;
-        // let vm1_dtb = __guest_dtb_start as usize;
+        let vm1_kernel_entry = __guest_kernel_start as usize;
+        let vm1_dtb = __guest_dtb_start as usize;
 
         // let vm1_kernel_entry = NIMBOS_KERNEL.as_ptr() as usize;
         // let vm1_dtb = NIMBOS_DTB.as_ptr() as usize;
 
-        let vm1_dtb = 0x7000_0000;
-        let vm1_kernel_entry = 0x7020_0000;
+        // let vm1_dtb = 0x7000_0000;
+        // let vm1_kernel_entry = 0x7020_0000;
         
 
         // boot cpu
@@ -239,9 +242,9 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
     info!( "physical memory: [{:#x}: {:#x}]", meta.physical_memory_offset, meta.physical_memory_offset + meta.physical_memory_size );
 
     gpt.map_region(
-        0x7020_0000,
-        0x7020_0000,
-        meta.physical_memory_size,
+        0x439000,
+        0x439000,
+        0x40000,
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE | MappingFlags::USER,
     )?;
     debug!("map physical memeory");
