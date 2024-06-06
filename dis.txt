@@ -1,5 +1,419 @@
 
-apps/hv/hv_.elf：     文件格式 elf64-littleaarch64
+apps/hv/hv_.elf:     file format elf64-littleaarch64
+apps/hv/hv_.elf
+architecture: aarch64, flags 0x00000112:
+EXEC_P, HAS_SYMS, D_PAGED
+start address 0x0000000000400000
+
+Program Header:
+    LOAD off    0x0000000000010000 vaddr 0x0000000000400000 paddr 0x0000000000400000 align 2**16
+         filesz 0x000000000002e000 memsz 0x000000000002e000 flags r-x
+    LOAD off    0x000000000003e000 vaddr 0x000000000042e000 paddr 0x000000000042e000 align 2**16
+         filesz 0x0000000000007000 memsz 0x0000000000007000 flags r--
+    LOAD off    0x0000000000045000 vaddr 0x0000000000435000 paddr 0x0000000000435000 align 2**16
+         filesz 0x0000000000003000 memsz 0x0000000000003000 flags rw-
+    LOAD off    0x0000000000048000 vaddr 0x0000000000438000 paddr 0x0000000000438000 align 2**16
+         filesz 0x0000000000002000 memsz 0x0000000000002000 flags r--
+    LOAD off    0x0000000000050000 vaddr 0x0000000000000000 paddr 0x000000000043a000 align 2**16
+         filesz 0x00000000004a2000 memsz 0x00000000004a2000 flags rw-
+   RELRO off    0x0000000000045000 vaddr 0x0000000000435000 paddr 0x0000000000435000 align 2**0
+         filesz 0x0000000000003000 memsz 0x0000000000003000 flags r--
+   STACK off    0x0000000000000000 vaddr 0x0000000000000000 paddr 0x0000000000000000 align 2**0
+         filesz 0x0000000000000000 memsz 0x0000000000000000 flags rw-
+private flags = 0x0:
+
+Sections:
+Idx Name          Size      VMA               LMA               File off  Algn
+  0 .text         0002e000  0000000000400000  0000000000400000  00010000  2**12
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  1 .rodata       00007000  000000000042e000  000000000042e000  0003e000  2**12
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  2 .data         00003000  0000000000435000  0000000000435000  00045000  2**12
+                  CONTENTS, ALLOC, LOAD, DATA
+  3 .guestdata    00002000  0000000000438000  0000000000438000  00048000  2**12
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  4 .percpu       00000040  0000000000000000  000000000043a000  00050000  2**3
+                  CONTENTS, ALLOC, LOAD, DATA
+  5 .bss          00066000  000000000043c000  0000000000876000  00050040  2**13
+                  ALLOC
+  6 .guest        00000000  00000000004a2000  00000000008dc000  004f2000  2**13
+                  CONTENTS, ALLOC, LOAD, DATA
+  7 .debug_abbrev 0000040e  0000000000000000  0000000000000000  004f2000  2**0
+                  CONTENTS, READONLY, DEBUGGING, OCTETS
+  8 .debug_info   00004aba  0000000000000000  0000000000000000  004f240e  2**0
+                  CONTENTS, READONLY, DEBUGGING, OCTETS
+  9 .debug_aranges 00000550  0000000000000000  0000000000000000  004f6ec8  2**0
+                  CONTENTS, READONLY, DEBUGGING, OCTETS
+ 10 .debug_ranges 00002f00  0000000000000000  0000000000000000  004f7418  2**0
+                  CONTENTS, READONLY, DEBUGGING, OCTETS
+ 11 .debug_str    0000a22d  0000000000000000  0000000000000000  004fa318  2**0
+                  CONTENTS, READONLY, DEBUGGING, OCTETS
+ 12 .debug_pubnames 000033e7  0000000000000000  0000000000000000  00504545  2**0
+                  CONTENTS, READONLY, DEBUGGING, OCTETS
+ 13 .debug_pubtypes 0000007e  0000000000000000  0000000000000000  0050792c  2**0
+                  CONTENTS, READONLY, DEBUGGING, OCTETS
+ 14 .debug_frame  000028a8  0000000000000000  0000000000000000  005079b0  2**3
+                  CONTENTS, READONLY, DEBUGGING, OCTETS
+ 15 .debug_line   00003054  0000000000000000  0000000000000000  0050a258  2**0
+                  CONTENTS, READONLY, DEBUGGING, OCTETS
+SYMBOL TABLE:
+0000000000000000 l    df *ABS*	0000000000000000 arceos_hv.1984414de2b1e797-cgu.2
+0000000000401f84 l       .text	0000000000000000 handle_el1t_64_sync
+0000000000401ff0 l       .text	0000000000000000 handle_el1t_64_irq
+000000000040205c l       .text	0000000000000000 handle_el1t_64_fiq
+00000000004020c8 l       .text	0000000000000000 handle_el1t_64_error
+0000000000402134 l       .text	0000000000000000 handle_el1h_64_sync
+00000000004021a0 l       .text	0000000000000000 handle_el1h_64_irq
+000000000040220c l       .text	0000000000000000 handle_el1h_64_fiq
+0000000000402278 l       .text	0000000000000000 handle_el1h_64_error
+00000000004022e4 l       .text	0000000000000000 handle_el0t_64_sync
+00000000004023d0 l       .text	0000000000000000 handle_el0t_64_irq
+00000000004024bc l       .text	0000000000000000 handle_el0t_64_fiq
+00000000004025a8 l       .text	0000000000000000 handle_el0t_64_error
+0000000000402694 l       .text	0000000000000000 handle_el0t_32_sync
+0000000000402780 l       .text	0000000000000000 handle_el0t_32_irq
+000000000040286c l       .text	0000000000000000 handle_el0t_32_fiq
+0000000000402958 l       .text	0000000000000000 handle_el0t_32_error
+0000000000402b5c l     F .text	0000000000000088 _ZN10hypercraft4arch11vcpus_array19VcpusArray$LT$H$GT$3new17hd306597bbd773ee1E
+00000000004083f4 l     F .text	0000000000000440 _ZN7axalloc15GlobalAllocator5alloc17h8f644e423ee6a768E
+000000000042c878 l     F .text	0000000000000008 __rust_alloc_error_handler
+0000000000402be4 l     F .text	00000000000001d8 _ZN10hypercraft4arch3cpu15PerCpu$LT$H$GT$11create_vcpu17hfd7f3730d85f6220E
+00000000004032c0 l     F .text	0000000000000088 _ZN5alloc11collections9vec_deque21VecDeque$LT$T$C$A$GT$4grow17h08d7cefe07e6dd26E
+0000000000402dbc l     F .text	00000000000001a8 _ZN42_$LT$$RF$T$u20$as$u20$core..fmt..Debug$GT$3fmt17hf73d5d2794dd4ce8E
+0000000000427ce4 l     F .text	00000000000002e0 _ZN4core3fmt9Formatter12pad_integral17h7bce63ec766e5eeeE
+0000000000427ae0 l     F .text	000000000000004c _ZN4core5slice5index26slice_start_index_len_fail17h36fca5bfd6ef1204E
+0000000000402f64 l     F .text	0000000000000268 _ZN4core5array69_$LT$impl$u20$core..fmt..Debug$u20$for$u20$$u5b$T$u3b$$u20$N$u5d$$GT$3fmt17h9eb4ecf3e91004d8E
+0000000000429630 l     F .text	0000000000000138 _ZN4core3fmt8builders8DebugSet5entry17hc9ac70a2e6d2a1aaE
+00000000004031cc l     F .text	00000000000000f4 _ZN4spin4once17Once$LT$T$C$R$GT$18try_call_once_slow17hd27f34a5bc06dd2cE
+00000000004285b8 l     F .text	0000000000000034 _ZN4core9panicking5panic17h7622c9da94764cc6E
+0000000000407594 l     F .text	00000000000000d4 _ZN5alloc7raw_vec19RawVec$LT$T$C$A$GT$16reserve_for_push17h4c7b7e5bb82bf434E
+0000000000403348 l     F .text	0000000000000050 _ZN77_$LT$arrayvec..errors..CapacityError$LT$T$GT$$u20$as$u20$core..fmt..Debug$GT$3fmt17h86fd338ec59248e4E
+0000000000422e60 l     F .text	0000000000000010 _ZN44_$LT$$RF$T$u20$as$u20$core..fmt..Display$GT$3fmt17h028168b546b8445cE
+00000000004286e8 l     F .text	0000000000000228 _ZN4core3fmt5write17had491e6ceb88f3c5E
+0000000000403398 l     F .text	0000000000000038 _ZN5alloc7raw_vec17capacity_overflow17h0a75521a8af5d283E
+0000000000427a8c l     F .text	0000000000000030 _ZN4core9panicking9panic_fmt17hb834418528aaaa5dE
+00000000004033d0 l     F .text	0000000000000040 __rdl_oom
+0000000000427b78 l     F .text	000000000000016c _ZN4core3fmt3num3imp52_$LT$impl$u20$core..fmt..Display$u20$for$u20$u64$GT$3fmt17hb9355a591539ed06E
+0000000000429558 l     F .text	0000000000000008 _ZN4core9panicking18panic_nounwind_fmt17h5e9973ea1aec1188E
+0000000000403410 l     F .text	0000000000000120 _ZN79_$LT$allocator..tlsf..TlsfByteAllocator$u20$as$u20$allocator..BaseAllocator$GT$10add_memory17h40f02a8f72260e74E
+0000000000403530 l     F .text	00000000000001e8 _ZN79_$LT$allocator..tlsf..TlsfByteAllocator$u20$as$u20$allocator..ByteAllocator$GT$7dealloc17ha19d402839ba8d1fE
+000000000047e000 l     O .bss	0000000000023ec8 _ZN7axalloc16GLOBAL_ALLOCATOR17h04b3423754977f4bE
+0000000000403718 l     F .text	00000000000001e8 _ZN4core5slice4sort8heapsort17h31adcd998f998861E
+0000000000427b2c l     F .text	000000000000004c _ZN4core9panicking18panic_bounds_check17h7a5004348664dd7fE
+0000000000403900 l     F .text	0000000000000124 _ZN4core5slice4sort14break_patterns17hb9fbede4de27f97dE
+0000000000403a24 l     F .text	000000000000043c _ZN4core5slice4sort22partial_insertion_sort17h4abe46d4340bd3b8E
+0000000000403e60 l     F .text	00000000000000b4 _ZN4core5slice4sort25insertion_sort_shift_left17hb9e4089ee7332f03E
+0000000000403f14 l     F .text	0000000000000070 _ZN4core5slice4sort26insertion_sort_shift_right17h6933c91a9dd2be46E
+0000000000403f84 l     F .text	0000000000000814 _ZN4core5slice4sort7recurse17h42b981fe64c334b9E
+0000000000428b68 l     F .text	000000000000004c _ZN4core5slice5index22slice_index_order_fail17hb50a06e91217f453E
+0000000000428048 l     F .text	000000000000004c _ZN4core5slice5index24slice_end_index_len_fail17h34d84eb9d2f473b0E
+0000000000427a4c l     F .text	0000000000000034 _ZN53_$LT$axerrno..AxError$u20$as$u20$core..fmt..Debug$GT$3fmt17h1b7d2a4233ef4e65E.762
+000000000042d114 l     F .text	000000000000009c _ZN3log17__private_api_log17h7f29abf710eff511E
+0000000000429290 l     F .text	0000000000000058 _ZN4core6result13unwrap_failed17h4ccb29953da6c6f0E
+0000000000438000 l     O .guestdata	0000000000001d62 _ZN9arceos_hv10NIMBOS_DTB17habe9c3a520f0d333E
+0000000000434668 l     O .rodata	0000000000000000 _ZN3log6logger3NOP17h11948bda88406911E
+0000000000429594 l     F .text	000000000000009c _ZN4core3fmt3num53_$LT$impl$u20$core..fmt..LowerHex$u20$for$u20$i64$GT$3fmt17hb75d8fb858ad3968E
+0000000000408870 l     F .text	0000000000000808 _ZN92_$LT$allocator..bitmap..BitmapPageAllocator$LT$_$GT$$u20$as$u20$allocator..PageAllocator$GT$11alloc_pages17hc2599d2b3a79021dE
+000000000042ba20 l     F .text	0000000000000304 _ZN3fdt9FdtHeader10from_bytes17h5066f543f73c8c89E
+0000000000409240 l     F .text	0000000000000118 _ZN68_$LT$axhal..paging..PagingIfImpl$u20$as$u20$page_table..PagingIf$GT$13dealloc_frame17hd53d8a39188437b3E
+000000000042bd24 l     F .text	0000000000000288 _ZN3fdt3Fdt9find_node17hacfb86d9ea324da2E
+0000000000429514 l     F .text	0000000000000044 _ZN4core6option13expect_failed17h93cfb0d412ad27a8E
+000000000042ac2c l     F .text	00000000000002fc _ZN3fdt4node7FdtNode3reg17hdeead877dd426ac5E
+000000000042bfac l     F .text	0000000000000404 _ZN3fdt3Fdt14find_all_nodes17h3349ca65f6b81467E
+0000000000407668 l     F .text	00000000000003d8 _ZN3fdt3Fdt14find_all_nodes28_$u7b$$u7b$closure$u7d$$u7d$17h1a8eb7ee3fdb2bb0E
+0000000000420be8 l     F .text	0000000000000514 _ZN90_$LT$axruntime..gpm..GuestPageTable$u20$as$u20$hypercraft..memory..GuestPageTableTrait$GT$10map_region17hb9a9c44ed59ab456E
+0000000000407554 l     F .text	0000000000000040 _ZN5alloc7raw_vec19RawVec$LT$T$C$A$GT$11allocate_in17h3db140487a8af40cE
+0000000000422e70 l     F .text	00000000000000e4 _ZN52_$LT$$BP$const$u20$T$u20$as$u20$core..fmt..Debug$GT$3fmt17h3d7fa58bbf8b1264E
+0000000000425f98 l     F .text	0000000000000224 _ZN9axruntime2hv6kernel8vm_array6add_vm17hf8a0524b015bb6d2E
+0000000000424590 l     F .text	000000000000011c _ZN9axruntime2hv6kernel8vm_array11add_vm_vcpu17heb1aa1752ee78bd3E
+00000000004246ac l     F .text	00000000000001a0 _ZN9axruntime2hv6kernel8vm_array12init_vm_vcpu17h30b97ec3ca7cbc3eE
+000000000042484c l     F .text	0000000000000f70 _ZN9axruntime2hv6kernel8vm_array18init_vm_emu_device17h4f2f281825d6b336E
+00000000004257bc l     F .text	00000000000007dc _ZN9axruntime2hv6kernel8vm_array26init_vm_passthrough_device17h67c644df04633de2E
+00000000004261bc l     F .text	00000000000001a4 _ZN9axruntime2hv6kernel8vm_array11run_vm_vcpu17hb8fc76e43ce5f9b6E
+0000000000407524 l     F .text	0000000000000030 _ZN59_$LT$hypercraft..HyperError$u20$as$u20$core..fmt..Debug$GT$3fmt17hdd91ca0a2e84c02bE
+00000000004185ac l     F .text	00000000000000f0 _ZN5alloc7raw_vec11finish_grow17h992cee18e3b41752E
+0000000000428bb4 l     F .text	0000000000000278 _ZN4core3str8converts9from_utf817hfc2a1fe0cb6cd765E
+000000000042b70c l     F .text	0000000000000314 _ZN3fdt4node17skip_current_node17hd3507e427bee3678E
+0000000000407a40 l     F .text	0000000000000004 _ZN4core3ptr34drop_in_place$LT$fdt..FdtError$GT$17h19dbeb43ca196b6aE
+0000000000407a44 l     F .text	0000000000000030 _ZN50_$LT$fdt..FdtError$u20$as$u20$core..fmt..Debug$GT$3fmt17h4b923b53ee80e1e3E
+0000000000407a74 l     F .text	0000000000000130 _ZN9arm_gicv314GicDistributor10set_enable17h5ccef0102fbf0248E
+0000000000407dfc l     F .text	00000000000005c8 _ZN5alloc11collections5btree3map25BTreeMap$LT$K$C$V$C$A$GT$6insert17hb590b61fe983767bE
+0000000000407ba4 l     F .text	0000000000000180 _ZN9arm_gicv316GicRedistributor10set_enable17hb18175317f27461dE
+0000000000407d24 l     F .text	00000000000000d8 _ZN9arm_gicv322GicHypervisorInterface6set_lr17h57b561ddf07285f6E
+0000000000408834 l     F .text	000000000000003c __rust_alloc
+00000000004083c4 l     F .text	0000000000000030 _ZN58_$LT$allocator..AllocError$u20$as$u20$core..fmt..Debug$GT$3fmt17hb38875872d5d85a1E
+0000000000409078 l     F .text	00000000000001c8 _ZN5axhal8platform14aarch64_common4psci10system_off17heba0085c3a14d8d9E
+000000000042a850 l     F .text	0000000000000184 _ZN4core3fmt3num3imp52_$LT$impl$u20$core..fmt..Display$u20$for$u20$i32$GT$3fmt17haae14e8c35c4f9e4E
+0000000000409358 l     F .text	0000000000000030 _ZN73_$LT$axhal..arch..aarch64..trap..TrapKind$u20$as$u20$core..fmt..Debug$GT$3fmt17hcc995da391f1055bE
+0000000000409388 l     F .text	0000000000000024 _ZN75_$LT$axhal..arch..aarch64..trap..TrapSource$u20$as$u20$core..fmt..Debug$GT$3fmt17h13c6760bebbbbd36E
+000000000040a5d4 l     F .text	0000000000000030 _ZN42_$LT$$RF$T$u20$as$u20$core..fmt..Debug$GT$3fmt17h8888563b63eda816E
+000000000042a728 l     F .text	000000000000008c _ZN4core3fmt3num51_$LT$impl$u20$core..fmt..Binary$u20$for$u20$i64$GT$3fmt17h6d5b723647dbdf11E
+000000000040ccfc l     F .text	00000000000001f4 _ZN5axhal8platform14aarch64_common5gicv312dispatch_irq17h5cc9f173a6386d7aE
+000000000040a1dc l     F .text	0000000000000030 _ZN82_$LT$axhal..arch..aarch64..hv..exception..TrapKind$u20$as$u20$core..fmt..Debug$GT$3fmt17ha04d272d06f59103E
+000000000040a20c l     F .text	0000000000000024 _ZN84_$LT$axhal..arch..aarch64..hv..exception..TrapSource$u20$as$u20$core..fmt..Debug$GT$3fmt17h641e62843b28319fE
+000000000040a908 l     F .text	0000000000000098 _ZN50_$LT$$RF$mut$u20$T$u20$as$u20$core..fmt..Debug$GT$3fmt17h6acc1f278e50008fE
+000000000040cef0 l     F .text	0000000000000118 _ZN5axhal8platform14aarch64_common5gicv320gicc_get_current_irq17he300d77fbc12e299E
+000000000040b148 l     F .text	000000000000011c _ZN5axhal4trap20handle_irq_extern_hv17h5df0a96b020cab88E
+000000000040ac04 l     F .text	0000000000000010 _ZN52_$LT$$RF$mut$u20$T$u20$as$u20$core..fmt..Display$GT$3fmt17h742e00be97a184a2E
+00000000004298b0 l     F .text	0000000000000188 _ZN4core3fmt9Formatter26debug_struct_field5_finish17h3b804171778aaf1aE
+000000000040a604 l     F .text	00000000000000a0 _ZN45_$LT$$RF$T$u20$as$u20$core..fmt..LowerHex$GT$3fmt17h3dd974b3d1c94aa1E
+000000000040a6a4 l     F .text	0000000000000264 _ZN42_$LT$$RF$T$u20$as$u20$core..fmt..Debug$GT$3fmt17h66988162b391d2b7E
+0000000000429768 l     F .text	0000000000000148 _ZN4core3fmt9Formatter26debug_struct_field4_finish17h0f594c31a3f06913E
+000000000040a9a0 l     F .text	0000000000000004 _ZN4core3ptr24drop_in_place$LT$u64$GT$17h638531ff04b4d6a3E
+000000000040a9a4 l     F .text	0000000000000260 _ZN4core3fmt3num50_$LT$impl$u20$core..fmt..Debug$u20$for$u20$u64$GT$3fmt17h524f3ab6794da149E
+000000000042c880 l     F .text	0000000000000248 _ZN91_$LT$hypercraft..arch..context_frame..Aarch64ContextFrame$u20$as$u20$core..fmt..Display$GT$3fmt17h8ebb4f0fa382bf58E
+000000000040ac14 l     F .text	00000000000000c4 _ZN5axhal8platform14aarch64_common13generic_timer10init_early17h85dcef83941d03ddE
+000000000040acd8 l     F .text	0000000000000370 _ZN4core5array69_$LT$impl$u20$core..fmt..Debug$u20$for$u20$$u5b$T$u3b$$u20$N$u5d$$GT$3fmt17h3de266afca361713E
+000000000040b048 l     F .text	000000000000005c _ZN5axhal8platform14aarch64_common4boot16cache_invalidate17h7f110b7ea5207e90E
+000000000043c000 l     O .bss	0000000000040000 _ZN5axhal8platform14aarch64_common4boot10BOOT_STACK17h64bfa16c9aa2ada8E
+000000000040b2cc l     F .text	0000000000000050 _ZN5axhal8platform14aarch64_common3mem12idmap_kernel17h8b7d978177ee23b3E
+000000000040b264 l     F .text	0000000000000068 _ZN5axhal8platform14aarch64_common3mem12init_mmu_el217h271d132c0508af1eE
+000000000040b0a4 l     F .text	0000000000000048 _ZN5axhal8platform14aarch64_common4boot13switch_to_el217hc45f77474d8c30f6E
+000000000040b144 l     F .text	0000000000000004 _ZN5axhal8platform14aarch64_common11dw_apb_uart6handle17he45ed9091d2f0eb5E
+000000000040b0ec l     F .text	0000000000000058 _ZN5axhal8platform14aarch64_common11dw_apb_uart7putchar17h7695ec14f54898a0E
+0000000000436000 l     O .data	0000000000001000 _ZN5axhal8platform14aarch64_common3mem10BOOT_PT_L117h44c9e2bdd51270a7E
+0000000000435000 l     O .data	0000000000001000 _ZN5axhal8platform14aarch64_common3mem10BOOT_PT_L017ha6dc0c0814b3146eE
+000000000040b31c l     F .text	0000000000000414 _ZN67_$LT$axhal..mem_map..MemRegionFlags$u20$as$u20$core..fmt..Debug$GT$3fmt17h41db3d88cf3b4c77E
+000000000040b730 l     F .text	00000000000010f0 _ZN5axhal7mem_map14memory_regions17h707173a4aa0929d8E
+000000000042d288 l     F .text	00000000000001f8 _ZN62_$LT$of..MY_MACHINE_FDT$u20$as$u20$core..ops..deref..Deref$GT$5deref17h363476ec145b1678E
+000000000042a9d4 l     F .text	0000000000000258 _ZN3fdt4node12NodeProperty5parse17h579c19296f3bdf7dE
+000000000040c820 l     F .text	00000000000004dc _ZN5axhal8platform14aarch64_common5gicv316register_handler17h162d69847659bfd4E
+000000000047c000 l     O .bss	0000000000002000 _ZN5axhal3irq17IRQ_HANDLER_TABLE17hd4d776bdec725f31E
+000000000042a68c l     F .text	000000000000009c _ZN4core3fmt3num53_$LT$impl$u20$core..fmt..LowerHex$u20$for$u20$i32$GT$3fmt17hc64da2d43825dbe3E
+000000000040d008 l     F .text	0000000000000800 _ZN5axhal8platform14aarch64_common10rust_entry17h9c8a78f53b3178d9E
+000000000040d808 l     F .text	0000000000000060 _ZN50_$LT$axlog..Logger$u20$as$u20$core..fmt..Write$GT$9write_str17hf4c11938efb1fe05E
+000000000040d868 l     F .text	0000000000000280 _ZN42_$LT$axlog..Logger$u20$as$u20$log..Log$GT$3log17h178c9396ed333d28E
+000000000040dae8 l     F .text	000000000000000c _ZN44_$LT$$RF$T$u20$as$u20$core..fmt..Display$GT$3fmt17h2bfcfee5adc9760aE
+00000000004292e8 l     F .text	00000000000000c0 _ZN4core3fmt3num3imp51_$LT$impl$u20$core..fmt..Display$u20$for$u20$u8$GT$3fmt17h4b5c426dff92061fE
+00000000004293a8 l     F .text	000000000000016c _ZN4core3fmt3num3imp52_$LT$impl$u20$core..fmt..Display$u20$for$u20$u32$GT$3fmt17h2c85c966193ac310E
+00000000004286dc l     F .text	000000000000000c _ZN59_$LT$core..fmt..Arguments$u20$as$u20$core..fmt..Display$GT$3fmt17hfad471350ce68425E
+000000000040daf4 l     F .text	0000000000000018 _ZN53_$LT$core..fmt..Error$u20$as$u20$core..fmt..Debug$GT$3fmt17h8785d65363bfa941E.189
+000000000040db0c l     F .text	0000000000000228 _ZN4core3fmt5Write10write_char17hba17f5ad12893833E
+000000000040dd34 l     F .text	0000000000000010 _ZN4core3fmt5Write9write_fmt17h0cd890f65c4b2328E
+000000000040dd44 l     F .text	0000000000000030 _ZN56_$LT$log..SetLoggerError$u20$as$u20$core..fmt..Debug$GT$3fmt17h43e25fa76d5ba83cE
+000000000040dd74 l     F .text	0000000000000014 _ZN42_$LT$$RF$T$u20$as$u20$core..fmt..Debug$GT$3fmt17hb91a9013eb04f182E
+0000000000429a38 l     F .text	000000000000013c _ZN4core3fmt9Formatter25debug_tuple_field1_finish17hd1ade053fed355bcE
+0000000000428094 l     F .text	0000000000000524 _ZN4core3fmt9Formatter3pad17hd8dd3efde1c91e3fE
+000000000040dd88 l     F .text	0000000000000008 _ZN42_$LT$axlog..Logger$u20$as$u20$log..Log$GT$7enabled17hc3bd9a4fa1929942E
+000000000040dd90 l     F .text	0000000000000004 _ZN42_$LT$axlog..Logger$u20$as$u20$log..Log$GT$5flush17h3d694f2b9c72fcb8E
+000000000040dd94 l     F .text	0000000000000934 _ZN9axruntime2hv6kernel6vgicv38set_pend17h51511dab6182c319E
+000000000041040c l     F .text	00000000000005fc _ZN9axruntime2hv6kernel6vgicv39remove_lr17h5f940f5e4337b068E
+000000000042cac8 l     F .text	000000000000036c _ZN10hypercraft4arch5gicv313gic_set_state17h644037b38e41e43cE
+000000000040f2e8 l     F .text	00000000000003fc _ZN9axruntime2hv6kernel6vgicv35route17h1d0e6c680d4c540cE
+0000000000410a08 l     F .text	00000000000001a0 _ZN9axruntime2hv6kernel6vgicv320vgic_int_yield_owner17hd0182387077dd159E
+00000000004277cc l     F .text	0000000000000048 _ZN5alloc4sync16Arc$LT$T$C$A$GT$9drop_slow17h70176e216c054676E
+0000000000427814 l     F .text	0000000000000048 _ZN5alloc4sync16Arc$LT$T$C$A$GT$9drop_slow17h8dc79260d9823611E
+000000000040e6c8 l     F .text	0000000000000c20 _ZN9axruntime2hv6kernel6vgicv315update_int_list17hfc91c4acf6c850ceE
+0000000000411c18 l     F .text	0000000000000564 _ZN9axruntime2hv6kernel6vgicv315remove_int_list17h55839b771eb04335E
+00000000004119d8 l     F .text	0000000000000240 _ZN9axruntime2hv6kernel6vgicv312add_int_list17hdbb4cbfd529df8e2E
+000000000040f6e4 l     F .text	0000000000000d28 _ZN9axruntime2hv6kernel6vgicv36add_lr17hacfbe1bbcb93cbbaE
+0000000000410ba8 l     F .text	0000000000000210 _ZN9axruntime2hv6kernel6vgicv314vgic_get_state17h9f4ec2ce52ad57dfE
+0000000000423d8c l     F .text	00000000000000a4 _ZN10hypercraft4arch6vgicv317Vgic$LT$H$C$G$GT$15vgicd_interrupt17h4b2d0eb29c352d4cE
+0000000000423e30 l     F .text	000000000000004c _ZN10hypercraft4arch6vgicv320VgicInt$LT$H$C$G$GT$2id17h549872be585b41c9E
+0000000000410db8 l     F .text	00000000000007b0 _ZN9axruntime2hv6kernel6vgicv38write_lr17ha97255474dabd930E
+0000000000411568 l     F .text	000000000000013c _ZN9axruntime2hv6kernel6vgicv39vgic_owns17hfb0b75b23d90a703E
+00000000004116a4 l     F .text	0000000000000334 _ZN9axruntime2hv6kernel6vgicv311gich_get_lr17h4efba957f045776aE
+0000000000423e7c l     F .text	00000000000002f0 _ZN10hypercraft4arch6vgicv320VgicInt$LT$H$C$G$GT$5owner17h975bf637b0428010E
+00000000004232a0 l     F .text	0000000000000088 _ZN5alloc11collections9vec_deque21VecDeque$LT$T$C$A$GT$4grow17h6ddb1a1dfeddb14cE
+0000000000422f54 l     F .text	000000000000034c _ZN5alloc11collections9vec_deque21VecDeque$LT$T$C$A$GT$6remove17h89f0e0d45337bd65E
+000000000041217c l     F .text	00000000000006e0 _ZN9axruntime2hv6kernel6vgicv320emu_isenabler_access17he77d761981c62c6fE
+00000000004229a4 l     F .text	0000000000000160 _ZN9axruntime2hv6kernel12active_vm_id17hb12a47be9fa8249aE
+0000000000422848 l     F .text	000000000000015c _ZN9axruntime2hv6kernel9active_vm17ha3eb8f8a60318c70E
+0000000000412a90 l     F .text	0000000000000ad4 _ZN9axruntime2hv6kernel6vgicv310set_enable17h61b0bd817a75f913E
+000000000041285c l     F .text	0000000000000234 _ZN9axruntime2hv6kernel6vgicv310get_enable17h6268b710e527d742E
+0000000000413564 l     F .text	00000000000008dc _ZN9axruntime2hv6kernel6vgicv320emu_icenabler_access17hc9b557f33335d098E
+000000000041d9f0 l     F .text	0000000000000068 _ZN10hypercraft4arch2vm15VM$LT$H$C$G$GT$13has_interrupt17hff4601c289eca15bE
+0000000000413e40 l     F .text	0000000000000778 _ZN9axruntime2hv6kernel6vgicv316emu_pendr_access17hb07ca0a62475fabdE
+00000000004145b8 l     F .text	0000000000000f90 _ZN9axruntime2hv6kernel6vgicv318emu_activer_access17h24d9a039424511bdE
+0000000000415548 l     F .text	0000000000000f58 _ZN9axruntime2hv6kernel6vgicv316emu_icfgr_access17h66060a2832af0179E
+00000000004164a0 l     F .text	0000000000001184 _ZN9axruntime2hv6kernel6vgicv321emu_ipriorityr_access17ha158d4914a9ddd14E
+0000000000417624 l     F .text	00000000000000ec _ZN9axruntime2hv6kernel6vgicv39emu_razwi17h7e7b90c5d6285120E
+0000000000417710 l     F .text	0000000000000c88 _ZN9axruntime2hv6kernel6vgicv318emu_irouter_access17h7d52275b3ac4951fE
+0000000000418398 l     F .text	000000000000012c _ZN9axruntime2hv6kernel6vgicv315emu_pidr_access17h032c21b4f13b8eb2E
+00000000004184c4 l     F .text	00000000000000e8 _ZN5alloc7raw_vec19RawVec$LT$T$C$A$GT$16reserve_for_push17h0690284203ee22a9E
+000000000041869c l     F .text	00000000000000e4 _ZN5alloc7raw_vec19RawVec$LT$T$C$A$GT$16reserve_for_push17h2bc8b2004ec007a1E
+0000000000418780 l     F .text	00000000000000c8 _ZN5alloc7raw_vec19RawVec$LT$T$C$A$GT$16reserve_for_push17h9c0857a06470bbf5E
+0000000000418848 l     F .text	00000000000000e0 _ZN5alloc7raw_vec19RawVec$LT$T$C$A$GT$16reserve_for_push17hbf12be7d716829f1E
+0000000000418928 l     F .text	00000000000000d4 _ZN5alloc7raw_vec19RawVec$LT$T$C$A$GT$16reserve_for_push17hd4cc05e60cdfd84fE
+00000000004189fc l     F .text	00000000000000e8 _ZN5alloc7raw_vec19RawVec$LT$T$C$A$GT$16reserve_for_push17hd69caf5e78fdc883E
+0000000000418ae4 l     F .text	00000000000000c4 _ZN5alloc7raw_vec19RawVec$LT$T$C$A$GT$16reserve_for_push17hd929ba8105bef31aE
+0000000000418ba8 l     F .text	00000000000000d4 _ZN5alloc7raw_vec19RawVec$LT$T$C$A$GT$16reserve_for_push17hed7264f37ef02e63E
+0000000000418c7c l     F .text	00000000000000d4 _ZN5alloc7raw_vec19RawVec$LT$T$C$A$GT$16reserve_for_push17hed76bc57c74a460dE
+0000000000418d50 l     F .text	00000000000000e8 _ZN5alloc7raw_vec19RawVec$LT$T$C$A$GT$7reserve21do_reserve_and_handle17h4df2e79fc52a7b58E
+0000000000418e38 l     F .text	00000000000008ac _ZN9axruntime2hv6kernel15emuintc_handler16emu_intc_handler17hc7fde87eec939b63E
+0000000000429b74 l     F .text	000000000000002c _ZN43_$LT$bool$u20$as$u20$core..fmt..Display$GT$3fmt17ha8ca08632f77bfb9E
+0000000000427510 l     F .text	00000000000002bc _ZN5alloc4sync16Arc$LT$T$C$A$GT$9drop_slow17h5e88896a1b5e3998E
+00000000004196e4 l     F .text	00000000000029e4 _ZN9axruntime2hv6kernel15emuintc_handler23gic_maintenance_handler17h7c935b2395d49297E
+000000000042cff0 l     F .text	0000000000000118 _ZN10hypercraft4arch5utils4util15bitmap_find_nth17hf0cd0c24d93f844eE
+00000000004243d8 l     F .text	00000000000001b8 _ZN109_$LT$alloc..collections..vec_deque..iter..Iter$LT$T$GT$$u20$as$u20$core..iter..traits..iterator..Iterator$GT$4fold17hfb980d4eb132df16E
+000000000041c0c8 l     F .text	0000000000000a10 _ZN9axruntime2hv6kernel15emuintc_handler18emul_vgicr_handler17ha1f27d5e8d8c5c45E
+000000000041cad8 l     F .text	0000000000000cfc _ZN114_$LT$core..iter..adapters..flatten..FlatMap$LT$I$C$U$C$F$GT$$u20$as$u20$core..iter..traits..iterator..Iterator$GT$4next17h4846e7e4a4c53395E
+000000000041d7d4 l     F .text	0000000000000030 _ZN59_$LT$hypercraft..HyperError$u20$as$u20$core..fmt..Debug$GT$3fmt17hdd91ca0a2e84c02bE.450
+000000000041d804 l     F .text	00000000000001ec _ZN10hypercraft4arch2vm15VM$LT$H$C$G$GT$12set_emu_devs17h3a40186dc2d0d240E
+000000000041da58 l     F .text	00000000000001fc _ZN10hypercraft4arch2vm15VM$LT$H$C$G$GT$3run17h998736d8e3be306fE
+000000000042a7b4 l     F .text	000000000000009c _ZN4core3fmt3num53_$LT$impl$u20$core..fmt..UpperHex$u20$for$u20$i64$GT$3fmt17ha8adebe2934e76c2E
+0000000000423474 l     F .text	0000000000000020 _ZN10hypercraft4arch4vcpu13VCpu$LT$H$GT$3run17h48a3bba63aca35a2E
+000000000041dc54 l     F .text	00000000000000c8 _ZN65_$LT$alloc..vec..Vec$LT$T$C$A$GT$$u20$as$u20$core..fmt..Debug$GT$3fmt17h7c65920a3d015228E
+0000000000423494 l     F .text	0000000000000114 _ZN42_$LT$$RF$T$u20$as$u20$core..fmt..Debug$GT$3fmt17h5681f7cba8f4809dE
+000000000042d1b0 l     F .text	000000000000006c _ZN58_$LT$memory_addr..PhysAddr$u20$as$u20$core..fmt..Debug$GT$3fmt17hf92bfcbbf416f57bE
+00000000004236b8 l     F .text	00000000000004f0 _ZN9axruntime2hv6kernel3ipi15ipi_irq_handler17hed9d7f1322f761deE
+000000000042195c l     F .text	000000000000032c _ZN9axruntime2hv6kernel10guest_psci16psci_ipi_handler17hc6911dbab1a70422E
+0000000000420a14 l     F .text	0000000000000030 _ZN58_$LT$allocator..AllocError$u20$as$u20$core..fmt..Debug$GT$3fmt17hb38875872d5d85a1E.467
+0000000000420a44 l     F .text	0000000000000068 _ZN57_$LT$page_table..PageSize$u20$as$u20$core..fmt..Debug$GT$3fmt17hd99d381953938e7aE
+0000000000420aac l     F .text	0000000000000034 _ZN42_$LT$$RF$T$u20$as$u20$core..fmt..Debug$GT$3fmt17h96dcf202ec46c759E
+0000000000420ae0 l     F .text	00000000000000d8 rust_begin_unwind
+0000000000424270 l     F .text	0000000000000168 _ZN44_$LT$$RF$T$u20$as$u20$core..fmt..Display$GT$3fmt17h1916339b61845bcaE
+0000000000420bb8 l     F .text	0000000000000030 _ZN60_$LT$page_table..PagingError$u20$as$u20$core..fmt..Debug$GT$3fmt17h1d5030710b2a073cE
+000000000042d21c l     F .text	000000000000006c _ZN58_$LT$memory_addr..VirtAddr$u20$as$u20$core..fmt..Debug$GT$3fmt17hee32d5007fcf3062E
+00000000004210fc l     F .text	0000000000000820 _ZN9axruntime2hv6kernel10guest_psci17smc_guest_handler17h34bf7e01f01965feE
+000000000042191c l     F .text	0000000000000028 _ZN9axruntime2hv6kernel10guest_psci8smc_call17h3b38c2138dd3b8b9E
+0000000000421944 l     F .text	0000000000000004 _ZN4core3ptr29drop_in_place$LT$$LP$$RP$$GT$17h5d75c08092c4cb28E
+0000000000421948 l     F .text	0000000000000014 _ZN45_$LT$$LP$$RP$$u20$as$u20$core..fmt..Debug$GT$3fmt17h48f05ebcbf612584E.505
+00000000004227dc l     F .text	000000000000006c _ZN9axruntime2hv6kernel11current_cpu17h0e0df284d1adfdcdE
+0000000000421c88 l     F .text	00000000000000f8 _ZN9axruntime2hv6kernel14emureg_handler20vgic_icc_sre_handler17h00a24ec2f219cc39E
+0000000000422b04 l     F .text	000000000000035c _ZN42_$LT$$RF$T$u20$as$u20$core..fmt..Debug$GT$3fmt17hab07e9d76084d468E
+0000000000429ba0 l     F .text	0000000000000464 _ZN4core4char7methods22_$LT$impl$u20$char$GT$16escape_debug_ext17hb18c76c8dc879ea2E
+000000000042a004 l     F .text	0000000000000008 _ZN4core3str16slice_error_fail17h925923b623bd8691E
+0000000000423328 l     F .text	000000000000014c _ZN94_$LT$alloc..collections..vec_deque..VecDeque$LT$T$C$A$GT$$u20$as$u20$core..ops..drop..Drop$GT$4drop17hb4eece3ebb847f72E
+0000000000428e2c l     F .text	00000000000001b8 _ZN4core3fmt8builders11DebugStruct5field17h7f710f8f3aa370bdE
+00000000004235a8 l     F .text	0000000000000030 _ZN42_$LT$$RF$T$u20$as$u20$core..fmt..Debug$GT$3fmt17h62ab3e36307aaea9E
+00000000004235d8 l     F .text	0000000000000098 _ZN42_$LT$$RF$T$u20$as$u20$core..fmt..Debug$GT$3fmt17h0f64711d9d1e8105E
+0000000000423670 l     F .text	0000000000000030 _ZN75_$LT$axruntime..hv..kernel..ipi..PowerEvent$u20$as$u20$core..fmt..Debug$GT$3fmt17h85a20199ef4ca73cE
+00000000004236a0 l     F .text	0000000000000018 _ZN72_$LT$axruntime..hv..kernel..ipi..IpiType$u20$as$u20$core..fmt..Debug$GT$3fmt17h40bb168c84c7eaebE
+0000000000423ba8 l     F .text	00000000000001e4 _ZN9axruntime2hv6kernel3emu16emu_register_dev17hb212948ec77dc892E
+000000000042416c l     F .text	0000000000000104 _ZN10hypercraft4arch6vgicv320VgicInt$LT$H$C$G$GT$8priv_new17ha3137ba5c0fb1472E
+000000000042785c l     F .text	0000000000000048 _ZN5alloc4sync16Arc$LT$T$C$A$GT$9drop_slow17he871dbec119f986dE
+00000000004278a4 l     F .text	000000000000010c _ZN4core3fmt5Write10write_char17hccded4eb3698d231E
+00000000004279ec l     F .text	0000000000000060 _ZN4axio5Write9write_all17h3497af6d1506ce6eE
+00000000004279b0 l     F .text	0000000000000010 _ZN4core3fmt5Write9write_fmt17hc56213a9d864a951E
+00000000004279c0 l     F .text	000000000000002c _ZN77_$LT$axio..Write..write_fmt..Adapter$LT$T$GT$$u20$as$u20$core..fmt..Write$GT$9write_str17h72b0abf5e04ea32cE
+0000000000427a80 l     F .text	0000000000000004 _ZN4core3ptr37drop_in_place$LT$axerrno..AxError$GT$17hb56e58eff2dc5320E
+0000000000427a84 l     F .text	0000000000000008 _ZN4core3ops8function6FnOnce9call_once17h865e97699dca0ca4E
+0000000000427abc l     F .text	0000000000000024 _ZN36_$LT$T$u20$as$u20$core..any..Any$GT$7type_id17h461ffdc9e33d2abbE
+0000000000427fc4 l     F .text	0000000000000084 _ZN4core3fmt9Formatter12pad_integral12write_prefix17hdf089fa1265f84fbE
+00000000004285ec l     F .text	00000000000000e4 _ZN4core9panicking19assert_failed_inner17h6425a04e4cacc472E
+00000000004286d0 l     F .text	000000000000000c _ZN42_$LT$$RF$T$u20$as$u20$core..fmt..Debug$GT$3fmt17h7be275241176dcd8E
+0000000000428910 l     F .text	0000000000000258 _ZN4core3fmt3num52_$LT$impl$u20$core..fmt..Debug$u20$for$u20$usize$GT$3fmt17h3029622a86ef1588E.811
+0000000000428fe4 l     F .text	0000000000000224 _ZN68_$LT$core..fmt..builders..PadAdapter$u20$as$u20$core..fmt..Write$GT$9write_str17h024ddec91fa2e99aE
+0000000000429208 l     F .text	0000000000000078 _ZN68_$LT$core..fmt..builders..PadAdapter$u20$as$u20$core..fmt..Write$GT$10write_char17h8469489b4033d467E
+0000000000429280 l     F .text	0000000000000010 _ZN4core3fmt5Write9write_fmt17hfe996d61a78d5eecE
+0000000000429560 l     F .text	0000000000000034 _ZN4core9panicking18panic_nounwind_fmt7runtime17h5992ddfae2cbc03eE
+0000000000433bb8 l     O .rodata	0000000000000084 _ZN4core7unicode12unicode_data15grapheme_extend17SHORT_OFFSET_RUNS17h193d0185a8be87ecE
+0000000000433c3c l     O .rodata	00000000000002d7 _ZN4core7unicode12unicode_data15grapheme_extend7OFFSETS17h7af8ccc2b809066cE
+000000000042a570 l     F .text	000000000000011c _ZN4core7unicode9printable5check17h288764740da6ab35E
+000000000042a00c l     F .text	0000000000000390 _ZN4core3str19slice_error_fail_rt17h6661abb6ff3a48bcE
+000000000042a39c l     F .text	0000000000000158 _ZN41_$LT$char$u20$as$u20$core..fmt..Debug$GT$3fmt17h9a6e37cb8e3981f3E
+000000000042a4f4 l     F .text	000000000000007c _ZN71_$LT$core..ops..range..Range$LT$Idx$GT$$u20$as$u20$core..fmt..Debug$GT$3fmt17h98af125c1ef3ceaaE
+000000000042af28 l     F .text	00000000000005d8 _ZN3fdt4node9find_node17hd594ecda55bc26dbE
+000000000042b500 l     F .text	000000000000020c _ZN4core3str4iter22SplitInternal$LT$P$GT$4next17h287df1f0ca2824b2E
+000000000042c600 l     F .text	0000000000000014 _ZN4core9panicking13assert_failed17h37c78275729494abE
+000000000042c3b0 l     F .text	0000000000000250 _ZN4core3str4iter22SplitInternal$LT$P$GT$9next_back17h17bf685d2f5e98acE
+000000000042c614 l     F .text	0000000000000264 _ZN42_$LT$$RF$T$u20$as$u20$core..fmt..Debug$GT$3fmt17h66547fdceb36fbd9E
+000000000042d108 l     F .text	0000000000000008 _ZN43_$LT$log..NopLogger$u20$as$u20$log..Log$GT$7enabled17hf5d3d7ae98fbb44bE
+000000000042d110 l     F .text	0000000000000004 _ZN43_$LT$log..NopLogger$u20$as$u20$log..Log$GT$3log17hb76a3c8133d72de0E
+000000000042d480 l     F .text	0000000000000030 _ZN50_$LT$fdt..FdtError$u20$as$u20$core..fmt..Debug$GT$3fmt17h4b923b53ee80e1e3E.1089
+0000000000437000 l     O .data	0000000000000008 _ZN3log6LOGGER17hab630ad04d1f5aabE.1
+0000000000437008 l     O .data	0000000000000020 _ZN9axruntime2hv6kernel14emureg_handler13EMU_REGS_LIST17hc83e3544674b2e81E
+0000000000437028 l     O .data	0000000000000028 _ZN9axruntime2hv6kernel3ipi16IPI_HANDLER_LIST17ha5536b940fe92211E
+0000000000437050 l     O .data	0000000000000028 _ZN9axruntime2hv6kernel3ipi12CPU_INT_LIST17hab623bf0acc9409aE
+0000000000437078 l     O .data	0000000000000028 _ZN9axruntime2hv6kernel3emu13EMU_DEVS_LIST17h1a058bc4bb0b02ceE
+0000000000000000 l     O .percpu	0000000000000001 _ZN5axhal3cpu15__PERCPU_IS_BSP17h4aac7b01cf173817E
+0000000000000008 l     O .percpu	0000000000000008 _ZN5axhal3cpu15__PERCPU_CPU_ID17h10e1599500bab3b2E
+00000000004a1ec8 l     O .bss	0000000000000000 _ZN5axstd2io5stdio6stdout8INSTANCE17h10d68d17d11aa7d3E
+00000000004a1ec8 l     O .bss	0000000000000001 _ZN2of10MY_FDT_PTR17h6e65d78abd280111E.0
+00000000004a1ecc l     O .bss	0000000000000001 __rust_no_alloc_shim_is_unstable
+00000000004a1ed0 l     O .bss	0000000000000008 _ZN9arm_gicv311GIC_LRS_NUM17h2de2f87733252a48E.0
+00000000004a1ed8 l     O .bss	0000000000000008 _ZN9axruntime11INITED_CPUS17h5d91b948dfd4e625E
+00000000004a1ee0 l     O .bss	0000000000000008 _ZN9axruntime2hv6kernel8vm_array12INITED_VCPUS17h4173cbd7a7dca4d2E
+00000000004a1ee8 l     O .bss	0000000000000008 _ZN3log5STATE17h89b262efe72803a0E
+00000000004a1ef0 l     O .bss	0000000000000008 _ZN2of10MY_FDT_PTR17h6e65d78abd280111E.1
+00000000004a1ef8 l     O .bss	0000000000000008 _ZN3log20MAX_LOG_LEVEL_FILTER17h55ca4603cf3356d6E.0
+00000000004a1f00 l     O .bss	0000000000000010 _ZN9arm_gicv39GICD_LOCK17h92d22374ccb71b5dE
+00000000004a1f10 l     O .bss	0000000000000010 _ZN9arm_gicv39GICR_LOCK17hd73da0275a416bfbE
+00000000004a1f20 l     O .bss	0000000000000010 _ZN5axhal8platform14aarch64_common13generic_timer21CNTPCT_TO_NANOS_RATIO17hb645476041be22e7E
+00000000004a1f30 l     O .bss	0000000000000010 _ZN10hypercraft4arch3cpu12PER_CPU_BASE17h00dbd352b58d2e58E
+00000000004a1f40 l     O .bss	0000000000000018 _ZN10hypercraft4arch3cpu14CURRENT_CPU_HV17hd910620a79ea66a5E
+00000000004a1f58 l     O .bss	0000000000000020 _ZN9axruntime2hv6kernel8vm_array8VM_ARRAY17h4c8d22aaebfaa4ebE
+00000000004a1f78 l     O .bss	0000000000000028 _ZN9arm_gicv316INTERRUPT_EN_SET17h746fdf980bf176f5E
+00000000004a1fa0 l     O .bss	0000000000000040 _ZN62_$LT$of..MY_MACHINE_FDT$u20$as$u20$core..ops..deref..Deref$GT$5deref11__stability4LAZY17h8704da97e9314d6aE
+0000000000000000 l    df *ABS*	0000000000000000 compiler_builtins.b6d4295aa4354ef3-cgu.054
+000000000042d4b0 l     F .text	0000000000000004 .hidden memset
+0000000000000000 l    df *ABS*	0000000000000000 compiler_builtins.b6d4295aa4354ef3-cgu.001
+000000000042d4b4 l     F .text	00000000000000fc .hidden _ZN17compiler_builtins3mem6memcpy17h45ad0a154948f175E
+000000000042d5b0 l     F .text	0000000000000214 .hidden _ZN17compiler_builtins3mem7memmove17h7095586a8395d10eE
+000000000042d7c4 l     F .text	0000000000000158 .hidden _ZN17compiler_builtins3mem6memset17h80e8d6bb320f5e01E
+000000000042d91c l     F .text	0000000000000028 .hidden _ZN17compiler_builtins3mem6memcmp17ha89df668c8e670bcE
+0000000000000000 l    df *ABS*	0000000000000000 compiler_builtins.b6d4295aa4354ef3-cgu.057
+000000000042d944 l     F .text	0000000000000004 .hidden memmove
+0000000000000000 l    df *ABS*	0000000000000000 compiler_builtins.b6d4295aa4354ef3-cgu.085
+000000000042d948 l     F .text	0000000000000004 .hidden memcmp
+0000000000000000 l    df *ABS*	0000000000000000 compiler_builtins.b6d4295aa4354ef3-cgu.128
+000000000042d94c l     F .text	0000000000000004 .hidden memcpy
+0000000000404798 g     F .text	0000000000002d8c main
+0000000000426360 g     F .text	00000000000011b0 __TrapHandler_handle_irq_hv
+0000000000421d80 g     F .text	000000000000070c data_abort_handler
+000000000042248c g     F .text	000000000000018c hvc_handler
+000000000041dd1c g     F .text	0000000000002cf8 rust_main
+0000000000422618 g     F .text	00000000000001c4 smc_handler
+000000000042ce34 g     F .text	00000000000001bc init_hv
+0000000000400000 g     F .text	0000000000000070 _start
+000000000040a230 g     F .text	00000000000000d8 current_spxel_irq
+000000000040a064 g     F .text	00000000000000bc handle_el0t_32_error_exception
+0000000000409fa8 g     F .text	00000000000000bc handle_el0t_32_fiq_exception
+0000000000409eec g     F .text	00000000000000bc handle_el0t_32_irq_exception
+0000000000409e30 g     F .text	00000000000000bc handle_el0t_32_sync_exception
+0000000000409d74 g     F .text	00000000000000bc handle_el0t_64_error_exception
+0000000000409cb8 g     F .text	00000000000000bc handle_el0t_64_fiq_exception
+0000000000409bfc g     F .text	00000000000000bc handle_el0t_64_irq_exception
+0000000000409b40 g     F .text	00000000000000bc handle_el0t_64_sync_exception
+0000000000409a84 g     F .text	00000000000000bc handle_el1h_64_error_exception
+00000000004099c8 g     F .text	00000000000000bc handle_el1h_64_fiq_exception
+00000000004099c0 g     F .text	0000000000000008 handle_el1h_64_irq_exception
+000000000040969c g     F .text	0000000000000324 handle_el1h_64_sync_exception
+00000000004095e0 g     F .text	00000000000000bc handle_el1t_64_error_exception
+0000000000409524 g     F .text	00000000000000bc handle_el1t_64_fiq_exception
+0000000000409468 g     F .text	00000000000000bc handle_el1t_64_irq_exception
+00000000004093ac g     F .text	00000000000000bc handle_el1t_64_sync_exception
+000000000040a120 g     F .text	00000000000000bc invalid_exception_el2
+000000000040a308 g     F .text	0000000000000018 lower_aarch64_irq
+000000000040a320 g     F .text	00000000000002b4 lower_aarch64_synchronous
+0000000000400800 g       .text	0000000000000000 exception_vector_base_el2
+0000000000401800 g       .text	0000000000000000 exception_vector_base
+0000000000402a44 g       .text	0000000000000000 ret_to_kernel
+0000000000402a9c g       .text	0000000000000000 ret_to_user
+0000000000402b04 g       .text	0000000000000000 ret_to_first_user
+0000000000402b0c g       .text	0000000000000000 context_vm_entry
+0000000000438000 g       .guestdata	0000000000000000 __guest_dtb_start
+000000000043a000 g       .guestdata	0000000000000000 __guest_kernel_start
+0000000000400000 g       .text	0000000000000000 stext
+00000000004a2000 g       .bss	0000000000000000 ekernel
+000000000042e000 g       .text	0000000000000000 etext
+000000000042e000 g       .rodata	0000000000000000 srodata
+0000000000435000 g       .rodata	0000000000000000 erodata
+000000000043a000 g       .guestdata	0000000000000000 __eguestdata
+0000000000435000 g       .data	0000000000000000 sdata
+0000000000438000 g       .data	0000000000000000 __sguestdata
+0000000000438000 g       .data	0000000000000000 edata
+000000000043a040 g       .percpu	0000000000000000 percpu_end
+000000000043a000 g       .guestdata	0000000000000000 percpu_start
+000000000043c000 g       .bss	0000000000000000 boot_stack
+000000000047c000 g       .bss	0000000000000000 boot_stack_top
+000000000047c000 g       .bss	0000000000000000 sbss
+00000000004a2000 g       .bss	0000000000000000 ebss
+00000000004a2000 g       .guest	0000000000000000 eguest
+00000000004a2000 g       .bss	0000000000000000 sguest
+0000000000000010 g       .percpu	0000000000000000 __percpu_offset_end
+0000000000000000 g       .percpu	0000000000000000 __percpu_offset_start
+0000000000400000 g       *ABS*	0000000000000000 BASE_ADDRESS
+0000000000000040 g       .percpu	0000000000000000 __percpu_size_aligned
+0000000000400000 g       .text	0000000000000000 skernel
+0000000000439d62 g       .guestdata	0000000000000000 __guest_dtb_end
+000000000043a000 g       .guestdata	0000000000000000 __guest_kernel_end
+00000000004a2000 g       .guest	0000000000000000 sguest_dtb
+00000000004a2000 g       .guest	0000000000000000 eguest_dtb
+00000000004a2000 g       .guest	0000000000000000 sguest_kernel
+00000000004a2000 g       .guest	0000000000000000 eguest_kernel
+
 
 
 Disassembly of section .text:
@@ -2422,7 +2836,7 @@ Disassembly of section .text:
   402c78:	f9030e88 	str	x8, [x20, #1560]
   402c7c:	c89ffd8b 	stlr	x11, [x12]
   402c80:	f9400294 	ldr	x20, [x20]
-  402c84:	d53ccb28 	mrs	x8, s3_4_c12_c11_1
+  402c84:	d53ccb28 	mrs	x8, ich_vtr_el2
   402c88:	d35d7d08 	ubfx	x8, x8, #29, #3
   402c8c:	11000515 	add	w21, w8, #0x1
   402c90:	9400aa08 	bl	42d4b0 <memset>
@@ -32120,7 +32534,7 @@ Disassembly of section .text:
   41f860:	f9049feb 	str	x11, [sp, #2360]
   41f864:	f904a3ff 	str	xzr, [sp, #2368]
   41f868:	d63f0100 	blr	x8
-  41f86c:	d53ccb28 	mrs	x8, s3_4_c12_c11_1
+  41f86c:	d53ccb28 	mrs	x8, ich_vtr_el2
   41f870:	92401108 	and	x8, x8, #0x1f
   41f874:	91000509 	add	x9, x8, #0x1
   41f878:	d0000408 	adrp	x8, 4a1000 <_ZN7axalloc16GLOBAL_ALLOCATOR17h04b3423754977f4bE+0x23000>
@@ -32658,9 +33072,9 @@ Disassembly of section .text:
   4200c8:	b900152a 	str	w10, [x9, #20]
   4200cc:	b900192a 	str	w10, [x9, #24]
   4200d0:	b9001d2a 	str	w10, [x9, #28]
-  4200d4:	d51cc9a8 	msr	s3_4_c12_c9_5, x8
+  4200d4:	d51cc9a8 	msr	icc_sre_el2, x8
   4200d8:	d5033fdf 	isb
-  4200dc:	d53ccb28 	mrs	x8, s3_4_c12_c11_1
+  4200dc:	d53ccb28 	mrs	x8, ich_vtr_el2
   4200e0:	92401108 	and	x8, x8, #0x1f
   4200e4:	91000513 	add	x19, x8, #0x1
   4200e8:	aa1f03e1 	mov	x1, xzr

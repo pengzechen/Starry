@@ -4,6 +4,65 @@ extern crate alloc;
 #[macro_use] extern crate axstd;
 use log::*;
 
+const NIMBOS_DTB_SIZE: usize = 7522;
+const NIMBOS_KERNEL_SIZE: usize = 552960;
+// const NIMBOS_KERNEL_SIZE: usize = 292;
+
+
+#[link_section = ".guestdata.dtb"]
+static NIMBOS_DTB: [u8; NIMBOS_DTB_SIZE] = *include_bytes!("../guest/nimbos/nimbos-aarch64.dtb");
+#[link_section = ".guestdata.kernel"]
+static NIMBOS_KERNEL: [u8; NIMBOS_KERNEL_SIZE] = *include_bytes!("../guest/nimbos/nimbos-aarch64.bin");
+#[link_section = ".guestdata.mem"]
+static NIMBOS_MEM: [u8; 0x4000000] = [0; 0x4000000];
+
+extern "C" {
+    fn __guest_dtb_start();
+    fn __guest_dtb_end();
+    fn __guest_kernel_start();
+    fn __guest_kernel_end();
+}
+
+
+
+fn test_dtbdata() {
+    // 地址转换为指针
+    let address: *const u8 = NIMBOS_DTB.as_ptr() as usize as * const u8;
+
+    // 创建一个长度为10的数组来存储读取的数据
+    let mut buffer = [0u8; 20];
+
+    unsafe {
+        // 从指定地址读取10个字节
+        for i in 0..20 {
+            buffer[i] = *address.offset(i as isize);
+        }
+    }
+
+    // 输出读取的数据
+    debug!("{:?}", buffer);
+}
+
+fn test_kerneldata() {
+    // 地址转换为指针
+    let address: *const u8 = NIMBOS_KERNEL.as_ptr() as usize as * const u8;
+
+    // 创建一个长度为10的数组来存储读取的数据
+    let mut buffer = [0u8; 20];
+
+    unsafe {
+        // 从指定地址读取10个字节
+        for i in 0..20 {
+            buffer[i] = *address.offset(i as isize);
+        }
+    }
+
+    // 输出读取的数据
+    debug!("{:?}", buffer);
+}
+
+
+
 use dtb_aarch64::MachineMeta;
 use aarch64_config::*;
 use axstd::info;
@@ -25,11 +84,18 @@ use page_table_entry::MappingFlags;
     println!("Hello, hv!");
 
     {
-        let vm1_kernel_entry = 0x7020_0000;
-        let vm1_dtb = 0x7000_0000;
+        // let vm1_kernel_entry = 0x7020_0000;
+        // let vm1_dtb = 0x7000_0000;
+        
+        let vm1_kernel_entry = __guest_kernel_start as usize;
+        let vm1_dtb = __guest_dtb_start as usize;
+        test_kerneldata();
+        test_dtbdata();
+        
 
         // boot cpu
         PerCpu::<HyperCraftHalImpl>::init(0).unwrap(); 
+        debug!("33");
         // get current percpu
         let percpu = PerCpu::<HyperCraftHalImpl>::ptr_for_cpu(hart_id);
         // create vcpu, need to change addr for aarch64!
@@ -38,6 +104,7 @@ use page_table_entry::MappingFlags;
         percpu.set_active_vcpu(Some(vcpu.clone()));
 
         let vcpus = VcpusArray::new();
+        debug!("42");
 
         // add vcpu into vm
         let vm: VM<HyperCraftHalImpl, GuestPageTable> = VM::new(vcpus, gpt, 0).unwrap();
@@ -49,7 +116,7 @@ use page_table_entry::MappingFlags;
             VM_ARRAY.init_by(vm_array);
             debug!("this is VM_ARRAY: {:p}", &VM_ARRAY as *const _);
         }
-
+        debug!("54");
         add_vm(0, vm);
         let vcpu_id = vcpu.vcpu_id;
         add_vm_vcpu(0, vcpu);
@@ -90,74 +157,74 @@ use page_table_entry::MappingFlags;
 pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
     let mut gpt = GuestPageTable::new()?;
     let meta = MachineMeta::parse(dtb);
-    /* 
-    for virtio in meta.virtio.iter() {
-        gpt.map_region(
-            virtio.base_address,
-            virtio.base_address,
-            0x1000, 
-            MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-        )?;
-        debug!("finish one virtio");
-    }
-    */
-    // hard code for virtio_mmio
-    gpt.map_region(
-        0xa000000,
-        0xa000000,
-        0x4000,
-        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-    )?;
-    debug!("map virtio");   // ok
-    
-    if kernel_entry == 0x7020_0000 {
-        if let Some(pl011) = meta.pl011 {
-            gpt.map_region(
-                pl011.base_address,
-                pl011.base_address,
-                pl011.size,
-                MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-            )?;
-        }
-        debug!("map pl011");
-    }
-    
-    if let Some(pl031) = meta.pl031 {
-        gpt.map_region(
-            pl031.base_address,
-            pl031.base_address,
-            pl031.size,
-            MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-        )?;
-    }
-    debug!("map pl031");
-    if let Some(pl061) = meta.pl061 {
-        gpt.map_region(
-            pl061.base_address,
-            pl061.base_address,
-            pl061.size,
-            MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-        )?;
-    }
-    debug!("map pl061");
-
-    /* 
-    for intc in meta.intc.iter() {
-        gpt.map_region(
-            intc.base_address,
-            intc.base_address,
-            intc.size,
-            MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-        )?;
-    }
-    */
-    // map gicc to gicv. the address is qemu setting, it is different from real hardware
+    // /* 
+    // for virtio in meta.virtio.iter() {
+    //     gpt.map_region(
+    //         virtio.base_address,
+    //         virtio.base_address,
+    //         0x1000, 
+    //         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
+    //     )?;
+    //     debug!("finish one virtio");
+    // }
+    // */
+    // // hard code for virtio_mmio
     // gpt.map_region(
-    //     0x8000000,
-    //     0x8000000,
-    //     0x2_0000,
+    //     0xa000000,
+    //     0xa000000,
+    //     0x4000,
     //     MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
     // )?;
+    // debug!("map virtio");   // ok
+    
+    // if kernel_entry == 0x7020_0000 {
+    //     if let Some(pl011) = meta.pl011 {
+    //         gpt.map_region(
+    //             pl011.base_address,
+    //             pl011.base_address,
+    //             pl011.size,
+    //             MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
+    //         )?;
+    //     }
+    //     debug!("map pl011");
+    // }
+    
+    // if let Some(pl031) = meta.pl031 {
+    //     gpt.map_region(
+    //         pl031.base_address,
+    //         pl031.base_address,
+    //         pl031.size,
+    //         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
+    //     )?;
+    // }
+    // debug!("map pl031");
+    // if let Some(pl061) = meta.pl061 {
+    //     gpt.map_region(
+    //         pl061.base_address,
+    //         pl061.base_address,
+    //         pl061.size,
+    //         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
+    //     )?;
+    // }
+    // debug!("map pl061");
+
+    // /* 
+    // for intc in meta.intc.iter() {
+    //     gpt.map_region(
+    //         intc.base_address,
+    //         intc.base_address,
+    //         intc.size,
+    //         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
+    //     )?;
+    // }
+    // */
+    // // map gicc to gicv. the address is qemu setting, it is different from real hardware
+    // // gpt.map_region(
+    // //     0x8000000,
+    // //     0x8000000,
+    // //     0x2_0000,
+    // //     MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
+    // // )?;
 
     gpt.map_region(
         0x8010000,
@@ -180,41 +247,41 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
     )?;
 
-    // gpt.map_region(
-    //     0x80a0000,
-    //     0x80a0000,
-    //     0xf60000,
-    //     MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-    // )?;
+    // // gpt.map_region(
+    // //     0x80a0000,
+    // //     0x80a0000,
+    // //     0xf60000,
+    // //     MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
+    // // )?;
 
-    debug!("gicd gicv gicr");
+    // debug!("gicd gicv gicr");
 
 
-    if let Some(pcie) = meta.pcie {
-        gpt.map_region(
-            pcie.base_address,
-            pcie.base_address,
-            pcie.size,
-            MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-        )?;
-    }
-    debug!("map pcie");
+    // if let Some(pcie) = meta.pcie {
+    //     gpt.map_region(
+    //         pcie.base_address,
+    //         pcie.base_address,
+    //         pcie.size,
+    //         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
+    //     )?;
+    // }
+    // debug!("map pcie");
 
-    for flash in meta.flash.iter() {
-        gpt.map_region(
-            flash.base_address,
-            flash.base_address,
-            flash.size,
-            MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-        )?;
-    }
-    debug!("map flash");
+    // for flash in meta.flash.iter() {
+    //     gpt.map_region(
+    //         flash.base_address,
+    //         flash.base_address,
+    //         flash.size,
+    //         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
+    //     )?;
+    // }
+    // debug!("map flash");
 
-    info!(
-        "physical memory: [{:#x}: {:#x})",
-        meta.physical_memory_offset,
-        meta.physical_memory_offset + meta.physical_memory_size
-    );
+    // info!(
+    //     "physical memory: [{:#x}: {:#x})",
+    //     meta.physical_memory_offset,
+    //     meta.physical_memory_offset + meta.physical_memory_size
+    // );
     gpt.map_region(
         meta.physical_memory_offset,
         meta.physical_memory_offset,
@@ -223,9 +290,9 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
     )?;
     debug!("map physical memeory");
 
-    // let vaddr = 0x8010000;
-    // let hpa = gpt.translate(vaddr)?;
-    // debug!("translate vaddr: {:#x}, hpa: {:#x}", vaddr, hpa);
+    // // let vaddr = 0x8010000;
+    // // let hpa = gpt.translate(vaddr)?;
+    // // debug!("translate vaddr: {:#x}, hpa: {:#x}", vaddr, hpa);
 
     gpt.map_region(
         NIMBOS_KERNEL_BASE_VADDR,
@@ -234,7 +301,31 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE | MappingFlags::USER,
     )?;
 
+    // Ok(gpt)
+    gpt.map_region( 0xFEB50000, 0xFEB50000, 0x1000,MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,) ?;
+    debug!("map virtio");   // ok
+     
+    info!( "physical memory: [{:#x}: {:#x}]", meta.physical_memory_offset, meta.physical_memory_offset + meta.physical_memory_size );
+
+    // gpt.map_region(
+    //     0x7020_0000,
+    //     0x7020_0000,
+    //     0x40000,
+    //     MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE | MappingFlags::USER,
+    // )?;
+
+    gpt.map_region(
+        0x43a000,
+        0x43a000,
+        0x40000,
+        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE | MappingFlags::USER,
+    )?;
+    debug!("map physical memeory");
+
     Ok(gpt)
+
+
+    
 }
 
 /*
