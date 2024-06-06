@@ -3,6 +3,14 @@
 .global _start
 
 _start:
+
+    // 读取 SCTLR 寄存器
+    mrs x1, SCTLR_EL1
+    // 禁用对齐检查（清除 A 位）
+    bic x1, x1, #0x2
+    // 写回 SCTLR 寄存器
+    msr SCTLR_EL1, x1
+
     // 设置栈指针
     ldr x0, =_stack_top
     mov sp, x0
