@@ -212,6 +212,8 @@ const BOOT_MAP_SIZE: usize = 1 << BOOT_MAP_SHIFT; // 1GB
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE,
         true,
     );
+
+    idmap_device(0x900_0000);
 }
 
 pub(crate) unsafe fn idmap_device(phys_addr: usize) {

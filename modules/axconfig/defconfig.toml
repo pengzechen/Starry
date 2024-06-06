@@ -13,10 +13,13 @@ phys-memory-size = "0"
 kernel-base-paddr = "0"
 # Base virtual address of the kernel image.
 kernel-base-vaddr = "0"
+hv-kernel-base-vaddr = "0"
 
 # Linear mapping offset, for quick conversions between physical and virtual
 # addresses.
 phys-virt-offset = "0"
+hv-phys-virt-offset = "0"
+
 # MMIO regions with format (`base_paddr`, `size`).
 mmio-regions = []
 # VirtIO MMIO regions with format (`base_paddr`, `size`).

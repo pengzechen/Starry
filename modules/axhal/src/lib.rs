@@ -64,8 +64,7 @@ pub const KERNEL_PROCESS_ID: u64 = 1;
 pub use platform::aarch64_common::gicv3;
 
 //rk3588
-pub use platform::aarch64_common::dw_apb_uart::UART;
-// pub use platform::aarch64_common::pl011::UART;
+pub use platform::aarch64_common::console::UART;
 
 
 #[cfg(all(feature = "hv", feature = "irq", not(feature = "gic_v3")))]
@@ -93,6 +92,7 @@ mod platform;
 pub mod arch;
 pub mod cpu;
 pub mod mem_map;
+pub use mem_map::PHYS_VIRT_OFFSET;
 pub mod time;
 pub mod trap;
 

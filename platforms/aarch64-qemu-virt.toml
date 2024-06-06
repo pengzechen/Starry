@@ -9,11 +9,14 @@ family = "aarch64-qemu-virt"
 kernel-base-paddr = "0x4008_0000"
 # Base virtual address of the kernel image.
 kernel-base-vaddr = "0xffff_0000_4008_0000"
+hv-kernel-base-vaddr = "0x0000_0000_4008_0000"
 
 
 # Linear mapping offset, for quick conversions between physical and virtual
 # addresses.
 phys-virt-offset = "0xffff_0000_0000_0000"
+hv-phys-virt-offset = "0x0000_0000_0000_0000"
+
 # MMIO regions with format (`base_paddr`, `size`).
 mmio-regions = [
     ["0x0900_0000", "0x1000"],      # PL011 UART
@@ -76,7 +79,7 @@ gicc-paddr = "0x0801_0000"
 gicd-paddr = "0x0800_0000"
 
 # PSCI
-psci-method = "hvc"
+psci-method = "smc"
 
 # Testcase memory start address.
 testcase-memory-start = "0xd000_0000"

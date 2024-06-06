@@ -72,10 +72,6 @@ log-level-trace = ["axfeat/log-level-trace"]
 
 # Hypervisor
 hv = ["dep:hypercraft", "axruntime/hv"]
-platform-rk3588-aarch64 = ["axhal/platform-rk3588-aarch64", "bus-mmio"]
-
-platform-aarch64-qemu-virt-hv = ["axhal/platform-aarch64-qemu-virt-hv"]
-
 
 [dependencies]
 axfeat = { path = "../../api/axfeat" }

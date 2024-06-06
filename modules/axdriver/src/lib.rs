@@ -156,7 +156,8 @@ pub fn init_drivers() -> AllDevices {
 
     #[cfg(feature = "img")]
     {
-        use axconfig::{PHYS_VIRT_OFFSET, TESTCASE_MEMORY_SIZE, TESTCASE_MEMORY_START};
+        use axhal::PHYS_VIRT_OFFSET;
+        use axconfig::{TESTCASE_MEMORY_SIZE, TESTCASE_MEMORY_START};
         let mut ram_disk = driver_block::ramdisk::RamDisk::new(TESTCASE_MEMORY_SIZE);
         unsafe {
             ram_disk.copy_from_slice((TESTCASE_MEMORY_START + PHYS_VIRT_OFFSET) as *const u8)

@@ -18,15 +18,8 @@ irq = []
 tls = ["alloc"]
 signal = []
 monolithic = ["paging", "dep:axfs_ramfs"]
-hv = ["paging", "irq", "axconfig/hv", "percpu/hv", "arm_gic/hv", "arm_gicv3/hv","platform-rk3588-aarch64"]
+hv = ["paging", "irq", "axconfig/hv", "percpu/hv", "arm_gic/hv", "arm_gicv3/hv"]
 
-platform-rk3588-aarch64 = [
-    "axconfig/platform-rk3588-aarch64",
-    "dep:page_table_entry", "dep:ratio",
-]
-
-
-platform-aarch64-qemu-virt-hv = ["axconfig/platform-aarch64-qemu-virt-hv"]
 
 gic_v3 = []
 default = []
@@ -42,10 +35,10 @@ axconfig = { path = "../axconfig" }
 axalloc = { path = "../axalloc", optional = true }
 kernel_guard = { path = "../../crates/kernel_guard" }
 spinlock = { path = "../../crates/spinlock" }
-ratio = { path = "../../crates/ratio" ,optional = true}
+ratio = { path = "../../crates/ratio"}
 lazy_init = { path = "../../crates/lazy_init",optional = true }
 page_table = { path = "../../crates/page_table", optional = true }
-page_table_entry = { path = "../../crates/page_table_entry" ,optional = true}
+page_table_entry = { path = "../../crates/page_table_entry"}
 percpu = { path = "../../crates/percpu" }
 memory_addr = { path = "../../crates/memory_addr" }
 handler_table = { path = "../../crates/handler_table" }

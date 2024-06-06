@@ -8,6 +8,10 @@ use tock_registers::interfaces::{ReadWriteable, Readable, Writeable};
 #[link_section = ".bss.stack"]
 static mut BOOT_STACK: [u8; TASK_STACK_SIZE] = [0; TASK_STACK_SIZE];
 
+
+
+
+
 unsafe fn switch_to_el1() {
     SPSel.write(SPSel::SP::ELx);
     SP_EL0.set(0);
@@ -165,7 +169,7 @@ unsafe extern "C" fn _start() -> ! {
         start = sym _start,
         idmap_kernel = sym crate::platform::mem::idmap_kernel,
         boot_stack_size = const TASK_STACK_SIZE,
-        phys_virt_offset = const axconfig::PHYS_VIRT_OFFSET,
+        phys_virt_offset = crate::PHYS_VIRT_OFFSET,
         entry = sym crate::platform::rust_entry,
         options(noreturn),
     );
@@ -186,6 +190,10 @@ unsafe extern "C" fn _start() -> ! {
         mov x0, #2
         bl  {cache_invalidate}
 
+        mov x8, #97
+        mov x9, #0x09000000 //串口地址，需要变化
+        str x8, [x9]
+
         ldr x8, ={exception_vector_base_el2}    // setup vbar_el2 for hypervisor
         msr vbar_el2, x8
 
@@ -199,6 +207,11 @@ unsafe extern "C" fn _start() -> ! {
         adrp    x0, {start}             // kernel image phys addr
         bl      {idmap_kernel}
         bl      {init_mmu_el2}
+
+        mov x8, #97
+        mov x9, #0x09000000 //串口地址，需要变化
+        str x8, [x9]
+        
         bl      {switch_to_el2}         // switch to EL1
         bl      {enable_fp}             // enable fp/neon
 
@@ -219,7 +232,7 @@ unsafe extern "C" fn _start() -> ! {
         enable_fp = sym enable_fp,
         boot_stack = sym BOOT_STACK,
         boot_stack_size = const TASK_STACK_SIZE,
-        phys_virt_offset = const axconfig::PHYS_VIRT_OFFSET,
+        phys_virt_offset = const crate::PHYS_VIRT_OFFSET,
         entry = sym crate::platform::rust_entry,
         options(noreturn),
     );
@@ -250,7 +263,7 @@ unsafe extern "C" fn _start_secondary() -> ! {
         switch_to_el1 = sym switch_to_el1,
         init_mmu = sym init_mmu,
         enable_fp = sym enable_fp,
-        phys_virt_offset = const axconfig::PHYS_VIRT_OFFSET,
+        phys_virt_offset = crate::PHYS_VIRT_OFFSET,
         entry = sym crate::platform::rust_entry_secondary,
         options(noreturn),
     )

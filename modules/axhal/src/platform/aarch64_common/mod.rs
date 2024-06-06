@@ -4,24 +4,9 @@ mod boot;
 #[cfg(not(platform_family = "aarch64-raspi"))]
 pub mod mp;
 
-pub mod dw_apb_uart;
-// pub mod pl011;
-// rk3588
-pub mod console {
-    pub use super::dw_apb_uart::*;
-}
-// pub mod console {
-//     pub use super::pl011::*;
-// }
-
-pub mod misc {
-    pub use crate::platform::aarch64_common::psci::system_off as terminate;
-}
-
-// pub use crate::platform::aarch64_common::generic_timer_hv::init_percpu;
-
 #[cfg(not(platform_family = "aarch64-raspi"))]
 pub mod psci;
+
 //xh not sure
 cfg_if::cfg_if! {
     if #[cfg(all(feature = "irq" , not(feature = "gic_v3")))] {
@@ -39,19 +24,28 @@ cfg_if::cfg_if! {
     }
 }
 
-mod generic_timer;
-pub mod time {
-    pub use super::generic_timer::*;
+cfg_if::cfg_if! {
+    if #[cfg(feature = "hv")] {
+        mod generic_timer_hv;
+        pub mod time {
+            pub use super::generic_timer_hv::*;
+        }
+    } else {
+        mod generic_timer;
+        pub mod time {
+            pub use super::generic_timer::*;
+        }
+    }
 }
 
 cfg_if::cfg_if! {
     if #[cfg(any(platform_family = "aarch64-bsta1000b", platform_family= "aarch64-rk3588j"))] {
-        pub mod dw_apb_uart;
+        mod dw_apb_uart;
         pub mod console {
             pub use super::dw_apb_uart::*;
         }
     } else if #[cfg(any(platform_family = "aarch64-raspi", platform_family = "aarch64-qemu-virt"))] {
-        pub mod pl011;
+        mod pl011;
         pub mod console {
             pub use super::pl011::*;
         }
@@ -131,21 +125,3 @@ pub fn platform_init_secondary() {
 pub fn platform_name() -> &'static str {
     of::machin_name()
 }
-
-
-#[cfg(all(feature = "irq", feature = "hv"))]
-pub mod generic_timer_hv;
-
-// #[cfg(all(feature = "irq", feature = "gic_v3"))]
-// pub mod gicv3;
-
-
-
-
-// rk3588 这个地方暂时使用 qemu-virt 
-// mod qemu_virt_aarch64;
-// pub use self::qemu_virt_aarch64::*;
-
-// pub(crate) mod aarch64_common;
-// pub use self::aarch64_common::gicv3;
-    

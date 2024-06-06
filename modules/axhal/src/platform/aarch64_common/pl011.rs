@@ -42,7 +42,7 @@ pub fn init() {
     info!("this is init pl011 irq");
     // not 33 temp change  axconfig::UART_IRQ
     // crate::irq::set_enable(crate::platform::irq::UART_IRQ_NUM, true);
-    crate::irq::set_enable(axconfig::UART_IRQ_NUM, true);
+    crate::irq::set_enable(axconfig::UART_IRQ, true);
 }
 
 /// UART IRQ Handler

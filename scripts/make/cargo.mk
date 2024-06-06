@@ -8,8 +8,6 @@ else
   verbose :=
 endif
 
-features-y := axstd/platform-$(PLATFORM)
-
 ifeq ($(shell test $(SMP) -gt 1; echo $$?),0)
   features-y += axstd/smp
 endif
