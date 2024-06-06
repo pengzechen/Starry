@@ -29,6 +29,7 @@ features-$(NET)       += axstd/net
 features-$(GRAPHIC)   += axstd/display
 features-$(HV)        += axstd/hv 
 
+
 build_args-release := --release
 
 build_args := \
@@ -36,6 +37,7 @@ build_args := \
   --target-dir $(CURDIR)/target \
   $(build_args-$(MODE)) \
   --features "$(features-y)" \
+   --bin $(BIN_TYPE)\
   $(verbose)
 
 RUSTFLAGS := -C link-arg=-T$(LD_SCRIPT) -C link-arg=-no-pie

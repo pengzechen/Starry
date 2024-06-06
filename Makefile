@@ -78,6 +78,8 @@ else
   APP_TYPE := c
 endif
 
+BIN_TYPE :=
+
 # Architecture, platform and target
 ifneq ($(filter $(MAKECMDGOALS),unittest unittest_no_fail_fast),)
   PLATFORM_NAME :=

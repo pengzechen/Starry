@@ -11,9 +11,9 @@ const NIMBOS_MEM_SIZE: usize = 0x80_0000;
 
 
 #[link_section = ".guestdata.dtb"]
-static NIMBOS_DTB: [u8; NIMBOS_DTB_SIZE] = *include_bytes!("../guest/nimbos/nimbos-aarch64.dtb");
+static NIMBOS_DTB: [u8; NIMBOS_DTB_SIZE] = *include_bytes!("../../guest/nimbos/nimbos-aarch64.dtb");
 #[link_section = ".guestdata.kernel"]
-static NIMBOS_KERNEL: [u8; NIMBOS_KERNEL_SIZE] = *include_bytes!("../guest/nimbos/nimbos-aarch64.bin");
+static NIMBOS_KERNEL: [u8; NIMBOS_KERNEL_SIZE] = *include_bytes!("../../guest/nimbos/nimbos-aarch64.bin");
 #[link_section = ".guestdata.mem"]
 static NIMBOS_MEM: [u8; NIMBOS_MEM_SIZE] = [0; NIMBOS_MEM_SIZE];
 
@@ -62,10 +62,14 @@ fn test_kerneldata() {
     debug!("{:?}", buffer);
 }
 
+pub use arceos_hv::dtb_aarch64::*;
+pub use arceos_hv::aarch64_config::*;
 
+// mod dtb_aarch64;
+// mod aarch64_config;
 
-use dtb_aarch64::MachineMeta;
-use aarch64_config::*;
+// mod dtb_aarch64::MachineMeta;
+// mod aarch64_config::*;
 use axstd::info;
 use axstd::hv::{
         GuestPageTable, GuestPageTableTrait, HyperCraftHalImpl, PerCpu,
@@ -76,8 +80,8 @@ use axstd::hv::{
         is_vcpu_primary_ok,
         run_vm_vcpu, 
 };
-mod dtb_aarch64;
-mod aarch64_config;
+// use dtb_aarch64;
+// use aarch64_config;
 use alloc::vec::Vec;
 use page_table_entry::MappingFlags;
 

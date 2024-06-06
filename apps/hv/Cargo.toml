@@ -15,3 +15,9 @@ fdt = {version = "0.1.5"}
 arrayvec = { version = "0.7.2", default-features = false }
 spin = "0.9"
 log = "0.4"
+
+
+# Example of customizing binaries in Cargo.toml.
+[[bin]]
+name = "rk3588"
+path = "src/bin/rk3588.rs"
