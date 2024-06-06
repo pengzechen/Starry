@@ -6,8 +6,8 @@ use log::*;
 
 use dtb_aarch64::MachineMeta;
 use aarch64_config::*;
-use axstd::info;
-use axstd::hv::{
+use libax::info;
+use libax::hv::{
         GuestPageTable, GuestPageTableTrait, HyperCraftHalImpl, PerCpu,
         Result, VM, VcpusArray, 
         VM_ARRAY, VM_MAX_NUM,
@@ -21,18 +21,13 @@ mod aarch64_config;
 use alloc::vec::Vec;
 use page_table_entry::MappingFlags;
 
-/*
- * 运行需要nimbos启用gicv3
- * 
-*/
-
 #[no_mangle] fn main(hart_id: usize) {
     println!("Hello, hv!");
 
     {
         // qemu-virt
-        let vm1_kernel_entry = 0x7020_0000;
-        let vm1_dtb = 0x7000_0000;
+        // let vm1_kernel_entry = 0x7020_0000;
+        // let vm1_dtb = 0x7000_0000;
 
         // boot cpu
         PerCpu::<HyperCraftHalImpl>::init(0).unwrap(); 
@@ -96,7 +91,17 @@ use page_table_entry::MappingFlags;
 pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
     let mut gpt = GuestPageTable::new()?;
     let meta = MachineMeta::parse(dtb);
-
+    /* 
+    for virtio in meta.virtio.iter() {
+        gpt.map_region(
+            virtio.base_address,
+            virtio.base_address,
+            0x1000, 
+            MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
+        )?;
+        debug!("finish one virtio");
+    }
+    */
     // hard code for virtio_mmio
     gpt.map_region(
         0xa000000,
@@ -137,13 +142,41 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
     }
     debug!("map pl061");
 
+    /* 
+    for intc in meta.intc.iter() {
+        gpt.map_region(
+            intc.base_address,
+            intc.base_address,
+            intc.size,
+            MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
+        )?;
+    }
+    */
+    // map gicc to gicv. the address is qemu setting, it is different from real hardware
     // gicv3 needn't
     gpt.map_region(
-        0x8000000,
-        0x8000000,
+        0x8010000,
+        0x8040000,
+        0x2000,
+        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
+    )?;
+    // gicv3 needn't
+    gpt.map_region(
+        0x8020000,
+        0x8020000,
         0x20000,
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
     )?;
+
+    // v3 its nimbos needn't
+    gpt.map_region(
+        0x8080000,
+        0x8080000,
+        0x20000,
+        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
+    )?;
+
+    debug!("map its");
 
     if let Some(pcie) = meta.pcie {
         gpt.map_region(
@@ -177,6 +210,10 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE | MappingFlags::USER,
     )?;
     debug!("map physical memeory");
+
+    // let vaddr = 0x8010000;
+    // let hpa = gpt.translate(vaddr)?;
+    // debug!("translate vaddr: {:#x}, hpa: {:#x}", vaddr, hpa);
 
     gpt.map_region(
         NIMBOS_KERNEL_BASE_VADDR,

@@ -280,9 +280,9 @@ fn init_allocator() {
     for r in memory_regions() {
         if r.flags.contains(MemRegionFlags::FREE) && r.paddr != max_region_paddr {
             // debug!("{:?} 282",r);
-            if r.paddr == 0x1_f000_0000.into(){
-                break;
-            }
+            // if r.paddr == 0x1_f000_0000.into(){
+            //     break;
+            // }
             axalloc::global_add_memory(phys_to_virt(r.paddr).as_usize(), r.size)
                 .expect("add heap memory region failed");
             // debug!("{:?} 285",r);

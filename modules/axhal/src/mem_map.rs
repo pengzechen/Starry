@@ -23,11 +23,11 @@ bitflags::bitflags! {
         /// Device memory. (e.g., MMIO regions)
         const DEVICE        = 1 << 4;
         /// Uncachable memory. (e.g., framebuffer)
-        // const UNCACHED      = 1 << 5;
+        const UNCACHED      = 1 << 5;
         /// Reserved memory, do not use for allocation.
-        const RESERVED      = 1 << 5;
+        const RESERVED      = 1 << 6;
         /// Free memory for allocation.
-        const FREE          = 1 << 6;
+        const FREE          = 1 << 7;
     }
 }
 
