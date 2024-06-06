@@ -20,22 +20,115 @@ mod aarch64_config;
 use alloc::vec::Vec;
 use page_table_entry::MappingFlags;
 
+// #[link_section = ".guest.dtb"]
+// static NIMBOS_DTB: [u8; 7522] = *include_bytes!("../guest/nimbos/nimbos-aarch64-v3.dtb");
+// #[link_section = ".guest.kernel"]
+// static NIMBOS_KERNEL: [u8; 552960] = *include_bytes!("../../hv/guest/nimbos/nimbos-aarch64-v3.bin");
+
+const NIMBOS_DTB_SIZE: usize = 7522;
+const NIMBOS_KERNEL_SIZE: usize = 552960;
+// const NIMBOS_KERNEL_SIZE: usize = 532;
+const NIMBOS_MEM_SIZE: usize = 0x80_0000;
+
+#[link_section = ".guestdata.dtb"]
+static NIMBOS_DTB: [u8; NIMBOS_DTB_SIZE] = *include_bytes!("../guest/nimbos/nimbos-aarch64-v3.dtb");
+#[link_section = ".guestdata.kernel"]
+static NIMBOS_KERNEL: [u8; NIMBOS_KERNEL_SIZE] = *include_bytes!("../guest/nimbos/nimbos-aarch64-v3.bin");
+// #[link_section = ".guestdata.kernel"]
+// static NIMBOS_KERNEL: [u8; NIMBOS_KERNEL_SIZE] = *include_bytes!("../guest/testos/testos.bin");
+
+// 不拷贝到高地址时临时使用
+#[link_section = ".guestdata.mem"]
+static NIMBOS_MEM: [u8; NIMBOS_MEM_SIZE] = [0; NIMBOS_MEM_SIZE];
+
+extern "C" {
+    fn __guest_dtb_start();
+    fn __guest_dtb_end();
+    fn __guest_kernel_start();
+    fn __guest_kernel_end();
+}
+
+fn test_dtbdata() {
+    // 地址转换为指针
+    let address: *const u8 = NIMBOS_DTB.as_ptr() as usize as * const u8;
+
+    // 创建一个长度为10的数组来存储读取的数据
+    let mut buffer = [0u8; 20];
+
+    unsafe {
+        // 从指定地址读取10个字节
+        for i in 0..20 {
+            buffer[i] = *address.offset(i as isize);
+        }
+    }
+
+    // 输出读取的数据
+    debug!("{:?}", buffer);
+}
+
+fn test_kerneldata() {
+    // 地址转换为指针
+    let address: *const u8 = NIMBOS_KERNEL.as_ptr() as usize as * const u8;
+
+    // 创建一个长度为10的数组来存储读取的数据
+    let mut buffer = [0u8; 20];
+
+    unsafe {
+        // 从指定地址读取10个字节
+        for i in 0..20 {
+            buffer[i] = *address.offset(i as isize);
+        }
+    }
+
+    // 输出读取的数据
+    debug!("{:?}", buffer);
+}
+
+fn copy_high_data() -> usize {
+
+    //  申请一块内存  大小为 memory 大小
+    use alloc::alloc::Layout;
+    let layout = Layout::from_size_align(NIMBOS_MEM_SIZE, 8192).unwrap();
+    let area_base: *mut u8 = unsafe { alloc::alloc::alloc_zeroed(layout) };
+    info!("base: {:#x}, layout size: {:#x}", area_base as usize, layout.size());
+
+    let tls_load_base = __guest_kernel_start as *mut u8;
+    let tls_load_size = __guest_kernel_end as usize - __guest_kernel_start as usize;
+    unsafe {
+        // copy data from .tbdata section
+        core::ptr::copy_nonoverlapping(
+            tls_load_base,
+            area_base,
+            tls_load_size,
+        );
+    }
+
+    area_base as usize
+}
+
 #[no_mangle] fn main(hart_id: usize) {
     println!("Hello, hv!");
 
+    // 以下三行保证数据顺利链接到img
+    test_dtbdata();
+    test_kerneldata();
+    debug!("{}", NIMBOS_MEM[0]);
+    
     {
-        // qemu-virt
-        // let vm1_kernel_entry = 0x7020_0000;
-        // let vm1_dtb = 0x7000_0000;
+        let vm1_dtb = __guest_dtb_start as usize;
+        let vm1_kernel_entry = NIMBOS_KERNEL_BASE_PADDR;
+        
 
         // boot cpu
         PerCpu::<HyperCraftHalImpl>::init(0).unwrap(); 
         // get current percpu
         let percpu = PerCpu::<HyperCraftHalImpl>::ptr_for_cpu(hart_id);
         // create vcpu, need to change addr for aarch64!
-        let gpt = setup_gpm(vm1_dtb, vm1_kernel_entry).unwrap();  
+        let gpt = setup_gpm(vm1_dtb).unwrap();  
         let vcpu = percpu.create_vcpu(0, 0).unwrap();
         percpu.set_active_vcpu(Some(vcpu.clone()));
+
+        info!("percpu set ok");
 
         let vcpus = VcpusArray::new();
 
@@ -87,139 +180,74 @@ use page_table_entry::MappingFlags;
     // run_vm_vcpu(1, 0);
 }
 
-pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
-    let mut gpt = GuestPageTable::new()?;
+unsafe extern "C" fn set_not_algin() {
+    core::arch::asm!("
+    // 读取 SCTLR 寄存器
+    mrs x1, SCTLR_EL2
+    // 禁用对齐检查（清除 A 位）
+    bic x1, x1, #0x2
+    // 写回 SCTLR 寄存器
+    msr SCTLR_EL2, x1
+    ");
+}
+
+pub fn setup_gpm(dtb: usize) -> Result<GuestPageTable> {
+    let mut gpt = GuestPageTable::new() ?;
     let meta = MachineMeta::parse(dtb);
-    /* 
-    for virtio in meta.virtio.iter() {
-        gpt.map_region(
-            virtio.base_address,
-            virtio.base_address,
-            0x1000, 
-            MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-        )?;
-        debug!("finish one virtio");
-    }
-    */
-    // hard code for virtio_mmio
-    gpt.map_region(
-        0xa000000,
-        0xa000000,
-        0x4000,
+
+    //unsafe { set_not_algin(); }
+
+    gpt.map_region(0x900_0000,0xFEB50000,0x1000,
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-    )?;
+    ) ?;
+    
     debug!("map virtio");   // ok
     
-    if kernel_entry == 0x7020_0000 {
-        if let Some(pl011) = meta.pl011 {
-            gpt.map_region(
-                pl011.base_address,
-                pl011.base_address,
-                pl011.size,
-                MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-            )?;
-        }
-        debug!("map pl011");
-    }
-    
-    if let Some(pl031) = meta.pl031 {
-        gpt.map_region(
-            pl031.base_address,
-            pl031.base_address,
-            pl031.size,
-            MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-        )?;
-    }
-    debug!("map pl031");
-    if let Some(pl061) = meta.pl061 {
-        gpt.map_region(
-            pl061.base_address,
-            pl061.base_address,
-            pl061.size,
-            MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-        )?;
-    }
-    debug!("map pl061");
+    info!( "physical memory: [{:#x}: {:#x}]", meta.physical_memory_offset, meta.physical_memory_offset + meta.physical_memory_size );
 
-    /* 
-    for intc in meta.intc.iter() {
-        gpt.map_region(
-            intc.base_address,
-            intc.base_address,
-            intc.size,
-            MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-        )?;
-    }
-    */
-    // map gicc to gicv. the address is qemu setting, it is different from real hardware
-    // gicv3 needn't
+    // 拷贝 gusetdata 的数据到内存
+    //let addr = copy_high_data();
+    // gpt.map_region(
+    //     kernel_entry,
+    //     addr, 
+    //     NIMBOS_MEM_SIZE,
+    //     MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE | MappingFlags::USER,
+    // ) ?;
+    //debug!("map kernel_entry {:#x} to alloced mem addr {:#x}", kernel_entry, addr);
+
+    // nimbos memory
     gpt.map_region(
-        0x8010000,
-        0x8040000,
-        0x2000,
-        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-    )?;
-    // gicv3 needn't
-    gpt.map_region(
-        0x8020000,
-        0x8020000,
-        0x20000,
-        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-    )?;
-
-    // v3 its nimbos needn't
-    gpt.map_region(
-        0x8080000,
-        0x8080000,
-        0x20000,
-        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-    )?;
-
-    debug!("map its");
-
-    if let Some(pcie) = meta.pcie {
-        gpt.map_region(
-            pcie.base_address,
-            pcie.base_address,
-            pcie.size,
-            MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-        )?;
-    }
-    debug!("map pcie");
-
-    for flash in meta.flash.iter() {
-        gpt.map_region(
-            flash.base_address,
-            flash.base_address,
-            flash.size,
-            MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-        )?;
-    }
-    debug!("map flash");
-
-    info!(
-        "physical memory: [{:#x}: {:#x})",
-        meta.physical_memory_offset,
-        meta.physical_memory_offset + meta.physical_memory_size
-    );
-    gpt.map_region(
-        meta.physical_memory_offset,
-        meta.physical_memory_offset,
-        meta.physical_memory_size,
+        0x7000_0000,
+        0x7000_0000,
+        NIMBOS_MEM_SIZE,
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE | MappingFlags::USER,
-    )?;
+    ) ?;
+    debug!("map physical memeory");
+    // nimbos memory
+    gpt.map_region(
+        0x4000_0000,
+        0x4000_0000,
+        0x8_0000,
+        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE | MappingFlags::USER,
+    ) ?;
     debug!("map physical memeory");
 
-    // let vaddr = 0x8010000;
-    // let hpa = gpt.translate(vaddr)?;
-    // debug!("translate vaddr: {:#x}, hpa: {:#x}", vaddr, hpa);
-
+    // 任意的 kernel entry 都能映射到 439000
+    // 将 0000_0000_4008_0000 映射到kernel img地址
     gpt.map_region(
-        NIMBOS_KERNEL_BASE_VADDR,
-        kernel_entry,
-        meta.physical_memory_size,
+        NIMBOS_KERNEL_BASE_PADDR,
+        __guest_kernel_start as usize,
+        NIMBOS_MEM_SIZE,
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE | MappingFlags::USER,
-    )?;
+    ) ?;
+    
+    // 将 ffff_0000_4008_0000 映射到kernel img地址
+    // gpt.map_region(
+    //     NIMBOS_KERNEL_BASE_VADDR,
+    //     __guest_kernel_start as usize,
+    //     NIMBOS_MEM_SIZE,
+    //     MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE | MappingFlags::USER,
+    // ) ?;
 
     Ok(gpt)
 }
