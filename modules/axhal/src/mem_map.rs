@@ -1,6 +1,7 @@
 //! Physical memory management.
 
 use core::fmt;
+use crate::platform::aarch64_common::mem::platform_regions;
 
 #[cfg(feature = "hv")]
 pub const PHYS_VIRT_OFFSET: usize = axconfig::HV_PHYS_VIRT_OFFSET;
@@ -77,7 +78,7 @@ pub const fn phys_to_virt(paddr: PhysAddr) -> VirtAddr {
 
 /// Returns an iterator over all physical memory regions.
 pub fn memory_regions() -> impl Iterator<Item = MemRegion> {
-    kernel_image_regions().chain(crate::platform::aarch64_common::mem::platform_regions())
+    kernel_image_regions().chain(platform_regions())
 }
 
 /// Returns the memory regions of the kernel image (code and data sections).
