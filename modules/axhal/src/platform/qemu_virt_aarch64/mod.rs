@@ -11,7 +11,9 @@ pub mod irq {
 }
 
 pub mod console {
-    // pub use crate::platform::aarch64_common::pl011::*;
+    #[cfg(feature = "platform-qemu-virt-aarch64")]
+    pub use crate::platform::aarch64_common::pl011::*;
+    #[cfg(feature = "platform-rk3588-aarch64")]
     pub use crate::platform::aarch64_common::dw_apb_uart::*;   // 临时修改
 }
 
@@ -38,7 +40,6 @@ extern "C" {
 pub(crate) unsafe extern "C" fn rust_entry(cpu_id: usize, dtb: usize) {
     crate::mem::clear_bss();
     crate::arch::set_exception_vector_base(exception_vector_base as usize);
-    axlog::ax_println!("cpuid: {:#?}, dtb: {:#?}\n", cpu_id, dtb);
     crate::cpu::init_primary(cpu_id);
     console::init_early();             // 初始化锁
     time::init_early();     // 读寄存器 初始化频率 

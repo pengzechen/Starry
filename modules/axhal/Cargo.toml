@@ -16,7 +16,7 @@ irq     = []
 paging  = ["axalloc", "page_table"]
 hv      = [
     "paging", 
-    "platform-rk3588-aarch64", 
+    "platform-qemu-virt-aarch64", 
     "axconfig/hv", 
     "percpu/hv", 
     "arm_gic/hv"

@@ -287,13 +287,13 @@ unsafe extern "C" fn _start() -> ! {
     #[cfg(feature = "hv")]
     core::arch::asm!("
         // disable cache and MMU
-        mrs x1, sctlr_el2
-        bic x1, x1, #0xf
-        msr sctlr_el2, x1
+        // mrs x1, sctlr_el2
+        // bic x1, x1, #0xf
+        // msr sctlr_el2, x1
 
-        mrs x8, currentel
-        cmp x8, #2 << 2
-        b.ne .
+        // mrs x8, currentel
+        // cmp x8, #2 << 2
+        // b.ne .
 
         // cache_invalidate(0): clear dl1$
         mov x0, #0
@@ -312,6 +312,11 @@ unsafe extern "C" fn _start() -> ! {
         mov     sp, x8
 
         bl      {init_boot_page_table}
+
+        mov x8, #97
+        mov x9, #0x09000000 //串口地址，需要变化
+        str x8, [x9]
+        
         bl      {init_mmu_el2}
         bl      {switch_to_el2}         // switch to EL1
         bl      {enable_fp}             // enable fp/neon

@@ -71,5 +71,12 @@ pub fn cpuid2mpidr(cpuid: usize) -> usize {
 }
 
 
+#[cfg(feature = "platform-rk3588-aarch64")]
 pub const GICD_BASE: usize = 0xfe600000;
+#[cfg(feature = "platform-rk3588-aarch64")]
 pub const GICR_BASE: usize = 0xfe680000;
+
+#[cfg(feature = "platform-qemu-virt-aarch64")]
+pub const GICD_BASE: usize = 0x800_0000;
+#[cfg(feature = "platform-qemu-virt-aarch64")]
+pub const GICR_BASE: usize = 0x80a_0000;

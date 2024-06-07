@@ -56,15 +56,15 @@ pub fn set_enable(irq_num: usize, enabled: bool) {
 
     #[cfg(feature = "hv")]
     GICD.lock().set_priority(irq_num as _, 0x7f);
-    /* 
+    // /* 
     #[cfg(feature = "hv")]
     {
         debug!("in platform gic set_enable: irq_num {}, enabled {}", irq_num, enabled);
-        // GICD.lock().set_priority(irq_num as _, 0x7f);
-        // GICD.lock().set_target_cpu(irq_num as _, 1 << 0);   // only enable one cpu
+        GICD.lock().set_priority(irq_num as _, 0x7f);
+        GICD.lock().set_target_cpu(irq_num as _, 1 << 0);   // only enable one cpu
         GICD.lock().set_enable(irq_num as _, enabled);
     }
-    */
+    // */
 }
 
 /// Registers an IRQ handler for the given IRQ.
