@@ -41,7 +41,7 @@ _cargo_build: $(build_deplibs)
 	@printf "    $(GREEN_C)Building$(END_C) App: $(APP_NAME), Arch: $(ARCH), Platform: $(PLATFORM_NAME), App type: $(APP_TYPE)\n"
 ifeq ($(APP_TYPE), rust)
 	$(call cargo_build,--manifest-path $(APP)/Cargo.toml,$(AX_FEAT) $(LIB_FEAT) $(APP_FEAT))
-ifneq ($(BIN_TYPE),arceos-hv)
+ifeq ($(BIN_TYPE),rk3588)
 	@mv $(rust_target_dir)/$(BIN_TYPE) $(rust_elf)
 endif
 	@cp $(rust_elf) $(OUT_ELF)
