@@ -213,7 +213,7 @@ const BOOT_MAP_SIZE: usize = 1 << BOOT_MAP_SHIFT; // 1GB
         true,
     );
 
-    idmap_device(0x900_0000);
+    //idmap_device(0x900_0000);
 }
 
 pub(crate) unsafe fn idmap_device(phys_addr: usize) {
@@ -226,31 +226,6 @@ pub(crate) unsafe fn idmap_device(phys_addr: usize) {
             true,
         );
     }
-}
-
-
-pub(crate) unsafe fn init_boot_page_table(
-    boot_pt_l0: &mut [A64PTE; 512],
-    boot_pt_l1: &mut [A64PTE; 512],
-) {
-    // 0x0000_0000_0000 ~ 0x0080_0000_0000, table
-    boot_pt_l0[0] = A64PTE::new_table(PhysAddr::from(boot_pt_l1.as_ptr() as usize));
-    // 0x0000_0000_0000..0x0000_4000_0000, 1G block, device memory
-    boot_pt_l1[0] = A64PTE::new_page(
-        PhysAddr::from(0),
-        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::DEVICE,
-        true,
-    );
-    // 0x0000_4000_0000..0x0000_8000_0000, 1G block, normal memory
-    boot_pt_l1[1] = A64PTE::new_page(
-        PhysAddr::from(0x4000_0000),
-        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE,
-        true,
-    );
-}
-
-pub(crate) unsafe fn init_boot_page_table_mem() {
-    init_boot_page_table(&mut BOOT_PT_L0, &mut BOOT_PT_L1);
 }
 
 extern "C" {

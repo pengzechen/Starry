@@ -63,7 +63,7 @@ extern "C" {
 
 /// The earliest entry point for the secondary CPUs.
 pub(crate) unsafe extern "C" fn rust_entry(cpu_id: usize, dtb: usize) {
-    console::putchar(b'x');
+    //console::putchar(b'x');
     use crate::mem_map::phys_to_virt;
     crate::mem_map::clear_bss();
     crate::arch::set_exception_vector_base(exception_vector_base as usize);

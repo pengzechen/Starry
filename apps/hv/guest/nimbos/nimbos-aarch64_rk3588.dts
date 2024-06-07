@@ -1,0 +1,87 @@
+/dts-v1/;
+
+/ {
+	interrupt-parent = <0x8002>;
+	model = "nimbos,dummy-virt";
+	#size-cells = <0x02>;
+	#address-cells = <0x02>;
+	compatible = "nimbos,dummy-virt";
+
+	memory@70000000 {
+		reg = <0x00 0x70000000 0x00 0x8000000>;
+		device_type = "memory";
+	};
+
+	8250@9030000 {
+		phandle = <0x8004>;
+		clock-names = "apb_pclk";
+		clocks = <0x8000>;
+		interrupts = <0x00 0x07 0x04>;
+		gpio-controller;
+		#gpio-cells = <0x02>;
+		compatible = "arm,8250\0arm,primecell";
+		reg = <0x00 0xfeb50000 0x00 0x1000>;
+	};
+
+	// gic v3
+	gic@8000000 {
+		compatible = "arm,gic-v3";
+		#interrupt-cells = <3>;
+		interrupt-controller;
+		reg = <0x0 0xfe600000 0x0 0x10000>,  // GICD
+		      <0x0 0xfe680000 0x0 0x100000>;  // ITS (if applicable, may need adjustment)
+		phandle = <0x8002>;
+
+		ranges;
+
+		gicr@8010000 {
+			reg = <0x0 0xfe680000 0x0 0x100000>;
+		};
+
+	};
+
+	cpus {
+		#size-cells = <0x00>;
+		#address-cells = <0x01>;
+
+		cpu-map {
+
+			socket0 {
+
+				cluster0 {
+
+					core0 {
+						cpu = <0x8001>;
+					};
+				};
+			};
+		};
+
+		cpu@0 {
+			phandle = <0x8001>;
+			reg = <0x00>;
+			compatible = "arm,cortex-a72";
+			device_type = "cpu";
+		};
+	};
+
+	timer {
+		interrupts = <0x01 0x0d 0x104 0x01 0x0e 0x104 0x01 0x0b 0x104 0x01 0x0a 0x104>;
+		always-on;
+		compatible = "arm,armv8-timer\0arm,armv7-timer";
+	};
+
+	apb-pclk {
+		phandle = <0x8000>;
+		clock-output-names = "clk24mhz";
+		clock-frequency = <0x16e3600>;
+		#clock-cells = <0x00>;
+		compatible = "fixed-clock";
+	};
+
+	chosen {
+		stdout-path = "/pl011@9000000";
+		rng-seed = <0x136df250 0xc3dbcc39 0xbfeda3f3 0x38a7ac60 0x5721e082 0x54ed87f6 0x1e4e2740 0x46fa7831>;
+		kaslr-seed = <0x5c7c8563 0xad0c2481>;
+	};
+};

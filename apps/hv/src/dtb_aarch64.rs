@@ -14,15 +14,9 @@ pub struct MachineMeta {
     pub physical_memory_size: usize,
 
     pub virtio: ArrayVec<Device, 32>,
-
-    pub pl011: Option<Device>,
-    pub pl031: Option<Device>,
-    pub pl061: Option<Device>,
-
+    pub console: ArrayVec<Device, 3>,
     pub intc: ArrayVec<Device, 3>,
-
     pub pcie: Option<Device>,
-
     pub flash: ArrayVec<Device, 2>,
 }
 
@@ -57,13 +51,22 @@ impl MachineMeta {
         }
         meta.virtio.sort_unstable_by_key(|v| v.base_address);
 
-        // probe uart device
+        for node in fdt.find_all_nodes("/8250") {
+            if let Some(reg) = node.reg().and_then(|mut reg| reg.next()) {
+                let base_addr = reg.starting_address as usize;
+                let size = reg.size.unwrap();
+                meta.console.push(Device {
+                    base_address: base_addr,
+                    size,
+                });
+            }
+        }
+
         for node in fdt.find_all_nodes("/pl011") {
             if let Some(reg) = node.reg().and_then(|mut reg| reg.next()) {
                 let base_addr = reg.starting_address as usize;
                 let size = reg.size.unwrap();
-                // debug!("pl011 addr: {:#x}, size: {:#x}", base_addr, size);
-                meta.pl011 = Some(Device {
+                meta.console.push(Device {
                     base_address: base_addr,
                     size,
                 });
@@ -73,8 +76,7 @@ impl MachineMeta {
             if let Some(reg) = node.reg().and_then(|mut reg| reg.next()) {
                 let base_addr = reg.starting_address as usize;
                 let size = reg.size.unwrap();
-                // debug!("pl031 addr: {:#x}, size: {:#x}", base_addr, size);
-                meta.pl031 = Some(Device {
+                meta.console.push(Device {
                     base_address: base_addr,
                     size,
                 });
@@ -85,7 +87,7 @@ impl MachineMeta {
                 let base_addr = reg.starting_address as usize;
                 let size = reg.size.unwrap();
                 // debug!("pl061 addr: {:#x}, size: {:#x}", base_addr, size);
-                meta.pl061 = Some(Device {
+                meta.console.push(Device {
                     base_address: base_addr,
                     size,
                 });

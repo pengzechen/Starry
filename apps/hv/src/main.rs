@@ -28,7 +28,6 @@ use page_table_entry::MappingFlags;
 
 #[no_mangle] fn main(hart_id: usize) {
     println!("Hello, hv!");
-
     {
         // qemu-virt
         let vm1_kernel_entry = 0x7020_0000;
@@ -104,39 +103,18 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
         0x4000,
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
     )?;
-    debug!("map virtio");   // ok
+    debug!("map virtio");
     
-    if kernel_entry == 0x7020_0000 {
-        if let Some(pl011) = meta.pl011 {
-            gpt.map_region(
-                pl011.base_address,
-                pl011.base_address,
-                pl011.size,
-                MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-            )?;
-        }
-        debug!("map pl011");
-    }
-    
-    if let Some(pl031) = meta.pl031 {
+    for (i,c)in meta.console.iter().enumerate() {
         gpt.map_region(
-            pl031.base_address,
-            pl031.base_address,
-            pl031.size,
+            c.base_address,
+            c.base_address,
+            c.size,
             MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
         )?;
+        debug!("map console{i} : {:#x} -  {:#x}",c.base_address, c.size);
     }
-    debug!("map pl031");
-    if let Some(pl061) = meta.pl061 {
-        gpt.map_region(
-            pl061.base_address,
-            pl061.base_address,
-            pl061.size,
-            MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-        )?;
-    }
-    debug!("map pl061");
-
+    
     // gicv3 needn't
     gpt.map_region(
         0x8000000,
@@ -170,16 +148,17 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
         meta.physical_memory_offset,
         meta.physical_memory_offset + meta.physical_memory_size
     );
+
     gpt.map_region(
         meta.physical_memory_offset,
         meta.physical_memory_offset,
         meta.physical_memory_size,
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE | MappingFlags::USER,
     )?;
-    debug!("map physical memeory");
 
-    gpt.map_region(
-        NIMBOS_KERNEL_BASE_VADDR,
+    debug!("map physical memeory");
+    gpt.map_region (
+        KERNEL_BASE_PADDR,
         kernel_entry,
         meta.physical_memory_size,
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE | MappingFlags::USER,
