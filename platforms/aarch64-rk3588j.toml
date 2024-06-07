@@ -8,9 +8,11 @@ family = "aarch64-rk3588j"
 kernel-base-paddr = "0x40_0000"
 # Base virtual address of the kernel image.
 kernel-base-vaddr = "0xffff_0000_0040_0000"
+hv-kernel-base-vaddr = "0x0000_0000_0040_0000"
 # Linear mapping offset, for quick conversions between physical and virtual
 # addresses.
 phys-virt-offset = "0xffff_0000_0000_0000"
+hv-phys-virt-offset = "0x0000_0000_0000_0000"
 # MMIO regions with format (`base_paddr`, `size`).
 mmio-regions = [
     ["0xfeb50000", "0x1000"], # uart8250 UART0

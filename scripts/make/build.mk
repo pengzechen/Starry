@@ -42,6 +42,7 @@ _cargo_build: $(build_deplibs)
 ifeq ($(APP_TYPE), rust)
 	$(call cargo_build,--manifest-path $(APP)/Cargo.toml,$(AX_FEAT) $(LIB_FEAT) $(APP_FEAT))
 ifeq ($(BIN_TYPE),rk3588)
+	@rm $(rust_elf)
 	@mv $(rust_target_dir)/$(BIN_TYPE) $(rust_elf)
 endif
 	@cp $(rust_elf) $(OUT_ELF)

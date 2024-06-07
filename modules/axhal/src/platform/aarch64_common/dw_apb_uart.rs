@@ -42,7 +42,7 @@ pub fn init_early() {
 #[cfg(feature = "irq")]
 pub fn init() {
     UART.lock().set_ier(true);
-    crate::irq::register_handler(axconfig::UART_IRQ_NUM, handle);
+    crate::irq::register_handler(axconfig::UART_IRQ, handle);
 }
 
 /// UART IRQ Handler

@@ -161,7 +161,7 @@ ifeq ($(HV), y)
 endif
 
 all: build
-include scripts/make/rk3588.mk
+# include scripts/make/rk3588.mk
 include scripts/make/utils.mk
 include scripts/make/build.mk
 include scripts/make/qemu.mk
