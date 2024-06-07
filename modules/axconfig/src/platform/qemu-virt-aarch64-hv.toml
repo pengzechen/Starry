@@ -17,7 +17,14 @@ phys-virt-offset = "0x0000_0000_0000_0000"
 # MMIO regions with format (`base_paddr`, `size`).
 mmio-regions = [
     ["0x0900_0000", "0x1000"],      # PL011 UART
-    ["0x0800_0000", "0x4_0000"],    # GICv2 (including gich, gicv)
+    ["0x0800_0000", "0x1_0000"],    # gicd  v2 size 0x1000, v3 size 0x10000, so map 0x10000
+    ["0x0801_0000", "0x1_0000"],    # gicc
+    ["0x0803_0000", "0x1_0000"],    # gich
+    ["0x0804_0000", "0x1_0000"],    # gicv
+
+    ["0x0808_0000", "0x2_0000"],    # gicv3 its
+    ["0x080a_0000", "0x2_0000"],    # gicv3 gicr
+    
     ["0x0a00_0000", "0x4000"],      # VirtIO
     ["0x1000_0000", "0x2eff_0000"],     # PCI memory ranges (ranges 1: 32-bit MMIO space)
     ["0x40_1000_0000", "0x1000_0000"],  # PCI config space
@@ -71,8 +78,15 @@ pci-ranges = [
 uart-paddr = "0x0900_0000"
 uart-irq-num = "33"
 
+# GICD Address
+gicd-paddr = "0x0800_0000"
 # GICC Address
 gicc-paddr = "0x0801_0000"
-gicd-paddr = "0x0800_0000"
+# GICH Address
 gich-paddr = "0x0803_0000"
+# GICV Address
 gicv-paddr = "0x0804_0000"
+# GICR Address
+gicr-paddr = "0x080a_0000"
+# gicv3 its base
+gicv3-its  = "0x0808_0000"

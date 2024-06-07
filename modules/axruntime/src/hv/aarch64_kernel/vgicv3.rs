@@ -1376,7 +1376,7 @@ use arm_gicv3::GicRedistributor;
 
 #[inline(always)]
 pub fn vgicr_get_id(emu_ctx: &EmuContext) -> u32 {
-    ((emu_ctx.address - 0x80a0000) / size_of::<GicRedistributor>()) as u32
+    ((emu_ctx.address - axconfig::GICR_PADDR) / size_of::<GicRedistributor>()) as u32
 }
 
 pub fn vgicr_emul_ctrl_access(emu_ctx: &EmuContext) {

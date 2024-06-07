@@ -87,20 +87,66 @@ use page_table_entry::MappingFlags;
     run_vm_vcpu(1, 0);
 }
 
+// v2     v3     都可以调用这个函数 初始化gic
+// qemu   rk3588 都可以使用
+// nimbos linux  都可以使用
+fn map_gic( gpt: &mut GuestPageTable  ) -> Result<usize> {
+    /* 
+        intc@8000000 {
+            phandle = <0x8001>;
+            interrupts = <0x01 0x09 0x04>;
+            reg = <0x00 0x8000000 0x00 0x10000 // GICD
+                0x00 0x8010000 0x00 0x10000 // GICC
+                0x00 0x8030000 0x00 0x10000 // GICH
+                0x00 0x8040000 0x00 0x10000>; // GICV
+            compatible = "arm,cortex-a15-gic";
+            ranges;
+            #size-cells = <0x02>;
+            #address-cells = <0x02>;
+            interrupt-controller;
+            #interrupt-cells = <0x03>;
+
+            v2m@8020000 {
+                phandle = <0x8002>;
+                reg = <0x00 0x8020000 0x00 0x1000>;
+                msi-controller;
+                compatible = "arm,gic-v2m-frame";
+            };
+	    };
+    */
+    // map gicc to gicv. the address is qemu setting, it is different from real hardware
+    // gicv2 must, gicv3 needn't
+    gpt.map_region(
+        0x8010000,
+        0x8040000,
+        0x2000,
+        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
+    )?;
+
+    // gicv2 must, gicv3 needn't
+    gpt.map_region(
+        0x8020000,
+        0x8020000,
+        0x1000,
+        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
+    )?;
+    
+    // v3 its nimbos needn't
+    gpt.map_region(
+        0x8080000,
+        0x8080000,
+        0x20000,
+        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
+    )?;
+    debug!("map its");
+
+    Ok(1)
+}
+
+
 pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
     let mut gpt = GuestPageTable::new()?;
     let meta = MachineMeta::parse(dtb);
-    /* 
-        for virtio in meta.virtio.iter() {
-            gpt.map_region(
-                virtio.base_address,
-                virtio.base_address,
-                0x1000, 
-                MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-            )?;
-            debug!("finish one virtio");
-        }
-    */
 
     // hard code for virtio_mmio
     gpt.map_region(
@@ -142,51 +188,9 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
     }
     debug!("map pl061");
 
-    /* 
-        for intc in meta.intc.iter() {
-            gpt.map_region(
-                intc.base_address,
-                intc.base_address,
-                intc.size,
-                MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-            )?;
-        }
-    */
 
-    // map gicc to gicv. the address is qemu setting, it is different from real hardware
-    // gicv3 needn't
-    gpt.map_region(
-        0x8010000,
-        0x8040000,
-        0x2000,
-        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-    )?;
+    map_gic(&mut gpt) ?;
 
-    // ???
-    gpt.map_region(
-        0x8020000,
-        0x8020000,
-        0x10000,
-        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-    )?;
-
-    // gicv3 needn't
-    gpt.map_region(
-        0x8000000,
-        0x8000000,
-        0x10000,
-        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-    )?;
-
-    // v3 its nimbos needn't
-    gpt.map_region(
-        0x8080000,
-        0x8080000,
-        0x20000,
-        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-    )?;
-
-    debug!("map its");
 
     if let Some(pcie) = meta.pcie {
         gpt.map_region(
@@ -208,6 +212,8 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
     }
     debug!("map flash");
 
+
+    /* =========== Memory =========== */
     info!(
         "physical memory: [{:#x}: {:#x})",
         meta.physical_memory_offset,
