@@ -12,6 +12,8 @@ documentation = "https://rcore-os.github.io/arceos/axruntime/index.html"
 [features]
 default = []
 
+gic_v3  = []
+
 smp = ["axhal/smp"]
 irq = ["axhal/irq", "axtask?/irq", "percpu", "kernel_guard"]
 tls = ["axhal/tls", "axtask?/tls"]
@@ -25,6 +27,8 @@ display = ["axdriver", "axdisplay"]
 signal = ["axprocess/signal", "axhal/signal"]
 img = ["axdriver/img", "paging"]
 monolithic = ["axprocess/monolithic", "axhal/monolithic", "axtask/monolithic", "axmem/monolithic"]
+
+hv = ["alloc", "dep:hypercraft", "axhal/hv", "dep:page_table", "page_table_entry/hv", "paging"]
 
 [dependencies]
 cfg-if = "1.0"
@@ -43,3 +47,14 @@ crate_interface = { path = "../../crates/crate_interface" }
 percpu = { path = "../../crates/percpu", optional = true }
 kernel_guard = { path = "../../crates/kernel_guard", optional = true }
 lazy_init = { path = "../../crates/lazy_init", optional = true }
+spinlock = { path = "../../crates/spinlock"}
+
+hypercraft = { path = "../../crates/hypercraft", optional = true }
+page_table = { path = "../../crates/page_table", optional = true }
+page_table_entry = { path = "../../crates/page_table_entry" }
+arm_gicv3 = { path = "../../crates/arm_gicv3"}
+cortex-a = "8.1.1"
+smccc = "0.1.1"
+spin = "0.9"
+
+

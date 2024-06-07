@@ -46,3 +46,7 @@ pub fn busy_wait_until(deadline: TimeValue) {
         core::hint::spin_loop();
     }
 }
+
+#[cfg(all(feature = "irq", feature = "hv"))]
+pub use crate::platform::irq::HYPERVISOR_TIMER_IRQ_NUM;
+

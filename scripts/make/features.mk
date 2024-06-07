@@ -51,6 +51,13 @@ else ifneq ($(findstring monolithic,$(APP)),)
   endif
 endif
 
+ifeq ($(GIC_V3), y)
+    override FEATURES += gic_v3
+endif
+ifeq ($(HV), y)
+    override FEATURES += hv
+endif
+
 override FEATURES := $(strip $(FEATURES))
 
 ax_feat :=

@@ -1,0 +1,1 @@
+pub const KERNEL_BASE_PADDR: usize = 0x0000_0000_4008_0000;

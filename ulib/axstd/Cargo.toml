@@ -36,6 +36,9 @@ alloc-buddy = ["axfeat/alloc-buddy"]
 paging = ["axfeat/paging"]
 tls = ["axfeat/tls"]
 
+gic_v3 = ["axhal/gic_v3", "axruntime/gic_v3", "hypercraft?/gic_v3"]
+hv = ["dep:hypercraft", "axruntime/hv"]
+
 # Multi-threading and scheduler
 multitask = ["arceos_api/multitask", "axfeat/multitask"]
 sched_fifo = ["axfeat/sched_fifo"]
@@ -74,3 +77,9 @@ arceos_api = { path = "../../api/arceos_api" }
 axio = { path = "../../crates/axio" }
 axerrno = { path = "../../crates/axerrno" }
 spinlock = { path = "../../crates/spinlock" }
+
+hypercraft = {path = "../../crates/hypercraft", optional = true}
+axruntime = { path = "../../modules/axruntime", default-features = false }
+axhal = { path = "../../modules/axhal" }
+axlog = { path = "../../modules/axlog" }
+

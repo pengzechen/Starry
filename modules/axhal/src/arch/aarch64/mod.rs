@@ -6,7 +6,7 @@ use core::arch::asm;
 #[cfg(feature = "monolithic")]
 pub use trap::first_into_user;
 
-use aarch64_cpu::registers::{DAIF, TPIDR_EL0, TTBR0_EL1, TTBR1_EL1, VBAR_EL1};
+use aarch64_cpu::registers::{DAIF, TPIDR_EL0, TTBR0_EL1, TTBR1_EL1, VBAR_EL1, TTBR0_EL2};
 use memory_addr::{PhysAddr, VirtAddr};
 use tock_registers::interfaces::{Readable, Writeable};
 
@@ -73,6 +73,9 @@ pub unsafe fn write_page_table_root(root_paddr: PhysAddr) {
     trace!("set page table root: {:#x} => {:#x}", old_root, root_paddr);
     if old_root != root_paddr {
         // kernel space page table use TTBR1 (0xffff_0000_0000_0000..0xffff_ffff_ffff_ffff)
+        #[cfg(feature="hv")]
+        TTBR0_EL2.set(root_paddr.as_usize() as _);
+        #[cfg(not(feature = "hv"))]
         TTBR1_EL1.set(root_paddr.as_usize() as _);
         flush_tlb(None);
     }
@@ -144,3 +147,5 @@ pub unsafe fn write_thread_pointer(tpidr_el0: usize) {
 
 #[cfg(feature = "signal")]
 core::arch::global_asm!(include_str!("signal.S"));
+
+pub mod hv;

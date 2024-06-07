@@ -34,6 +34,30 @@ mod mp;
 #[cfg(feature = "smp")]
 pub use self::mp::rust_main_secondary;
 
+
+#[cfg(feature = "hv")] mod gpm;
+#[cfg(feature = "hv")] mod hv;
+#[cfg(feature = "hv")] pub use gpm::GuestPageTable;
+#[cfg(feature = "hv")] pub use hv::HyperCraftHalImpl;
+
+#[cfg(feature = "hv")]
+pub use hv::{
+    VM_ARRAY, VM_MAX_NUM,
+    add_vm, add_vm_vcpu, get_vm, print_vm,
+    init_vm_vcpu, init_vm_emu_device, init_vm_passthrough_device,
+    is_vcpu_init_ok, is_vcpu_primary_ok,
+    run_vm_vcpu,
+};
+
+#[cfg(feature = "hv")]
+use axhal::IPI_IRQ_NUM;
+
+#[cfg(feature = "hv")]
+use crate::hv::kernel::{
+    ipi_irq_handler, init_ipi, cpu_int_list_init,
+    gic_maintenance_handler
+};
+
 const LOGO: &str = r#"
        d8888                            .d88888b.   .d8888b.
       d88888                           d88P" "Y88b d88P  Y88b
@@ -46,7 +70,8 @@ d88P     888 888      "Y8888P  "Y8888   "Y88888P"   "Y8888P"
 "#;
 
 extern "C" {
-    fn main();
+    #[cfg(not(feature = "hv"))]     fn main();
+    #[cfg(feature = "hv")]     fn main(cpu_id: usize);
 }
 #[cfg(feature = "img")]
 core::arch::global_asm!(include_str!("../../axdriver/image.S"));
@@ -149,7 +174,12 @@ pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
     {
         info!("Initialize kernel page table...");
         remap_kernel_memory().expect("remap kernel memoy failed");
+
     }
+    unsafe {
+        info!("{:#x}",* (0x70000000 as *const u32));
+    }
+    info!("Initialize kernel page table end2");
 
     info!("Initialize platform devices...");
     axhal::platform_init();
@@ -163,7 +193,8 @@ pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
             axtask::init_scheduler();
         }
     }
-    #[cfg(any(feature = "fs", feature = "net", feature = "display"))]
+
+    #[cfg(all(any(feature = "fs", feature = "net", feature = "display"), not(feature="hv")))]
     {
         #[allow(unused_variables)]
         let all_devices = axdriver::init_drivers();
@@ -200,7 +231,11 @@ pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
         core::hint::spin_loop();
     }
 
-    unsafe { main() };
+    unsafe {
+        #[cfg(not(feature = "hv"))] main();
+        #[cfg(feature = "hv")] main(cpu_id);
+    };
+
 
     #[cfg(feature = "multitask")]
     axtask::exit(0);
@@ -233,6 +268,9 @@ fn init_allocator() {
         }
     }
     for r in memory_regions() {
+        if r.paddr == 0x1_f000_0000.into(){
+            continue;
+        }
         if r.flags.contains(MemRegionFlags::FREE) && r.paddr != max_region_paddr {
             axalloc::global_add_memory(phys_to_virt(r.paddr).as_usize(), r.size)
                 .expect("add heap memory region failed");
@@ -288,7 +326,9 @@ cfg_if::cfg_if! {
         }
     }
 }
-#[cfg(feature = "irq")]
+
+
+#[cfg(all(feature = "irq", not(feature="hv")))]
 fn init_interrupt() {
     use axhal::time::TIMER_IRQ_NUM;
 
@@ -318,6 +358,52 @@ fn init_interrupt() {
 
     // Enable IRQs before starting app
     axhal::arch::enable_irqs();
+}
+
+#[cfg(all(feature = "irq", feature="hv"))]
+fn init_interrupt() {
+    // IPI interrupt handler
+    debug!("init ipi interrupt handler");
+    axhal::irq::register_handler(IPI_IRQ_NUM, ipi_irq_handler);
+    debug!("per cpu init ");
+    cpu_int_list_init();
+    debug!("per cpu init  end");
+
+    init_ipi();
+
+    // Maintenance interrupt handler
+    debug!("init maintenance interrupt handler");
+    axhal::irq::register_handler(axhal::MAINTENANCE_IRQ_NUM, gic_maintenance_handler);
+
+
+    // axhal::GICD.lock().print_prio();
+/*
+    debug!("init hypervisor timer interrupt handler");
+    use axhal::time::HYPERVISOR_TIMER_IRQ_NUM;
+    // Setup timer interrupt handler
+    const PERIODIC_INTERVAL_NANOS: u64 =
+        axhal::time::NANOS_PER_SEC / axconfig::TICKS_PER_SEC as u64;
+
+    #[percpu::def_percpu]
+    static NEXT_DEADLINE: u64 = 0;
+
+    fn update_timer() {
+        let now_ns = axhal::time::current_time_nanos();
+        // Safety: we have disabled preemption in IRQ handler.
+        let mut deadline = unsafe { NEXT_DEADLINE.read_current_raw() };
+        if now_ns >= deadline {
+            deadline = now_ns + PERIODIC_INTERVAL_NANOS;
+        }
+        unsafe { NEXT_DEADLINE.write_current_raw(deadline + PERIODIC_INTERVAL_NANOS) };
+        axhal::time::set_oneshot_timer(deadline);
+    }
+
+    axhal::irq::register_handler(HYPERVISOR_TIMER_IRQ_NUM, || {
+        update_timer();
+        #[cfg(feature = "multitask")]
+        axtask::on_timer_tick();
+    });
+*/
 }
 
 #[cfg(all(feature = "tls", not(feature = "multitask")))]

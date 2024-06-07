@@ -24,8 +24,33 @@ qemu_args-aarch64 := \
   -machine virt \
   -kernel $(OUT_BIN)
 
+GUEST ?= linux
+
+ifeq ($(GIC_V3), y)
+ROOTFS = apps/hv/guest/$(GUEST)/rootfs-aarch64.img
+GUEST_DTB = apps/hv/guest/$(GUEST)/$(GUEST)-aarch64-v3.dtb
+GUEST_BIN = apps/hv/guest/$(GUEST)/$(GUEST)-aarch64-v3.bin
+GIC_VER="3"
+else
+ROOTFS = apps/hv/guest/$(GUEST)/rootfs-aarch64.img
+GUEST_DTB = apps/hv/guest/$(GUEST)/$(GUEST)-aarch64.dtb
+GUEST_BIN = apps/hv/guest/$(GUEST)/$(GUEST)-aarch64.bin
+GIC_VER="2"
+endif
+
+ifeq ($(HV), y)
+qemu_args-y := -m 3G -smp $(SMP) $(qemu_args-$(ARCH)) \
+            -device loader,file=$(GUEST_DTB),addr=0x70000000,force-raw=on \
+            -device loader,file=$(GUEST_BIN),addr=0x70200000,force-raw=on \
+            -machine virtualization=on,gic-version=$(GIC_VER)
+else
 # bitmap_allocator is hard coding, support max 4GB mem
 qemu_args-y := -m 2G -smp $(SMP) $(qemu_args-$(ARCH))
+endif
+
+ifeq ($(GUEST), linux)
+ qemu_args-y +=  -drive if=none,file=$(ROOTFS),format=raw,id=hd0   -device virtio-blk-device,drive=hd0 
+endif
 
 qemu_args-$(BLK) += \
   -device virtio-blk-$(vdev-suffix),drive=disk0 \

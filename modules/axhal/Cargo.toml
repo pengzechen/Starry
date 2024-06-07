@@ -18,6 +18,9 @@ irq = []
 tls = ["alloc"]
 signal = []
 monolithic = ["paging", "dep:axfs_ramfs"]
+hv = ["paging", "irq", "percpu/hv",  "arm_gicv3/hv"]
+gic_v3 = []
+
 default = []
 
 [dependencies]
@@ -40,6 +43,8 @@ handler_table = { path = "../../crates/handler_table" }
 crate_interface = { path = "../../crates/crate_interface" }
 axfs_ramfs = { path = "../../crates/axfs_ramfs", optional = true }
 riscv = "0.10"
+
+hypercraft = { path = "../../crates/hypercraft" }
 [target.'cfg(target_arch = "x86_64")'.dependencies]
 x86 = "0.52"
 x86_64 = "0.14"
@@ -59,6 +64,8 @@ arm_gic = { path = "../../crates/arm_gic" }
 arm_pl011 = { path = "../../crates/arm_pl011" }
 dw_apb_uart = { path = "../../crates/dw_apb_uart" }
 of = { path = "../../crates/of"}
+arm_gicv3 = { path = "../../crates/arm_gicv3" }
+cortex-a = "8.1.1"
 
 [build-dependencies]
 axconfig = { path = "../axconfig" }

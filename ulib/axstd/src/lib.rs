@@ -75,3 +75,9 @@ pub mod time;
 pub mod fs;
 #[cfg(feature = "net")]
 pub mod net;
+
+#[cfg(feature = "hv")]
+pub mod hv;
+
+pub use axlog::{debug, error, info, trace, warn};
+

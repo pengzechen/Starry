@@ -8,17 +8,33 @@ pub mod mp;
 pub mod psci;
 
 cfg_if::cfg_if! {
-    if #[cfg(feature = "irq")] {
-        mod gic;
+    if #[cfg(all(feature = "irq" , not(feature = "gic_v3")))] {
+        pub mod gic;
         pub mod irq {
             pub use super::gic::*;
         }
     }
+
+    else if #[cfg(all(feature = "irq", feature = "gic_v3"))] {
+        pub mod gicv3;
+        pub mod irq {
+            pub use super::gicv3::*;
+        }
+    }
 }
 
-mod generic_timer;
-pub mod time {
-    pub use super::generic_timer::*;
+cfg_if::cfg_if! {
+    if #[cfg(feature = "hv")] {
+        mod generic_timer_hv;
+        pub mod time {
+            pub use super::generic_timer_hv::*;
+        }
+    } else {
+        mod generic_timer;
+        pub mod time {
+            pub use super::generic_timer::*;
+        }
+    }
 }
 
 cfg_if::cfg_if! {

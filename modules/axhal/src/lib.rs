@@ -86,3 +86,27 @@ pub use self::platform::set_tss_stack_top;
 
 #[cfg(feature = "smp")]
 pub use self::platform::platform_init_secondary;
+
+
+#[cfg(feature = "gic_v3")]
+pub use crate::platform::gicv3;
+
+pub use mem::PHYS_VIRT_OFFSET;
+
+#[cfg(feature = "hv")]
+pub use crate::platform::console::UART;
+
+#[cfg(all(feature = "hv", feature = "irq", not(feature = "gic_v3")))]
+pub use platform::gic::{
+    gicc_get_current_irq, deactivate_irq, interrupt_cpu_ipi_send,
+    gic_is_priv, gic_lrs, gicc_clear_current_irq, gicv_clear_current_irq,
+    GICH, GICD, GICV, GICC, GICD_BASE, GIC_SPI_MAX,
+};
+
+#[cfg(all(feature = "hv", feature = "irq", feature = "gic_v3"))]
+pub use platform::gicv3::{
+    gicc_get_current_irq, deactivate_irq, interrupt_cpu_ipi_send,
+    gic_lrs, gicc_clear_current_irq,
+    GICD, GICC, GICH, GIC_SPI_MAX, IPI_IRQ_NUM, MAINTENANCE_IRQ_NUM, HYPERVISOR_TIMER_IRQ_NUM
+};
+

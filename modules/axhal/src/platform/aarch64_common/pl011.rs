@@ -8,7 +8,7 @@ use crate::mem::phys_to_virt;
 
 const UART_BASE: PhysAddr = PhysAddr::from(axconfig::UART_PADDR);
 
-static UART: SpinNoIrq<Pl011Uart> =
+pub static UART: SpinNoIrq<Pl011Uart> =
     SpinNoIrq::new(Pl011Uart::new(phys_to_virt(UART_BASE).as_mut_ptr()));
 
 /// Writes a byte to the console.

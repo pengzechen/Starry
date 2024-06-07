@@ -166,9 +166,11 @@ impl From<MappingFlags> for DescriptorAttr {
                 attr |= Self::UXN;
             }
         } else {
-            attr |= Self::UXN;
-            if !flags.contains(MappingFlags::EXECUTE) {
-                attr |= Self::PXN;
+            #[cfg(not(feature = "hv"))] {
+                attr |= Self::UXN;
+                if !flags.contains(MappingFlags::EXECUTE) {
+                    attr |= Self::PXN;
+                }                
             }
         }
         attr

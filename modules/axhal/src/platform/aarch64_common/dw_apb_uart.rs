@@ -7,7 +7,7 @@ use spinlock::SpinNoIrq;
 
 const UART_BASE: PhysAddr = PhysAddr::from(axconfig::UART_PADDR);
 
-static UART: SpinNoIrq<DW8250> = SpinNoIrq::new(DW8250::new(phys_to_virt(UART_BASE).as_usize()));
+pub static UART: SpinNoIrq<DW8250> = SpinNoIrq::new(DW8250::new(phys_to_virt(UART_BASE).as_usize()));
 
 /// Writes a byte to the console.
 pub fn putchar(c: u8) {
@@ -30,6 +30,8 @@ pub fn getchar() -> Option<u8> {
 pub fn init_early() {
     // SAFETY: idmap console mmio mem before paging
     unsafe {
+        putchar(b'a');
+        putchar(b'a');
         crate::platform::aarch64_common::mem::idmap_device(UART_BASE.as_usize());
     }
     //rk3588 uboot init uart, kernel not init uart

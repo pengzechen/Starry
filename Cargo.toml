@@ -4,6 +4,7 @@ resolver = "2"
 members = [
     "crates/allocator",
     "crates/arm_gic",
+    "crates/arm_gicv3",
     "crates/arm_pl011",
     "crates/dw_apb_uart",
     "crates/axerrno",
@@ -19,7 +20,6 @@ members = [
     "crates/driver_net",
     "crates/driver_pci",
     "crates/driver_virtio",
-    "crates/eventfd",
     "crates/flatten_objects",
     "crates/handler_table",
     "crates/kernel_guard",
@@ -75,7 +75,8 @@ members = [
     "apps/task/yield",
     "apps/task/priority",
     "apps/task/tls",
-    "apps/monolithic_userboot"
+    "apps/monolithic_userboot",
+    "apps/hv"
 ]
 
 [profile.release]

@@ -34,20 +34,22 @@ SMP ?= 1
 MODE ?= release
 LOG ?= off
 V ?=
+HV ?= y
+GIC_V3 ?= y
 
 # App options
-A ?= apps/monolithic_userboot
+A ?= apps/hv
 APP ?= $(A)
 FEATURES ?=
 APP_FEATURES ?=
 RUSTFLAGS ?=
 STRUCT ?= Unikernel
 
-override FEATURES += fp_simd
+#override FEATURES += fp_simd
 
 # QEMU options
-BLK ?= y
-NET ?= y
+BLK ?= n
+NET ?= n
 GRAPHIC ?= n
 BUS ?= mmio
 
@@ -57,6 +59,7 @@ NET_DUMP ?= n
 NET_DEV ?= user
 VFIO_PCI ?=
 VHOST ?= n
+
 
 # Network options
 IP ?= 10.0.2.15
@@ -117,6 +120,7 @@ else
   $(error "ARCH" must be one of "x86_64", "riscv64", or "aarch64")
 endif
 
+export GIC_V3
 export AX_ARCH=$(ARCH)
 export AX_PLATFORM=$(PLATFORM_NAME)
 export AX_SMP=$(SMP)
@@ -133,6 +137,8 @@ AR := $(CROSS_COMPILE)ar
 RANLIB := $(CROSS_COMPILE)ranlib
 LD := rust-lld -flavor gnu
 
+
+
 OBJDUMP ?= rust-objdump -d --print-imm-hex --x86-asm-syntax=intel
 OBJCOPY ?= rust-objcopy --binary-architecture=$(ARCH)
 GDB ?= gdb-multiarch
@@ -141,7 +147,12 @@ GDB ?= gdb-multiarch
 OUT_DIR ?= $(APP)
 
 APP_NAME := $(shell basename $(APP))
+
 LD_SCRIPT := $(CURDIR)/modules/axhal/linker_$(PLATFORM_NAME).lds
+ifeq ($(HV), y)
+       LD_SCRIPT = $(CURDIR)/modules/axhal/linker_$(PLATFORM)_hv.lds
+endif
+
 OUT_ELF := $(OUT_DIR)/$(APP_NAME)_$(PLATFORM_NAME).elf
 OUT_BIN := $(OUT_DIR)/$(APP_NAME)_$(PLATFORM_NAME).bin
 
