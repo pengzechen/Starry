@@ -35,7 +35,7 @@ const GICC_BASE: PhysAddr = PhysAddr::from(axconfig::GICC_PADDR);
 #[cfg(feature = "hv")]
 const GICH_BASE: PhysAddr = PhysAddr::from(axconfig::GICH_PADDR);
 #[cfg(feature = "hv")]
-const GICV_BASE: PhysAddr = PhysAddr::from(0x8040000);
+const GICV_BASE: PhysAddr = PhysAddr::from(axconfig::GICV_PADDR);
 
 pub static GICD: SpinNoIrq<GicDistributor> =
     SpinNoIrq::new(GicDistributor::new(phys_to_virt(GICD_BASE).as_mut_ptr()));

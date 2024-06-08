@@ -10,7 +10,16 @@ use axhal::cpu::this_cpu_id;
 
 use super::emu::emu_register_dev;
 use super::emuintc_handler::{emu_intc_handler, emu_intc_init};
+
+#[cfg(feature = "gic_v3")]
+use super::emuintc_handler::emu_vgicr_init;
+
 use super::emuuart_handler::{emu_uart_handler, emu_uart_init};
+
+#[cfg(feature = "gic_v3")]
+use super::emuintc_handler::emul_vgicr_handler;
+
+use super::emureg_handler::{vgic_icc_sre_handler, emu_register_reg, EmuRegType};
 use super::interrupt::interrupt_vm_register;
 use crate::{GuestPageTable, HyperCraftHalImpl};
 
@@ -58,31 +67,48 @@ pub fn init_vm_emu_device(vm_id: usize) {
         if let Some(vm_option) = VM_ARRAY.get_mut(vm_id) {
             if let Some(vm) = vm_option {
                 // init emu intc
-                let idx = 0;
-                vm.set_intc_dev_id(idx);
+            let idx = 0;
+            vm.set_intc_dev_id(idx);
+            
+            emu_register_dev(
+                EmuDeviceType::EmuDeviceTGicd,
+                vm.vm_id,
+                idx,
+                axconfig::GICD_PADDR, // emu_dev.base_ipa,
+                0x10000,      // emu_dev.length,    // v3 10000, v2 1000
+                emu_intc_handler,
+            );
+            emu_intc_init(vm, idx);
+
+            #[cfg(feature = "gic_v3")]{
+                let idx = 11;
                 emu_register_dev(
-                    EmuDeviceType::EmuDeviceTGicd,
+                    EmuDeviceType::EmuDeviceTGICR,
                     vm.vm_id,
                     idx,
-                    0x8000000, // emu_dev.base_ipa,
-                    0x1000,    // emu_dev.length,
-                    emu_intc_handler,
+                    axconfig::GICR_PADDR,  // ipa
+                    0x2_0000,
+                    emul_vgicr_handler,
                 );
-                emu_intc_init(vm, idx);
+                emu_vgicr_init(vm, idx);
 
-                if vm_id!=0 {
-                    // init emu uart
-                    let idx = 1;
-                    emu_register_dev(
-                        EmuDeviceType::EmuDeviceTConsole,
-                        vm.vm_id,
-                        idx,
-                        0x9000000, // emu_dev.base_ipa,
-                        0x1000,    // emu_dev.length,
-                        emu_uart_handler,
-                    );
-                    emu_uart_init(vm, idx);
-                }
+                emu_register_reg(EmuRegType::SysReg, arm_gicv3::ICC_SRE_ADDR, vgic_icc_sre_handler);
+                // emu_register_reg(EmuRegType::SysReg, emu_dev.base_ipa, vgic_icc_sgir_handler);
+            }
+
+            if vm_id!=0 {
+                // init emu uart
+                let idx = 1;
+                emu_register_dev(
+                    EmuDeviceType::EmuDeviceTConsole,
+                    vm.vm_id,
+                    idx,
+                    0x9000000, // emu_dev.base_ipa,
+                    0x1000,    // emu_dev.length,
+                    emu_uart_handler,
+                );
+                emu_uart_init(vm, idx);
+            }
 
             }
         }

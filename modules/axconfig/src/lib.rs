@@ -30,7 +30,9 @@ cfg_if::cfg_if! {
         #[rustfmt::skip]
         #[path = "config_qemu_virt_riscv.rs"]
         mod config;
-    } else if #[cfg(all(
+    } 
+    
+    else if #[cfg(all(
         any(target_arch = "aarch64", not(target_os = "none")),
         feature = "platform-qemu-virt-aarch64", not(feature = "hv")
     ))] {
@@ -44,7 +46,25 @@ cfg_if::cfg_if! {
         #[rustfmt::skip]
         #[path = "config_qemu_virt_aarch64_hv.rs"]
         mod config;
+    } 
+    
+    else if #[cfg(all(
+        any(target_arch = "aarch64", not(target_os = "none")),
+        feature = "platform-rk3588-aarch64", not(feature = "hv")
+    ))] {
+        #[rustfmt::skip]
+        #[path = "config_rk3588_aarch64.rs"]
+        mod config;
     } else if #[cfg(all(
+        any(target_arch = "aarch64", not(target_os = "none")),
+        feature = "platform-rk3588-aarch64", feature = "hv"
+    ))] {
+        #[rustfmt::skip]
+        #[path = "config_rk3588_aarch64_hv.rs"]
+        mod config;
+    }
+    
+    else if #[cfg(all(
         any(target_arch = "aarch64", not(target_os = "none")),
         feature = "platform-raspi4-aarch64"
     ))] {
@@ -62,3 +82,7 @@ pub use config::*;
 
 /// End address of the whole physical memory.
 pub const PHYS_MEMORY_END: usize = PHYS_MEMORY_BASE + PHYS_MEMORY_SIZE;
+
+// 临时使用
+#[cfg(feature = "platform-rk3588-aarch64")]
+pub const PHYS_MEMORY_END: usize = 0x4040_0000;   // start + 1G

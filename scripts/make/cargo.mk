@@ -23,6 +23,9 @@ endif
 
 ifeq ($(ARCH), aarch64)
   features-$(HV) += libax/irq
+  ifeq ($(GIC_V3), y)
+    features-$(HV) += libax/gic_v3
+  endif
 endif
 
 ifeq ($(BUS),pci)

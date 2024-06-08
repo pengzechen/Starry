@@ -26,7 +26,17 @@ cfg_if::cfg_if! {
     ))] {
         mod qemu_virt_aarch64;
         pub use self::qemu_virt_aarch64::*;
-    } else if #[cfg(all(
+    } 
+    
+    else if #[cfg(all(
+        target_arch = "aarch64",
+        feature = "platform-rk3588-aarch64"
+    ))] {
+        mod rk3588_aarch64;
+        pub use self::rk3588_aarch64::*;
+    } 
+    
+    else if #[cfg(all(
         target_arch = "aarch64",
         feature = "platform-raspi4-aarch64"
     ))] {

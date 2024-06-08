@@ -1,11 +1,17 @@
 mod emu;
 mod emuintc_handler;
+mod emureg_handler;
 mod emuuart_handler;
 mod guest_psci;
 mod interrupt;
 mod ipi;
 mod sync;
+
+#[cfg(not(feature = "gic_v3"))]
 mod vgic;
+#[cfg(feature = "gic_v3")]
+mod vgicv3;
+
 mod vuart;
 pub mod vm_array;
 
@@ -41,6 +47,10 @@ pub fn active_vm() -> &'static mut VM<HyperCraftHalImpl, GuestPageTable> {
         Some(vm) => vm,
         None => panic!("No active VM found"),
     }
+}
+
+pub fn active_vm_id() -> usize {
+    active_vm().vm_id
 }
 
 pub fn secondary_main_hv(cpu_id: usize) {

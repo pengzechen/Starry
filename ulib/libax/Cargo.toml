@@ -26,6 +26,9 @@ smp = ["axruntime/smp", "spinlock/smp"]
 # Floating point/SIMD
 fp_simd = ["axhal/fp_simd"]
 
+# GIC v3 version
+gic_v3 = ["axhal/gic_v3", "axruntime/gic_v3", "hypercraft?/gic_v3"]
+
 # Memory
 alloc = ["dep:axalloc", "axruntime/alloc", "axio/alloc"]
 paging = ["axruntime/paging"]

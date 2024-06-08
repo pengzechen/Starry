@@ -1,19 +1,20 @@
 # Arguments
-ARCH ?= x86_64
-SMP ?= 1
-MODE ?= release
-LOG ?= warn
+ARCH 		?= x86_64
+SMP 		?= 1
+MODE 		?= release
+LOG 		?= warn
 
-A ?= apps/helloworld
-APP ?= $(A)
-APP_FEATURES ?=
-DISK_IMG ?= disk.img
+A 			?= apps/helloworld
+APP 		?= $(A)
+APP_FEATURES?=
+DISK_IMG 	?= disk.img
+GIC_V3      ?= n
 
-FS ?= n
-NET ?= n
-GRAPHIC ?= n
-BUS ?= mmio
-HV ?= n
+FS        ?= n
+NET       ?= n
+GRAPHIC   ?= n
+BUS       ?= mmio
+HV        ?= n
 
 QEMU_LOG ?= n
 NET_DUMP ?= n
@@ -47,6 +48,7 @@ else
 endif
 
 export ARCH
+export GIC_V3
 export PLATFORM
 export SMP
 export MODE
@@ -55,10 +57,10 @@ export LOG
 # Binutils
 ifeq ($(APP_LANG), c)
   CROSS_COMPILE ?= $(ARCH)-linux-musl-
-  CC := $(CROSS_COMPILE)gcc
-  AR := $(CROSS_COMPILE)ar
+  CC     := $(CROSS_COMPILE)gcc
+  AR     := $(CROSS_COMPILE)ar
   RANLIB := $(CROSS_COMPILE)ranlib
-  LD := rust-lld -flavor gnu
+  LD     := rust-lld -flavor gnu
 endif
 
 OBJDUMP ?= rust-objdump -d --print-imm-hex --x86-asm-syntax=intel

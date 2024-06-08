@@ -340,6 +340,15 @@ qemu-system-aarch64 -m 3G -smp 2 -cpu cortex-a72 -machine virt -nographic   \
         0x10000,
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
     )?;
+
+    // gicv3 its
+    gpt.map_region(
+        0x8080000,
+        0x8080000,
+        0x20000,
+        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
+    )?;
+
     if let Some(pcie) = meta.pcie {
         gpt.map_region(
             pcie.base_address,
@@ -373,9 +382,9 @@ qemu-system-aarch64 -m 3G -smp 2 -cpu cortex-a72 -machine virt -nographic   \
     )?;
     debug!("map physical memeory");
 
-    let vaddr = 0x8010000;
-    let hpa = gpt.translate(vaddr)?;
-    debug!("translate vaddr: {:#x}, hpa: {:#x}", vaddr, hpa);
+    // let vaddr = 0x8010000;
+    // let hpa = gpt.translate(vaddr)?;
+    // debug!("translate vaddr: {:#x}, hpa: {:#x}", vaddr, hpa);
 
     gpt.map_region(
         NIMBOS_KERNEL_BASE_VADDR,

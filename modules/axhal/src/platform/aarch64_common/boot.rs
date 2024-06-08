@@ -138,6 +138,8 @@ unsafe fn init_mmu_el2() {
     );
     */
     
+    idmap_device(0xfeb5_0000);
+    
     // Set EL1 to 64bit.
     HCR_EL2.write(HCR_EL2::RW::EL1IsAarch64);
 
@@ -222,6 +224,25 @@ unsafe fn cache_invalidate(cache_level: usize) {
         options(nostack)
     );
 }
+
+
+use page_table_entry::{GenericPTE, MappingFlags};
+const BOOT_MAP_SHIFT: usize = 30; // 1GB
+const BOOT_MAP_SIZE: usize = 1 << BOOT_MAP_SHIFT; // 1GB
+
+pub(crate) unsafe fn idmap_device(phys_addr: usize) {
+    let aligned_address: usize = (phys_addr) & !(BOOT_MAP_SIZE - 1);
+    let l1_index = phys_addr >> BOOT_MAP_SHIFT;
+    if BOOT_PT_L1[l1_index].is_unused() {
+        BOOT_PT_L1[l1_index] = A64PTE::new_page(
+            PhysAddr::from(aligned_address),
+            MappingFlags::READ | MappingFlags::WRITE | MappingFlags::DEVICE,
+            true,
+        );
+    }
+}
+
+
 
 /// The earliest entry point for the primary CPU.
 #[naked]

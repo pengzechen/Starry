@@ -21,7 +21,7 @@ net = ["alloc", "paging", "axdriver/virtio-net", "dep:axnet"]
 display = ["alloc", "paging", "axdriver/virtio-gpu", "dep:axdisplay"]
 
 default = ["axtask?/default"]
-
+gic_v3 = []
 hv = ["alloc", "dep:hypercraft", "axhal/hv", "dep:page_table", "dep:page_table_entry", "dep:lazy_init", "dep:arm_gic"]
 
 [dependencies]
@@ -46,6 +46,7 @@ hypercraft = { path = "../../crates/hypercraft", optional = true }
 page_table = { path = "../../crates/page_table", optional = true }
 page_table_entry = { path = "../../crates/page_table_entry", features = ["hv"], optional = true }
 arm_gic = { path = "../../crates/arm_gic", optional = true}
+arm_gicv3 = { path = "../../crates/arm_gicv3" }
 
 [target.'cfg(target_arch = "x86_64")'.dependencies]
 x86 = "0.52"

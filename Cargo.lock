@@ -162,6 +162,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "arm_gicv3"
+version = "0.1.0"
+dependencies = [
+ "log",
+ "spin 0.9.8",
+ "tock-registers",
+]
+
+[[package]]
 name = "arm_pl011"
 version = "0.1.0"
 dependencies = [
@@ -309,6 +318,7 @@ version = "0.1.0"
 dependencies = [
  "aarch64-cpu",
  "arm_gic",
+ "arm_gicv3",
  "arm_pl011",
  "axalloc",
  "axconfig",
@@ -317,6 +327,7 @@ dependencies = [
  "cfg-if",
  "cortex-a",
  "crate_interface 0.1.1",
+ "dw_apb_uart",
  "handler_table",
  "hypercraft",
  "kernel_guard",
@@ -380,6 +391,7 @@ version = "0.1.0"
 dependencies = [
  "aarch64-cpu",
  "arm_gic",
+ "arm_gicv3",
  "axalloc",
  "axconfig",
  "axdisplay",
@@ -748,6 +760,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "dw_apb_uart"
+version = "0.1.0"
+dependencies = [
+ "tock-registers",
+]
+
+[[package]]
 name = "either"
 version = "1.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -923,6 +942,7 @@ version = "0.1.0"
 dependencies = [
  "aarch64-cpu",
  "arm_gic",
+ "arm_gicv3",
  "arrayvec",
  "bit_field",
  "bitflags 1.3.2",

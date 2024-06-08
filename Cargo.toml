@@ -19,6 +19,7 @@ members = [
 
     "crates/allocator",
     "crates/arm_gic",
+    "crates/arm_gicv3",
     "crates/arm_pl011",
     "crates/axerrno",
     "crates/axfs_devfs",
@@ -27,6 +28,7 @@ members = [
     "crates/axio",
     "crates/capability",
     "crates/crate_interface",
+    "crates/dw_apb_uart",
     "crates/driver_block",
     "crates/driver_common",
     "crates/driver_display",

@@ -14,7 +14,7 @@ use hypercraft::arch::hvc::{HVC_SYS, HVC_SYS_BOOT, hvc_guest_handler};
 use hypercraft::arch::emu::EmuContext;
 
 use axhal::arch::hv::exception_utils::*;
-use axhal::{gic_is_priv, gic_lrs, GICD, GICH, GICV, GICC};
+// use axhal::{gic_is_priv, gic_lrs, GICD, GICH, GICV, GICC};
 
 use super::guest_psci::smc_guest_handler;
 use super::current_cpu;
