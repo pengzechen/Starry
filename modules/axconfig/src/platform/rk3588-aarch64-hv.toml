@@ -33,7 +33,7 @@ uart-irq-num = "0x14d"
 # GICD Address
 gicd-paddr = "0xfe600000"
 # GICR Address
-gicc-paddr = "0xfe680000"
+gicr-paddr = "0xfe680000"
 
 # 没有用到临时添加 
 gich-paddr = "0x6666_0000"

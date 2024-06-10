@@ -33,7 +33,7 @@ uart-irq = "0x14d"
 # GICD Address
 gicd-paddr = "0xfe600000"
 # GICR Address
-gicc-paddr = "0xfe680000"
+gicr-paddr = "0xfe680000"
 
 # PSCI
 psci-method = "smc"

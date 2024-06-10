@@ -39,7 +39,7 @@ impl MachineMeta {
             if let Some(reg) = node.reg().and_then(|mut reg| reg.next()) {
                 let paddr = reg.starting_address as usize;
                 let size = reg.size.unwrap();
-                libax::debug!("virtio mmio addr: {:#x}, size: {:#x}", paddr, size);
+                //libax::debug!("virtio mmio addr: {:#x}, size: {:#x}", paddr, size);
                 meta.virtio.push(Device {
                     base_address: paddr,
                     size,

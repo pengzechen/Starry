@@ -88,6 +88,7 @@ include scripts/make/test.mk
 ifeq ($(PLATFORM), raspi4-aarch64)
   include scripts/make/raspi4.mk
 endif
+include scripts/make/rk3588.mk
 
 build: $(OUT_DIR) $(OUT_BIN)
 

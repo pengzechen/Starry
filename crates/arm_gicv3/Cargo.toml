@@ -14,5 +14,3 @@ spin = { version = "0.9.4", features = ["use_ticket_mutex"] }
 
 platform-qemu-virt-aarch64 = []
 platform-rk3588-aarch64    = []
-
-default = ["platform-qemu-virt-aarch64"]
