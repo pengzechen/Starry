@@ -12,3 +12,8 @@ page_table_entry = { path = "../../crates/page_table_entry" }
 fdt = {version = "0.1.5"}
 arrayvec = { version = "0.7.2", default-features = false }
 spin = "0.9"
+
+[features]
+
+platform-rk3588-aarch64 = []
+default = ["platform-rk3588-aarch64"]

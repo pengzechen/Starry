@@ -47,6 +47,18 @@ use alloc::vec::Vec;
 #[cfg(target_arch = "x86_64")]
 mod x64;
 
+#[cfg(feature = "platform-rk3588-aarch64")] 
+mod rk3588;
+#[cfg(feature = "platform-rk3588-aarch64")] 
+use rk3588::copy_high_data;
+
+extern "C" {
+    fn __guest_dtb_start();
+    fn __guest_dtb_end();
+    fn __guest_kernel_start();
+    fn __guest_kernel_end();
+}
+
 #[no_mangle] fn main(hart_id: usize) {
     println!("Hello, hv!");
 
@@ -74,8 +86,14 @@ mod x64;
     }
     #[cfg(target_arch = "aarch64")]
     {
+        #[cfg(feature = "platform-rk3588-aarch64")]
+        copy_high_data();
+
         let vm1_kernel_entry = 0x7020_0000;
         let vm1_dtb = 0x7000_0000;
+
+        // let vm1_kernel_entry = __guest_kernel_start as usize;
+        // let vm1_dtb = __guest_dtb_start as usize ;
 
         // boot cpu
         PerCpu::<HyperCraftHalImpl>::init(0); 
@@ -262,7 +280,8 @@ qemu-system-aarch64 -m 3G -smp 2 -cpu cortex-a72 -machine virt -nographic   \
     run_vm_vcpu(1, 0);
 }
 
-#[cfg(target_arch = "aarch64")] pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
+#[cfg(all(target_arch = "aarch64", not(feature = "platform-rk3588-aarch64")))] 
+pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
     let mut gpt = GuestPageTable::new()?;
     let meta = MachineMeta::parse(dtb);
     /* 
@@ -340,6 +359,83 @@ qemu-system-aarch64 -m 3G -smp 2 -cpu cortex-a72 -machine virt -nographic   \
         0x10000,
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
     )?;
+
+    // gicv3 its
+    gpt.map_region(
+        0x8080000,
+        0x8080000,
+        0x20000,
+        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
+    )?;
+
+    if let Some(pcie) = meta.pcie {
+        gpt.map_region(
+            pcie.base_address,
+            pcie.base_address,
+            pcie.size,
+            MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
+        )?;
+    }
+    debug!("map pcie");
+
+    for flash in meta.flash.iter() {
+        gpt.map_region(
+            flash.base_address,
+            flash.base_address,
+            flash.size,
+            MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
+        )?;
+    }
+    debug!("map flash");
+
+    info!(
+        "physical memory: [{:#x}: {:#x})",
+        meta.physical_memory_offset,
+        meta.physical_memory_offset + meta.physical_memory_size
+    );
+    gpt.map_region(
+        meta.physical_memory_offset,
+        meta.physical_memory_offset,
+        meta.physical_memory_size,
+        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE | MappingFlags::USER,
+    )?;
+    debug!("map physical memeory");
+
+    // let vaddr = 0x8010000;
+    // let hpa = gpt.translate(vaddr)?;
+    // debug!("translate vaddr: {:#x}, hpa: {:#x}", vaddr, hpa);
+
+    gpt.map_region(
+        NIMBOS_KERNEL_BASE_VADDR,
+        kernel_entry,
+        meta.physical_memory_size,
+        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE | MappingFlags::USER,
+    )?;
+
+    Ok(gpt)
+}
+
+
+#[cfg(all(target_arch = "aarch64", feature = "platform-rk3588-aarch64"))] 
+pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
+    let mut gpt = GuestPageTable::new()?;
+    let meta = MachineMeta::parse(dtb);
+
+    gpt.map_region(
+        0xa000000,
+        0xa000000,
+        0x4000,
+        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
+    )?;
+    debug!("map virtio");
+    
+    gpt.map_region(
+        0x900_0000,
+        0xfeb5_0000,
+        0x4000,
+        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
+    )?;
+    debug!("map dw uart");
 
     // gicv3 its
     gpt.map_region(
