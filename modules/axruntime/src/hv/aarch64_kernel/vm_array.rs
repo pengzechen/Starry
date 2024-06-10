@@ -74,7 +74,7 @@ pub fn init_vm_emu_device(vm_id: usize) {
                 EmuDeviceType::EmuDeviceTGicd,
                 vm.vm_id,
                 idx,
-                axconfig::GICD_PADDR, // emu_dev.base_ipa,
+                0x800_0000, // emu_dev.base_ipa,  /* 这个地方要让nimbos觉得跑在qemu上 */
                 0x10000,      // emu_dev.length,    // v3 10000, v2 1000
                 emu_intc_handler,
             );
@@ -86,7 +86,7 @@ pub fn init_vm_emu_device(vm_id: usize) {
                     EmuDeviceType::EmuDeviceTGICR,
                     vm.vm_id,
                     idx,
-                    axconfig::GICR_PADDR,  // ipa
+                    0x80a_0000,  // ipa  /* 这个地方要让nimbos觉得跑在qemu上 */
                     0x2_0000,
                     emul_vgicr_handler,
                 );
