@@ -21,13 +21,15 @@ pub(crate) fn platform_regions() -> impl Iterator<Item = MemRegion> {
             })
             .chain(core::iter::once(fdt_region()))
             .chain(free_regions())
-            .chain(crate::mem::default_mmio_regions()),
+            .chain(crate::mem::default_mmio_regions())
+            .chain(crate::mem::guest_regions()),
         )
     } else {
         Right(
             core::iter::once(fdt_region())
                 .chain(free_regions())
-                .chain(crate::mem::default_mmio_regions()),
+                .chain(crate::mem::default_mmio_regions())
+                .chain(crate::mem::guest_regions()),
         )
     };
     iterator.into_iter()
@@ -92,8 +94,26 @@ fn free_regions() -> impl Iterator<Item = MemRegion> {
         name: "kernel memory",
     };
 
-    let filter_kernel_mem = all_mem.flat_map(move |m| split_region(m, &hack_k_region).into_iter());
-    filter_kernel_mem.flat_map(move |m| split_region(m, &fdt_region()).into_iter())
+    let all_mem_after_kernel_filter_split = all_mem.flat_map(
+        move |m| split_region(m, &hack_k_region));
+    let all_mem_after_fdt_filter_split = all_mem_after_kernel_filter_split.flat_map(
+        move |m| split_region(m, &fdt_region()));
+    
+    #[cfg(not(feature="hv"))] 
+    {
+        all_mem_after_fdt_filter_split
+    }
+    #[cfg(feature="hv")]
+    {
+        let mut guest_regions = crate::mem::guest_regions();
+        let guest1 = guest_regions.next().unwrap();
+        let guest2 = guest_regions.next().unwrap();
+        let all_mem_after_guest1_filter_split = all_mem_after_fdt_filter_split.
+            flat_map(move |m| split_region(m, &guest1));
+        all_mem_after_guest1_filter_split.
+            flat_map(move |m| split_region(m, &guest2))
+
+    }
 }
 
 const FDT_FIX_SIZE: usize = 0x10_0000; //1M

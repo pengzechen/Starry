@@ -128,7 +128,7 @@ fn gen_config_rs(config_path: &Path) -> Result<Vec<u8>> {
                     }
                 }
                 Value::Array(regions) => {
-                    if key != "mmio-regions" && key != "virtio-mmio-regions" && key != "pci-ranges"
+                    if key != "mmio-regions" && key != "virtio-mmio-regions" && key != "pci-ranges" && key !="guest-regions"
                     {
                         continue;
                     }

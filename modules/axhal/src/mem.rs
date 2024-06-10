@@ -144,6 +144,22 @@ pub(crate) fn default_free_regions() -> impl Iterator<Item = MemRegion> {
     })
 }
 
+#[cfg(feature="hv")]
+pub(crate) fn guest_regions() -> impl Iterator<Item = MemRegion> {
+    axconfig::GUEST_REGIONS.iter().map(|reg| MemRegion {
+        paddr: reg.0.into(),
+        size: reg.1,
+        flags: MemRegionFlags::RESERVED
+            | MemRegionFlags::READ
+            | MemRegionFlags::WRITE,
+        name: "Guest OS Regions",
+    })
+}
+#[cfg(not(feature="hv"))]
+pub(crate) fn guest_regions() -> impl Iterator<Item = MemRegion> {
+    core::iter::empty();
+
+}
 /// Return the extend free memory regions to prepare for the monolithic_userboot
 ///
 /// extend to [0xffff_ffc0_a000_0000, 0xffff_ffc0_f000_0000)
@@ -164,6 +180,16 @@ pub(crate) fn clear_bss() {
     unsafe {
         core::slice::from_raw_parts_mut(_sbss as usize as *mut u8, _ebss as usize - _sbss as usize)
             .fill(0);
+    }
+}
+
+#[allow(dead_code)]
+pub(crate) fn clear_guest_mem() {
+    for g in guest_regions() {
+        unsafe {
+            core::slice::from_raw_parts_mut(g.paddr.as_usize() as *mut u8, g.size)
+            .fill(0);
+        }
     }
 }
 

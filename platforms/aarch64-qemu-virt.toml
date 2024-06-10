@@ -11,7 +11,6 @@ kernel-base-paddr = "0x4008_0000"
 kernel-base-vaddr = "0xffff_0000_4008_0000"
 hv-kernel-base-vaddr = "0x0000_0000_4008_0000"
 
-
 # Linear mapping offset, for quick conversions between physical and virtual
 # addresses.
 phys-virt-offset = "0xffff_0000_0000_0000"
@@ -26,6 +25,13 @@ mmio-regions = [
     ["0x1000_0000", "0x2eff_0000"],     # PCI memory ranges (ranges 1: 32-bit MMIO space)
     ["0x40_1000_0000", "0x1000_0000"],  # PCI config space
 ]
+
+# left mem for guest os 
+guest-regions = [
+    ["0x7000_0000", "0x1000_0000"],     # Guest1 Mem size: 128M
+    ["0x8000_0000", "0x1000_0000"],    # Guest2 Mem size: 128M
+]
+
 # VirtIO MMIO regions with format (`base_paddr`, `size`).
 virtio-mmio-regions = [
     ["0x0a00_0000", "0x200"],
