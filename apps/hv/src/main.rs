@@ -21,7 +21,6 @@ mod aarch64_config;
 use alloc::vec::Vec;
 use page_table_entry::MappingFlags;
 
-#[cfg(platform_family = "aarch64-rk3588j")]
 extern "C" {
     fn guestdtb_start();
     fn guestdtb_end();
@@ -29,10 +28,8 @@ extern "C" {
     fn guestkernel_end();
 }
 
-#[cfg(platform_family = "aarch64-rk3588j")]
 core::arch::global_asm!(include_str!("../guest.S"));
 
-#[cfg(platform_family = "aarch64-rk3588j")]
 fn copy_data(src: *mut u8, dst:  *mut u8, size: usize) {
     unsafe {
         // copy data from .tbdata section
@@ -54,14 +51,12 @@ fn copy_data(src: *mut u8, dst:  *mut u8, size: usize) {
         let vm1_kernel_entry = 0x7020_0000;
         let vm1_dtb: usize = 0x7000_0000;
 
-        #[cfg(platform_family = "aarch64-rk3588j")]
-        {
-            let dtb_start_addr = guestdtb_start;
-            let kernel_start_addr = guestkernel_start;
-            unsafe {
+        
+        let dtb_start_addr = guestdtb_start;
+        let kernel_start_addr = guestkernel_start;
+        unsafe {
             copy_data(dtb_start_addr as *mut u8, 0x7000_0000 as *mut u8, 0x20_0000);
             copy_data(kernel_start_addr as *mut u8, 0x7020_0000 as *mut u8, 0x40_0000);
-            }
         }
 
         // boot cpu
@@ -92,7 +87,6 @@ fn copy_data(src: *mut u8, dst:  *mut u8, size: usize) {
         init_vm_vcpu(0, vcpu_id, vm1_kernel_entry, vm1_dtb);
         init_vm_emu_device(0);
         init_vm_passthrough_device(0);
-
         run_vm_vcpu(0, 0);
     }
 }

@@ -40,16 +40,10 @@ endif
 
 ifeq ($(HV), y)
 qemu_args-y := -m 3G -smp $(SMP) $(qemu_args-$(ARCH)) \
-            -device loader,file=$(GUEST_DTB),addr=0x70000000,force-raw=on \
-            -device loader,file=$(GUEST_BIN),addr=0x70200000,force-raw=on \
-            -machine virtualization=on,gic-version=$(GIC_VER)
+            -machine virtualization=on,gic-version=$(GIC_VER) 
 else
 # bitmap_allocator is hard coding, support max 4GB mem
 qemu_args-y := -m 2G -smp $(SMP) $(qemu_args-$(ARCH))
-endif
-
-ifeq ($(GUEST), linux)
- qemu_args-y +=  -drive if=none,file=$(ROOTFS),format=raw,id=hd0   -device virtio-blk-device,drive=hd0 
 endif
 
 qemu_args-$(BLK) += \

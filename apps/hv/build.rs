@@ -5,8 +5,18 @@ use std::{
 
 fn new_guest_img() -> Result<()> {
     let mut f = File::create("./guest.S").unwrap();
-    let img_path: &str = "./apps/hv/guest/nimbos/nimbos-aarch64_rk3588.bin";
-    let dtb_path: &str = "./apps/hv/guest/nimbos/nimbos-aarch64_rk3588.dtb";
+    let guest = std::env::var("GUEST").unwrap();
+    let mut img_path = String::new();
+    let mut dtb_path = String::new();
+    if axconfig::FAMILY == "aarch64-qemu-virt" {
+        img_path = format!( "./apps/hv/guest/{}/{}-aarch64.bin",guest,guest);
+        dtb_path = format!( "./apps/hv/guest/{}/{}-aarch64.dtb",guest,guest);
+    } else if axconfig::FAMILY == "aarch64-rk3588j" {
+        img_path 
+            =String::from("./apps/hv/guest/nimbos/nimbos-aarch64_rk3588.bin");
+        dtb_path = 
+            String::from( "./apps/hv/guest/nimbos/nimbos-aarch64_rk3588.dtb");
+    }
 
     writeln!(
         f,
@@ -33,8 +43,6 @@ guestdtb_end:"#,
 }
 
 fn main() {
-    if axconfig::FAMILY == "aarch64-rk3588j" {
-         new_guest_img().unwrap();
-    }
+    new_guest_img().unwrap();
     println!("cargo:rustc-cfg=platform_family=\"{}\"", axconfig::FAMILY);
 }
