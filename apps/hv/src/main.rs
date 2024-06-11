@@ -77,7 +77,7 @@ fn test_dtbdata_high() {
             copy_data(kernel_start_addr as *mut u8, 0x7020_0000 as *mut u8, 0x40_0000);
         }
 
-        // boot cpu
+        // boot cpu 
         PerCpu::<HyperCraftHalImpl>::init(0).unwrap(); 
         // get current percpu
         let percpu = PerCpu::<HyperCraftHalImpl>::ptr_for_cpu(hart_id);
@@ -139,19 +139,19 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
     let mut gpt = GuestPageTable::new()?;
     let meta = MachineMeta::parse(dtb);
 
-    // hard code for virtio_mmio
-    gpt.map_region(
-        0xa000000,
-        0xa000000,
-        0x4000,
-        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-    )?;
-    debug!("map virtio");
+    // // hard code for virtio_mmio
+    // gpt.map_region(
+    //     0xa000000,
+    //     0xa000000,
+    //     0x4000,
+    //     MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
+    // )?;
+    // debug!("map virtio");
     
     for (i,c)in meta.console.iter().enumerate() {
         gpt.map_region(
             c.base_address,
-            c.base_address,
+            axconfig::UART_PADDR,
             c.size,
             MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
         )?;
