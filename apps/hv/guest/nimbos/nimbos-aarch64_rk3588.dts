@@ -20,7 +20,7 @@
 		gpio-controller;
 		#gpio-cells = <0x02>;
 		compatible = "arm,8250\0arm,primecell";
-		reg = <0x00 0xfeb50000 0x00 0x1000>;
+		reg = <0x00 0x9000000 0x00 0x1000>;
 	};
 
 	// gic v3
