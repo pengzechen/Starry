@@ -174,11 +174,8 @@ pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
     {
         info!("Initialize kernel page table...");
         remap_kernel_memory().expect("remap kernel memoy failed");
-
     }
-    unsafe {
-        info!("{:#x}",* (0x70000000 as *const u32));
-    }
+    
     info!("Initialize kernel page table end2");
 
     info!("Initialize platform devices...");
@@ -268,9 +265,6 @@ fn init_allocator() {
         }
     }
     for r in memory_regions() {
-        if r.paddr == 0x1_f000_0000.into(){
-            continue;
-        }
         if r.flags.contains(MemRegionFlags::FREE) && r.paddr != max_region_paddr {
             axalloc::global_add_memory(phys_to_virt(r.paddr).as_usize(), r.size)
                 .expect("add heap memory region failed");

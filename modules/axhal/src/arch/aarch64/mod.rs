@@ -52,10 +52,20 @@ pub fn halt() {
 ///
 /// Returns the physical address of the page table root.
 #[inline]
+#[cfg(not(feature="hv"))]
 pub fn read_page_table_root() -> PhysAddr {
     let root = TTBR1_EL1.get();
     PhysAddr::from(root as usize)
 }
+
+#[inline]
+#[cfg(feature="hv")]
+pub fn read_page_table_root() -> PhysAddr {
+    let root = TTBR0_EL2.get();
+    PhysAddr::from(root as usize)
+}
+
+
 
 /// Reads the `TTBR0_EL1` register.
 pub fn read_page_table_root0() -> PhysAddr {
@@ -96,6 +106,7 @@ pub unsafe fn write_page_table_root0(root_paddr: PhysAddr) {
 /// If `vaddr` is [`None`], flushes the entire TLB. Otherwise, flushes the TLB
 /// entry that maps the given virtual address.
 #[inline]
+#[cfg(not(feature="hv"))]
 pub fn flush_tlb(vaddr: Option<VirtAddr>) {
     unsafe {
         if let Some(vaddr) = vaddr {
@@ -106,6 +117,16 @@ pub fn flush_tlb(vaddr: Option<VirtAddr>) {
         }
     }
 }
+
+#[inline]
+#[cfg(feature="hv")]
+pub fn flush_tlb(_vaddr: Option<VirtAddr>) {
+    unsafe {
+        // flush the entire TLB
+        asm!("dsb ishst","tlbi alle2", "dsb ish", "isb", options(nostack));
+    }
+}
+
 
 /// Flushes the entire instruction cache.
 #[inline]

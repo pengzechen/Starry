@@ -40,6 +40,25 @@ fn copy_data(src: *mut u8, dst:  *mut u8, size: usize) {
         );
     }
 }
+
+fn test_dtbdata_high() {
+    // 地址转换为指针
+    let address: *const u8 = 0x7000_0000 as * const u8;
+
+    // 创建一个长度为10的数组来存储读取的数据
+    let mut buffer = [0u8; 20];
+
+    unsafe {
+        // 从指定地址读取10个字节
+        for i in 0..20 {
+            buffer[i] = *address.offset(i as isize);
+        }
+    }
+
+    // 输出读取的数据
+    debug!("{:?}", buffer);
+}
+
 /*
  * 运行需要nimbos启用gicv3
  * 
@@ -48,12 +67,11 @@ fn copy_data(src: *mut u8, dst:  *mut u8, size: usize) {
     println!("Hello, hv!");
     {
         // qemu-virt
-        let vm1_kernel_entry = 0x7020_0000;
+        let vm1_kernel_entry: usize = 0x7020_0000;
         let vm1_dtb: usize = 0x7000_0000;
-
         
-        let dtb_start_addr = guestdtb_start;
-        let kernel_start_addr = guestkernel_start;
+        let dtb_start_addr = guestdtb_start as usize;
+        let kernel_start_addr = guestkernel_start as usize;
         unsafe {
             copy_data(dtb_start_addr as *mut u8, 0x7000_0000 as *mut u8, 0x20_0000);
             copy_data(kernel_start_addr as *mut u8, 0x7020_0000 as *mut u8, 0x40_0000);

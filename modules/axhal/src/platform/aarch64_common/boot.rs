@@ -64,7 +64,6 @@ unsafe fn enable_fp() {
 unsafe fn switch_to_el2() {
     SPSel.write(SPSel::SP::ELx);
     let current_el = CurrentEL.read(CurrentEL::EL);
-
     if current_el == 3 {
         SCR_EL3.write(
             SCR_EL3::NS::NonSecure + SCR_EL3::HCE::HvcEnabled + SCR_EL3::RW::NextELIsAarch64,
@@ -186,6 +185,9 @@ unsafe extern "C" fn _start() -> ! {
         mov x0, #2
         bl  {cache_invalidate}
 
+        // clear icache
+        ic  iallu
+
         ldr x8, ={exception_vector_base_el2}    // setup vbar_el2 for hypervisor
         msr vbar_el2, x8
 
@@ -200,12 +202,9 @@ unsafe extern "C" fn _start() -> ! {
         bl      {idmap_kernel}
         bl      {init_mmu_el2}
 
-        bl      {switch_to_el2}         // switch to EL1
+        bl      {switch_to_el2}         // switch to EL2
         bl      {enable_fp}             // enable fp/neon
-
-        mov     x8, {phys_virt_offset}  // set SP to the high address
-        add     sp, sp, x8
-
+        
         mov     x0, x19                 // call rust_entry(cpu_id, dtb)
         mov     x1, x20
         ldr     x8, ={entry}
@@ -220,7 +219,6 @@ unsafe extern "C" fn _start() -> ! {
         enable_fp = sym enable_fp,
         boot_stack = sym BOOT_STACK,
         boot_stack_size = const TASK_STACK_SIZE,
-        phys_virt_offset = const crate::PHYS_VIRT_OFFSET,
         entry = sym crate::platform::rust_entry,
         options(noreturn),
     );

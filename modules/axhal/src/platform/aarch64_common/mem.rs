@@ -1,4 +1,6 @@
-use aarch64_cpu::{asm::barrier, registers::*};
+use aarch64_cpu::{asm::barrier};
+use cortex_a::registers::*;
+
 use tock_registers::interfaces::{ReadWriteable, Writeable};
 
 use crate::mem::virt_to_phys;
@@ -185,29 +187,27 @@ pub(crate)  unsafe fn init_mmu_el2() {
     */
     // Set EL1 to 64bit.
     HCR_EL2.write(HCR_EL2::RW::EL1IsAarch64);
-
-    // Device-nGnRE memory
-    let attr0 = MAIR_EL2::Attr0_Device::nonGathering_nonReordering_EarlyWriteAck;
-    // Normal memory
-    let attr1 = MAIR_EL2::Attr1_Normal_Inner::WriteBack_NonTransient_ReadWriteAlloc
-        + MAIR_EL2::Attr1_Normal_Outer::WriteBack_NonTransient_ReadWriteAlloc;
-    MAIR_EL2.write(attr0 + attr1); // 0xff_04
-
-     // Enable TTBR0 and TTBR1 walks, page size = 4K, vaddr size = 48 bits, paddr size = 40 bits.
-    let tcr_flags0 = TCR_EL2::TG0::KiB_4
-        + TCR_EL2::SH0::Inner
-         + TCR_EL2::ORGN0::WriteBack_ReadAlloc_WriteAlloc_Cacheable
-         + TCR_EL2::IRGN0::WriteBack_ReadAlloc_WriteAlloc_Cacheable
-         + TCR_EL2::T0SZ.val(16);
-    TCR_EL2.write(TCR_EL2::PS::Bits_40 + tcr_flags0);
-    barrier::isb(barrier::SY);
+    MAIR_EL2.write(
+        MAIR_EL2::Attr0_Device::nonGathering_nonReordering_noEarlyWriteAck
+            + MAIR_EL2::Attr1_Normal_Outer::WriteBack_NonTransient_ReadWriteAlloc
+            + MAIR_EL2::Attr1_Normal_Inner::WriteBack_NonTransient_ReadWriteAlloc
+            + MAIR_EL2::Attr2_Normal_Outer::NonCacheable
+            + MAIR_EL2::Attr2_Normal_Inner::NonCacheable,
+    );
 
     let root_paddr = PhysAddr::from(BOOT_PT_L0.as_ptr() as usize).as_usize() as _;
     TTBR0_EL2.set(root_paddr);
 
-    // Flush the entire TLB
+    TCR_EL2.write(
+        TCR_EL2::PS::Bits_48
+            + TCR_EL2::SH0::Inner
+            + TCR_EL2::TG0::KiB_4
+            + TCR_EL2::ORGN0::WriteBack_ReadAlloc_WriteAlloc_Cacheable
+            + TCR_EL2::IRGN0::WriteBack_ReadAlloc_WriteAlloc_Cacheable
+            + TCR_EL2::T0SZ.val(16),
+    );
+
     crate::arch::flush_tlb(None);
-    idmap_device(0xfeb5_0000);
     SCTLR_EL2.modify(SCTLR_EL2::M::Enable + SCTLR_EL2::C::Cacheable + SCTLR_EL2::I::Cacheable);
     barrier::isb(barrier::SY);
 }
@@ -238,6 +238,7 @@ pub(crate) unsafe fn idmap_device(phys_addr: usize) {
             MappingFlags::READ | MappingFlags::WRITE | MappingFlags::DEVICE,
             true,
         );
+        crate::arch::flush_tlb(None);
     }
 }
 
