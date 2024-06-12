@@ -4,9 +4,9 @@ arch = "aarch64"
 platform = "aarch64-rk3588"
 
 # Base physical address of the kernel image.
-kernel-base-paddr = "0x40_0000"
+kernel-base-paddr = "0x48_0000"
 # Base virtual address of the kernel image.
-kernel-base-vaddr = "0x0000_0000_0040_0000"
+kernel-base-vaddr = "0x0000_0000_0048_0000"
 # Linear mapping offset, for quick conversions between physical and virtual
 # addresses.
 phys-virt-offset = "0x0000_0000_0000_0000"
