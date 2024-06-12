@@ -5,7 +5,6 @@ extern crate alloc;
 use log::*;
 
 use dtb_aarch64::MachineMeta;
-use aarch64_config::*;
 use axstd::info;
 use axstd::hv::{
         GuestPageTable, GuestPageTableTrait, HyperCraftHalImpl, PerCpu,
@@ -17,7 +16,6 @@ use axstd::hv::{
         run_vm_vcpu, 
 };
 mod dtb_aarch64;
-mod aarch64_config;
 use alloc::vec::Vec;
 use page_table_entry::MappingFlags;
 
@@ -67,14 +65,14 @@ fn test_dtbdata_high() {
     println!("Hello, hv!");
     {
         // qemu-virt
-        let vm1_kernel_entry: usize = 0x7020_0000;
-        let vm1_dtb: usize = 0x7000_0000;
+        let vm1_dtb: usize = axconfig::GUEST1_PHYSMEM_START;
+        let vm1_kernel_entry: usize = vm1_dtb + axconfig::GUEST1_KERNEL_OFFSET;
         
         let dtb_start_addr = guestdtb_start as usize;
         let kernel_start_addr = guestkernel_start as usize;
         unsafe {
-            copy_data(dtb_start_addr as *mut u8, 0x7000_0000 as *mut u8, 0x20_0000);
-            copy_data(kernel_start_addr as *mut u8, 0x7020_0000 as *mut u8, 0x40_0000);
+            copy_data(dtb_start_addr as *mut u8, vm1_dtb as *mut u8, 0x20_0000);
+            copy_data(kernel_start_addr as *mut u8, vm1_kernel_entry as *mut u8, 0x40_0000);
         }
 
         // boot cpu 
@@ -82,7 +80,7 @@ fn test_dtbdata_high() {
         // get current percpu
         let percpu = PerCpu::<HyperCraftHalImpl>::ptr_for_cpu(hart_id);
         // create vcpu, need to change addr for aarch64!
-        let gpt = setup_gpm(vm1_dtb, vm1_kernel_entry).unwrap();  
+        let gpt = setup_gpm(vm1_dtb).unwrap();  
         let vcpu: axstd::hv::VCpu<HyperCraftHalImpl> = percpu.create_vcpu(0, 0).unwrap();
         percpu.set_active_vcpu(Some(vcpu.clone()));
 
@@ -135,19 +133,10 @@ fn test_dtbdata_high() {
     // run_vm_vcpu(1, 0);
 }
 
-pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
+pub fn setup_gpm(dtb: usize) -> Result<GuestPageTable> {
     let mut gpt = GuestPageTable::new()?;
     let meta = MachineMeta::parse(dtb);
 
-    // // hard code for virtio_mmio
-    // gpt.map_region(
-    //     0xa000000,
-    //     0xa000000,
-    //     0x4000,
-    //     MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-    // )?;
-    // debug!("map virtio");
-    
     for (i,c)in meta.console.iter().enumerate() {
         gpt.map_region(
             c.base_address,
@@ -155,7 +144,7 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
             c.size,
             MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
         )?;
-        debug!("map console{i} : {:#x} -  {:#x}",c.base_address, c.size);
+        debug!("map console{i} :{:#x}-to {:#x}  {:#x}",c.base_address, axconfig::UART_PADDR,c.size);
     }
     
     if let Some(pcie) = meta.pcie {
@@ -165,8 +154,8 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
             pcie.size,
             MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
         )?;
+        debug!("map pcie : {:#x} to {:#x}", pcie.base_address,pcie.base_address);
     }
-    debug!("map pcie");
 
     for flash in meta.flash.iter() {
         gpt.map_region(
@@ -175,8 +164,8 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
             flash.size,
             MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
         )?;
+        debug!("map flash : {:#x} to {:#x}", flash.base_address,flash.base_address);
     }
-    debug!("map flash");
 
     info!(
         "physical memory: [{:#x}: {:#x})",
@@ -186,18 +175,12 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
 
     gpt.map_region(
         meta.physical_memory_offset,
-        meta.physical_memory_offset,
+        axconfig::GUEST1_PHYSMEM_START,
         meta.physical_memory_size,
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE | MappingFlags::USER,
     )?;
 
-    debug!("map physical memeory");
-    gpt.map_region (
-        KERNEL_BASE_PADDR,
-        kernel_entry,
-        meta.physical_memory_size,
-        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE | MappingFlags::USER,
-    )?;
-
+    debug!("map physical_memory: {:#x} to {:#x} size {:#x}", meta.physical_memory_offset,axconfig::GUEST1_PHYSMEM_START,
+        meta.physical_memory_size);
     Ok(gpt)
 }

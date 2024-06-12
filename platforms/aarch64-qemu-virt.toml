@@ -31,6 +31,9 @@ guest-regions = [
     ["0x7000_0000", "0x1000_0000"],     # Guest1 Mem size: 128M
     ["0x8000_0000", "0x1000_0000"],    # Guest2 Mem size: 128M
 ]
+guest1-physmem-start = "0x7000_0000"
+guest1-kernel-offset = "0x8_0000"
+guest2-physmem-start = "0x8000_0000"
 
 # VirtIO MMIO regions with format (`base_paddr`, `size`).
 virtio-mmio-regions = [

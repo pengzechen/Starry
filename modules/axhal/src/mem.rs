@@ -151,7 +151,8 @@ pub(crate) fn guest_regions() -> impl Iterator<Item = MemRegion> {
         size: reg.1,
         flags: MemRegionFlags::RESERVED
             | MemRegionFlags::READ
-            | MemRegionFlags::WRITE,
+            | MemRegionFlags::WRITE
+            | MemRegionFlags::EXECUTE,
         name: "Guest OS Regions",
     })
 }
