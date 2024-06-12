@@ -416,7 +416,7 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
 }
 
 
-#[cfg(all(target_arch = "aarch64", feature = "platform-rk3588-aarch64"))] 
+#[cfg(all(feature = "platform-rk3588-aarch64", not(feature = "testos")))] 
 pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
     let mut gpt = GuestPageTable::new()?;
     let meta = MachineMeta::parse(dtb);
@@ -478,16 +478,47 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
     )?;
     debug!("map physical memeory");
 
-    // let vaddr = 0x8010000;
-    // let hpa = gpt.translate(vaddr)?;
-    // debug!("translate vaddr: {:#x}, hpa: {:#x}", vaddr, hpa);
-
     gpt.map_region(
         NIMBOS_KERNEL_BASE_VADDR,
-        kernel_entry,
-        meta.physical_memory_size,
+        0x7020_0000,
+        0x0400_0000,
+        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE | MappingFlags::USER
+    );
+
+    Ok(gpt)
+}
+
+
+#[cfg(feature = "testos")] 
+pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
+    let mut gpt = GuestPageTable::new()?;
+    let meta = MachineMeta::parse(dtb);
+    
+    gpt.map_region(
+        0xfeb5_0000,
+        0x900_0000,
+        0x1000,
+        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
+    )?;
+    debug!("map dw uart");
+
+    gpt.map_region(
+        0x70000000,
+        0x70000000,
+        0x0040_0000,
+        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE | MappingFlags::USER,
+    )?;
+
+    gpt.map_region(
+        0xffff_0000_4008_0000,
+        0x7020_0000,
+        0x0040_0000,
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE | MappingFlags::USER,
     )?;
 
     Ok(gpt)
 }
+
+// make A=apps/hv ARCH=aarch64 HV=y PLATFORM=qemu-virt-aarch64 GIC_V3=y LOG=debug GUEST=nimbos build
+
+// qemu-system-aarch64 -m 3G -smp 1 -cpu cortex-a72 -machine virt -kernel apps/hv/hv_qemu-virt-aarch64.bin -machine virtualization=on,gic-version=3 -nographic

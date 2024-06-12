@@ -1,13 +1,18 @@
 const NIMBOS_DTB_SIZE: usize = 3303;
 const NIMBOS_KERNEL_SIZE: usize = 552960;
+const TSETOS_KERNEL_SIZE: usize = 428;
 
 
 #[link_section = ".guestdata.dtb"]
 static NIMBOS_DTB: [u8; NIMBOS_DTB_SIZE] = *include_bytes!("../guest/nimbos/nimbos-aarch64-v3-rk.dtb");
+
 #[link_section = ".guestdata.kernel"]
 static NIMBOS_KERNEL: [u8; NIMBOS_KERNEL_SIZE] = *include_bytes!("../guest/nimbos/nimbos-aarch64-v3-asqemu.bin");
+// #[link_section = ".guestdata.kernel"]
+// static NIMBOS_KERNEL: [u8; TSETOS_KERNEL_SIZE] = *include_bytes!("../guest/testos/testos.bin");
+
 #[link_section = ".guestdata.mem"]
-static NIMBOS_MEM: [u8; 0x4_0000] = [0; 0x4_0000];
+static NIMBOS_MEM: [u8; 0x40_0000] = [0; 0x40_0000];
 
 
 
