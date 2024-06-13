@@ -215,18 +215,47 @@ pub(crate)  unsafe fn init_mmu_el2() {
 const BOOT_MAP_SHIFT: usize = 30; // 1GB
 const BOOT_MAP_SIZE: usize = 1 << BOOT_MAP_SHIFT; // 1GB
 
+fn usize_to_u8_array(n: usize, buffer: &mut [u8; 20]) -> usize {
+      let mut number = n;
+      let mut index = 0;
+      if number == 0 {
+          buffer[index] = b'0';
+          return 1;
+      }
+      while number > 0 && index < buffer.len() {
+          buffer[index] = b'0' + (number % 10) as u8;
+          number /= 10;
+          index += 1;
+      }
+      buffer[0..index].reverse();
+      index
+}
+
+pub fn print_num(prefix: &[u8], num: usize) {
+   crate::console::write_bytes(prefix);
+    if num != 0 {
+        let mut buffer = [0u8; 20];
+        let length = usize_to_u8_array(num, &mut buffer);
+        let u8_array = &buffer[0..length];
+        crate::console::write_bytes(u8_array);
+    }
+   crate::console::write_bytes(b"\n");
+}
+
 pub(crate) unsafe fn idmap_kernel(kernel_phys_addr: usize) {
     let aligned_address = (kernel_phys_addr) & !(BOOT_MAP_SIZE - 1);
     let l1_index = kernel_phys_addr >> BOOT_MAP_SHIFT;
 
-    // 0x0000_0000_0000 ~ 0x0080_0000_0000, table
     BOOT_PT_L0[0] = A64PTE::new_table(PhysAddr::from(BOOT_PT_L1.as_ptr() as usize));
     // 1G block, kernel img
-    BOOT_PT_L1[l1_index] = A64PTE::new_page(
-        PhysAddr::from(aligned_address),
-        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE,
-        true,
-    );
+    if BOOT_PT_L1[l1_index].is_unused() {
+        BOOT_PT_L1[l1_index] = A64PTE::new_page(
+            PhysAddr::from(aligned_address),
+            MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE,
+            true,
+        );
+        crate::arch::flush_tlb(None);
+    }
 }
 
 pub(crate) unsafe fn idmap_device(phys_addr: usize) {
@@ -239,6 +268,12 @@ pub(crate) unsafe fn idmap_device(phys_addr: usize) {
             true,
         );
         crate::arch::flush_tlb(None);
+    }
+}
+
+pub fn get_pte_attr(index: usize) -> u64 {
+    unsafe {
+        BOOT_PT_L1[index].inner()
     }
 }
 

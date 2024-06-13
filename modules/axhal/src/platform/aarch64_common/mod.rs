@@ -67,17 +67,18 @@ pub(crate) unsafe extern "C" fn rust_entry(cpu_id: usize, dtb: usize) {
     crate::arch::set_exception_vector_base(exception_vector_base as usize);
     crate::cpu::init_primary(cpu_id);
 
+    // console init early
+    crate::platform::console::init_early();
     // init fdt
-    crate::platform::mem::idmap_device(dtb);
+    crate::platform::mem::idmap_kernel(dtb);
     of::init_fdt_ptr(phys_to_virt(dtb.into()).as_usize() as *const u8);
 
+    crate::console::write_bytes(b"idmap all mem \n");
     // HugeMap all device memory for allocator
     for m in crate::platform::mem::platform_regions() {
-        crate::platform::mem::idmap_device(m.paddr.as_usize());
+        crate::platform::mem::idmap_kernel(m.paddr.as_usize());
     }
     crate::mem::clear_guest_mem();
-
-    crate::platform::console::init_early();
     crate::platform::time::init_early();
     // disable low address access
     crate::arch::write_page_table_root0(0.into());

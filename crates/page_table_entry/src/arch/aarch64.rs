@@ -81,6 +81,14 @@ impl DescriptorAttr {
         if matches!(idx, MemAttr::Normal | MemAttr::NormalNonCacheable) {
             bits |= Self::INNER.bits() | Self::SHAREABLE.bits();
         }
+
+        #[cfg(feature="hv")]
+        {
+            if matches!(idx, MemAttr::Device) {
+                bits |= Self::SHAREABLE.bits();
+            }
+        }
+
         Self::from_bits_retain(bits)
     }
 
@@ -170,7 +178,7 @@ impl From<MappingFlags> for DescriptorAttr {
                 attr |= Self::UXN;
                 if !flags.contains(MappingFlags::EXECUTE) {
                     attr |= Self::PXN;
-                }                
+                }
             }
         }
         attr
@@ -192,6 +200,9 @@ impl A64PTE {
     /// Creates an empty descriptor with all bits set to zero.
     pub const fn empty() -> Self {
         Self(0)
+    }
+    pub fn inner(&self) -> u64 {
+        self.0
     }
 }
 

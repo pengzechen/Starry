@@ -75,27 +75,23 @@ pub fn init_vm_emu_device(vm_id: usize) {
                 EmuDeviceType::EmuDeviceTGicd,
                 vm.vm_id,
                 idx,
-                0x800_0000, // emu_dev.base_ipa,
-                0x10000,    // emu_dev.length,
+                axconfig::GUEST1_GICD_BASE_PADDR, // emu_dev.base_ipa,
+                0x10000,       // emu_dev.length,
                 emu_intc_handler,
             );
             emu_intc_init(vm, idx);
 
-            #[cfg(feature = "gic_v3")]{
-
             let idx = 11;
-
             emu_register_dev(
                 EmuDeviceType::EmuDeviceTGICR,
                 vm.vm_id,
                 idx,
-                0x80a_0000,
-                0x2_0000,
+                axconfig::GUEST1_GICR_BASE_PADDR,
+                0x10_0000,
                 emul_vgicr_handler,
             );
             emu_vgicr_init(vm, idx);
             emu_register_reg(EmuRegType::SysReg, arm_gicv3::ICC_SRE_ADDR, vgic_icc_sre_handler);
-            }
 
             if vm_id!=0 {
                 // init emu uart

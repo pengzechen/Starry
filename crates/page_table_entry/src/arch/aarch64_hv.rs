@@ -9,18 +9,13 @@ bitflags::bitflags! {
     /// Memory attribute fields in the VMSAv8-64 translation table format descriptors.
     #[derive(Debug)]
     pub struct DescriptorAttr: u64 {
-        // Attribute fields in stage 1 VMSAv8-64 Block and Page descriptors:
-
         /// Whether the descriptor is valid.
         const VALID =       1 << 0;
         /// The descriptor gives the address of the next level of translation table or 4KB page.
         /// (not a 2M, 1G block)
         const NON_BLOCK =   1 << 1;
-        /// Memory attributes index field.
-        const ATTR_INDX =   0b111 << 2;
-        /// Non-secure bit. For memory accesses from Secure state, specifies whether the output
-        /// address is in Secure or Non-secure memory.
-        const NS =          1 << 5;
+        /// Memory attributes [2:5]
+        const ATTR =   0b1111 << 2;
        /// Access permission: read-only.
         const S2AP_RO =      1 << 6;
         /// Access permission: write-only.
@@ -61,25 +56,38 @@ bitflags::bitflags! {
 enum MemType {
     Device = 0,
     Normal = 1,
+    NormalNonCache = 2,
 }
 
 impl DescriptorAttr {
-    #[allow(clippy::unusual_byte_groupings)]
-    const ATTR_INDEX_MASK: u64 = 0b111_00;
+    const ATTR_INDEX_MASK: u64 = 0b1111_00;
+    const PTE_S2_MEM_ATTR_NORMAL_INNER_WRITE_BACK_CACHEABLE: u64 = 0b11 << 2;
+    const PTE_S2_MEM_ATTR_NORMAL_OUTER_WRITE_BACK_CACHEABLE: u64 = 0b11 << 4;
+    const PTE_S2_MEM_ATTR_NORMAL_OUTER_WRITE_BACK_NOCACHEABLE: u64 = 0b1 << 4;
 
     const fn from_mem_type(mem_type: MemType) -> Self {
-        let mut bits = (mem_type as u64) << 2;
-        if matches!(mem_type, MemType::Normal) {
-            bits |= Self::INNER.bits() | Self::SHAREABLE.bits();
-        }
+        let bits = match mem_type {
+            MemType::Normal => 
+                Self::PTE_S2_MEM_ATTR_NORMAL_INNER_WRITE_BACK_CACHEABLE
+                | Self::PTE_S2_MEM_ATTR_NORMAL_OUTER_WRITE_BACK_CACHEABLE 
+                | Self::SHAREABLE.bits(),
+            MemType::NormalNonCache =>
+                Self::PTE_S2_MEM_ATTR_NORMAL_INNER_WRITE_BACK_CACHEABLE
+                | Self::PTE_S2_MEM_ATTR_NORMAL_OUTER_WRITE_BACK_NOCACHEABLE
+                | Self::SHAREABLE.bits(),
+            MemType::Device => Self::SHAREABLE.bits(),
+        };
         Self::from_bits_retain(bits)
     }
 
     fn mem_type(&self) -> MemType {
         let idx = (self.bits() & Self::ATTR_INDEX_MASK) >> 2;
         match idx {
+            Self::PTE_S2_MEM_ATTR_NORMAL_INNER_WRITE_BACK_CACHEABLE
+                | Self::PTE_S2_MEM_ATTR_NORMAL_OUTER_WRITE_BACK_CACHEABLE 
+                => MemType::Normal,
+            Self::PTE_S2_MEM_ATTR_NORMAL_OUTER_WRITE_BACK_NOCACHEABLE => MemType::NormalNonCache,
             0 => MemType::Device,
-            1 => MemType::Normal,
             _ => panic!("Invalid memory attribute index"),
         }
     }
@@ -111,8 +119,9 @@ impl From<MappingFlags> for DescriptorAttr {
         } else {
             Self::from_mem_type(MemType::Normal)
         };
+
         if flags.contains(MappingFlags::READ) {
-            attr |= Self::VALID | Self::S2AP_RO;
+            attr |= Self::S2AP_RO | Self::VALID;
         }
         if flags.contains(MappingFlags::WRITE) {
             attr |= Self::S2AP_WO;

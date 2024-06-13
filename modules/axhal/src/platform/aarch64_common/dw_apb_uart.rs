@@ -30,8 +30,6 @@ pub fn getchar() -> Option<u8> {
 pub fn init_early() {
     // SAFETY: idmap console mmio mem before paging
     unsafe {
-        putchar(b'a');
-        putchar(b'a');
         crate::platform::aarch64_common::mem::idmap_device(UART_BASE.as_usize());
     }
     //rk3588 uboot init uart, kernel not init uart

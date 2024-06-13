@@ -1014,7 +1014,7 @@ pub fn emu_icfgr_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu_ctx:
             }
         }
         if first_int >= 16 && !vm_has_interrupt_flag {
-            warn!("emu_icfgr_access: vm[{}] does not have interrupt {}", vm_id, first_int);
+            debug!("emu_icfgr_access: vm[{}] does not have interrupt {}", vm_id, first_int);
             return;
         }
     }
@@ -1070,7 +1070,7 @@ pub fn emu_ipriorityr_access(vgic: &Vgic<HyperCraftHalImpl, GuestPageTable>, emu
             }
         }
         if first_int >= 16 && !vm_has_interrupt_flag {
-            warn!(
+            debug!(
                 "emu_ipriorityr_access: vm[{}] does not have interrupt {}",
                 vm_id, first_int
             );
@@ -1376,7 +1376,7 @@ use arm_gicv3::GicRedistributor;
 
 #[inline(always)]
 pub fn vgicr_get_id(emu_ctx: &EmuContext) -> u32 {
-    ((emu_ctx.address - axconfig::GICR_PADDR) / size_of::<GicRedistributor>()) as u32
+    ((emu_ctx.address - axconfig::GUEST1_GICR_BASE_PADDR) / size_of::<GicRedistributor>()) as u32
 }
 
 pub fn vgicr_emul_ctrl_access(emu_ctx: &EmuContext) {
