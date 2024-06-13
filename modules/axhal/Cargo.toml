@@ -33,7 +33,7 @@ platform-rk3588-aarch64 = [
 
 default = []
 # manunl
-hv = ["paging", "platform-rk3588-aarch64", "axconfig/hv", "percpu/hv", "arm_gic/hv", "arm_gicv3/platform-rk3588-aarch64"]
+hv = ["paging", "platform-qemu-virt-aarch64", "axconfig/hv", "percpu/hv", "arm_gic/hv", "arm_gicv3/platform-qemu-virt-aarch64"]
 
 [dependencies]
 log = "0.4"

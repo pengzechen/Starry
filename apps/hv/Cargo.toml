@@ -16,6 +16,9 @@ spin = "0.9"
 [features]
 
 platform-rk3588-aarch64 = []
+platform-qemu-virt-aarch64 = []
 testos = []
-default = ["platform-rk3588-aarch64"]
+
+default = ["platform-qemu-virt-aarch64"]
+# default = ["platform-rk3588-aarch64"]
 # default = ["platform-rk3588-aarch64", "testos"]

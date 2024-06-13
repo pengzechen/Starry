@@ -252,7 +252,8 @@ qemu-system-aarch64 -m 3G -smp 2 -cpu cortex-a72 -machine virt -nographic   \
 -device loader,file=apps/hv/guest/nimbos/nimbos-aarch64.bin,addr=0x50200000,force-raw=on 
 */
 
-#[cfg(target_arch = "aarch64")] #[no_mangle] pub extern "C" fn secondary_vm(cpu_id: usize) ->! {
+#[cfg(target_arch = "aarch64")] #[no_mangle] 
+pub extern "C" fn secondary_vm(cpu_id: usize) ->! {
     while !is_vcpu_primary_ok() {
         core::hint::spin_loop();
     }
@@ -280,7 +281,7 @@ qemu-system-aarch64 -m 3G -smp 2 -cpu cortex-a72 -machine virt -nographic   \
     run_vm_vcpu(1, 0);
 }
 
-#[cfg(all(target_arch = "aarch64", not(feature = "platform-rk3588-aarch64")))] 
+#[cfg(all(target_arch = "aarch64", feature = "platform-qemu-virt-aarch64"))] 
 pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
     let mut gpt = GuestPageTable::new()?;
     let meta = MachineMeta::parse(dtb);
@@ -416,80 +417,34 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
 }
 
 
-#[cfg(all(feature = "platform-rk3588-aarch64", not(feature = "testos")))] 
-pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
+#[cfg(all(target_arch = "aarch64", feature = "platform-rk3588-aarch64"))] 
+pub fn setup_gpm(_dtb: usize, _kernel_entry: usize) -> Result<GuestPageTable> {
     let mut gpt = GuestPageTable::new()?;
-    let meta = MachineMeta::parse(dtb);
-
-    gpt.map_region(
-        0xa000000,
-        0xa000000,
-        0x4000,
-        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-    )?;
-    debug!("map virtio");
+    //let meta = MachineMeta::parse(dtb);
     
     gpt.map_region(
         0x900_0000,
         0xfeb5_0000,
-        0x4000,
+        0x1000,
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
     )?;
     debug!("map dw uart");
 
-    // gicv3 its
+
     gpt.map_region(
-        0x8080000,
-        0x8080000,
-        0x20000,
-        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-    )?;
-
-    if let Some(pcie) = meta.pcie {
-        gpt.map_region(
-            pcie.base_address,
-            pcie.base_address,
-            pcie.size,
-            MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-        )?;
-    }
-    debug!("map pcie");
-
-    for flash in meta.flash.iter() {
-        gpt.map_region(
-            flash.base_address,
-            flash.base_address,
-            flash.size,
-            MappingFlags::READ | MappingFlags::WRITE | MappingFlags::USER,
-        )?;
-    }
-    debug!("map flash");
-
-    info!(
-        "physical memory: [{:#x}: {:#x})",
-        meta.physical_memory_offset,
-        meta.physical_memory_offset + meta.physical_memory_size
-    );
-    gpt.map_region(
-        meta.physical_memory_offset,
-        meta.physical_memory_offset,
-        meta.physical_memory_size,
+        rk3588::DTB_ADDR,
+        rk3588::DTB_ADDR,
+        rk3588::MEM_SIZE,
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE | MappingFlags::USER,
     )?;
     debug!("map physical memeory");
 
-    gpt.map_region(
-        NIMBOS_KERNEL_BASE_VADDR,
-        0x7020_0000,
-        0x0400_0000,
-        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE | MappingFlags::USER
-    );
 
     Ok(gpt)
 }
 
 
-#[cfg(feature = "testos")] 
+#[cfg(all(target_arch = "aarch64", feature = "testos"))] 
 pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
     let mut gpt = GuestPageTable::new()?;
     let meta = MachineMeta::parse(dtb);
@@ -521,4 +476,5 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
 
 // make A=apps/hv ARCH=aarch64 HV=y PLATFORM=qemu-virt-aarch64 GIC_V3=y LOG=debug GUEST=nimbos build
 
-// qemu-system-aarch64 -m 3G -smp 1 -cpu cortex-a72 -machine virt -kernel apps/hv/hv_qemu-virt-aarch64.bin -machine virtualization=on,gic-version=3 -nographic
+// qemu-system-aarch64 -m 3G -smp 1 -cpu cortex-a72 -machine virt -kernel apps/hv/hv_qemu-virt-aarch64.bin\
+// -machine virtualization=on,gic-version=3 -nographic

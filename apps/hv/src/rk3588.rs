@@ -1,5 +1,5 @@
 const NIMBOS_DTB_SIZE: usize = 3303;
-const NIMBOS_KERNEL_SIZE: usize = 552960;
+const NIMBOS_KERNEL_SIZE: usize = 717416;
 const TSETOS_KERNEL_SIZE: usize = 428;
 
 
@@ -12,8 +12,11 @@ static NIMBOS_KERNEL: [u8; NIMBOS_KERNEL_SIZE] = *include_bytes!("../guest/nimbo
 // static NIMBOS_KERNEL: [u8; TSETOS_KERNEL_SIZE] = *include_bytes!("../guest/testos/testos.bin");
 
 #[link_section = ".guestdata.mem"]
-static NIMBOS_MEM: [u8; 0x40_0000] = [0; 0x40_0000];
+static NIMBOS_MEM: [u8; 0x4_0000] = [0; 0x4_0000];
 
+pub const DTB_ADDR:usize =    0x7000_0000;
+pub const KERNEL_ADDR:usize = 0x7008_0000;
+pub const MEM_SIZE:usize =    0x800_0000;
 
 
 extern "C" {
@@ -62,7 +65,7 @@ fn test_kerneldata() {
 
 fn test_dtbdata_high() {
     // 地址转换为指针
-    let address: *const u8 = 0x7000_0000 as * const u8;
+    let address: *const u8 = DTB_ADDR as * const u8;
 
     // 创建一个长度为10的数组来存储读取的数据
     let mut buffer = [0u8; 20];
@@ -80,7 +83,7 @@ fn test_dtbdata_high() {
 
 fn test_kerneldata_high() {
     // 地址转换为指针
-    let address: *const u8 = 0x7020_0000 as * const u8;
+    let address: *const u8 = KERNEL_ADDR as * const u8;
 
     // 创建一个长度为10的数组来存储读取的数据
     let mut buffer = [0u8; 20];
@@ -106,17 +109,17 @@ pub fn copy_high_data() -> usize {
 
     //zero data
 
-    let area_base  = 0x7000_0000 as * mut u8;
+    let area_base  = DTB_ADDR as * mut u8;
 
     unsafe {
         // 从指定地址读取10个字节
-        for i in 0..0x400_0000 {
+        for i in 0..MEM_SIZE {
             *area_base.offset(i as isize) = 0;
         }
     }
 
 
-    let area_base  = 0x7000_0000 as * mut u8;
+    let area_base  = DTB_ADDR as * mut u8;
 
     let tls_load_base = __guest_dtb_start as *mut u8;
     let tls_load_size = __guest_dtb_end as usize - __guest_dtb_start as usize;
@@ -129,7 +132,7 @@ pub fn copy_high_data() -> usize {
         );
     }
 
-    let area_base  = 0x7020_0000 as * mut u8;
+    let area_base  = KERNEL_ADDR as * mut u8;
 
     let tls_load_base = __guest_kernel_start as *mut u8;
     let tls_load_size = __guest_kernel_end as usize - __guest_kernel_start as usize;
