@@ -62,7 +62,8 @@ ifeq ($(HV), y)
     	  -device loader,file=$(GUEST_DTB),addr=0x70000000,force-raw=on \
         -device loader,file=$(GUEST_BIN),addr=0x70200000,force-raw=on 
         ifeq ($(GIC_V3), y)
-          qemu_args-y += -machine virtualization=on,gic-version=3
+          qemu_args-y += -machine virtualization=on,gic-version=3\
+          -device loader,file=/home/ajax/cicv/arch-only/arceos/apps/hv/guest/linux/initrd.gz,addr=0x78000000,force-raw=on 
         else
           qemu_args-y += -machine virtualization=on,gic-version=2
         endif
