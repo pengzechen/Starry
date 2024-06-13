@@ -78,7 +78,7 @@ pub(crate) unsafe extern "C" fn rust_entry(cpu_id: usize, dtb: usize) {
     for m in crate::platform::mem::platform_regions() {
         crate::platform::mem::idmap_kernel(m.paddr.as_usize());
     }
-    crate::mem::clear_guest_mem();
+    //crate::mem::clear_guest_mem();
     crate::platform::time::init_early();
     // disable low address access
     crate::arch::write_page_table_root0(0.into());

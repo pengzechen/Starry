@@ -12,10 +12,8 @@ fn new_guest_img() -> Result<()> {
         img_path = format!( "./apps/hv/guest/{}/{}-aarch64.bin",guest,guest);
         dtb_path = format!( "./apps/hv/guest/{}/{}-aarch64.dtb",guest,guest);
     } else if axconfig::FAMILY == "aarch64-rk3588j" {
-        img_path 
-            =String::from("./apps/hv/guest/nimbos/nimbos-aarch64_rk3588.bin");
-        dtb_path = 
-            String::from( "./apps/hv/guest/nimbos/nimbos-aarch64_rk3588.dtb");
+        img_path = format!("./apps/hv/guest/{}/{}-aarch64_rk3588.bin",guest,guest);
+        dtb_path = format!( "./apps/hv/guest/{}/{}-aarch64_rk3588.dtb",guest,guest);
     }
 
     writeln!(
