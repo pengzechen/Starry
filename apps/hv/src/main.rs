@@ -47,10 +47,8 @@ use alloc::vec::Vec;
 #[cfg(target_arch = "x86_64")]
 mod x64;
 
-#[cfg(feature = "platform-rk3588-aarch64")] 
-mod rk3588;
-#[cfg(feature = "platform-rk3588-aarch64")] 
-use rk3588::copy_high_data;
+// mod link_copy;
+// use link_copy::copy_high_data;
 
 extern "C" {
     fn __guest_dtb_start();
@@ -61,6 +59,8 @@ extern "C" {
 
 #[no_mangle] fn main(hart_id: usize) {
     println!("Hello, hv!");
+
+    //copy_high_data();
 
     #[cfg(target_arch = "riscv64")]
     {
@@ -86,14 +86,12 @@ extern "C" {
     }
     #[cfg(target_arch = "aarch64")]
     {
-        #[cfg(feature = "platform-rk3588-aarch64")]
-        copy_high_data();
+        
+        // let vm1_dtb = link_copy::DTB_COPYED_ADDR;
+        // let vm1_kernel_entry = link_copy::KERNEL_COPYED_ADDR;
 
         let vm1_kernel_entry = 0x7020_0000;
         let vm1_dtb = 0x7000_0000;
-
-        // let vm1_kernel_entry = __guest_kernel_start as usize;
-        // let vm1_dtb = __guest_dtb_start as usize ;
 
         // boot cpu
         PerCpu::<HyperCraftHalImpl>::init(0); 
@@ -281,7 +279,7 @@ pub extern "C" fn secondary_vm(cpu_id: usize) ->! {
     run_vm_vcpu(1, 0);
 }
 
-#[cfg(all(target_arch = "aarch64", feature = "platform-qemu-virt-aarch64"))] 
+#[cfg(all(feature = "platform-qemu-virt-aarch64", any(feature = "nimbos", feature = "linux")))] 
 pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
     let mut gpt = GuestPageTable::new()?;
     let meta = MachineMeta::parse(dtb);
@@ -417,7 +415,7 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
 }
 
 
-#[cfg(all(target_arch = "aarch64", feature = "platform-rk3588-aarch64"))] 
+#[cfg(all(feature = "platform-rk3588-aarch64", any(feature = "nimbos", feature = "linux")))] 
 pub fn setup_gpm(_dtb: usize, _kernel_entry: usize) -> Result<GuestPageTable> {
     let mut gpt = GuestPageTable::new()?;
     //let meta = MachineMeta::parse(dtb);
@@ -432,9 +430,9 @@ pub fn setup_gpm(_dtb: usize, _kernel_entry: usize) -> Result<GuestPageTable> {
 
 
     gpt.map_region(
-        rk3588::DTB_ADDR,
-        rk3588::DTB_ADDR,
-        rk3588::MEM_SIZE,
+        link_copy::DTB_COPYED_ADDR,
+        link_copy::DTB_COPYED_ADDR,
+        0x800_0000,
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE | MappingFlags::USER,
     )?;
     debug!("map physical memeory");
@@ -444,7 +442,7 @@ pub fn setup_gpm(_dtb: usize, _kernel_entry: usize) -> Result<GuestPageTable> {
 }
 
 
-#[cfg(all(target_arch = "aarch64", feature = "testos"))] 
+#[cfg(all(feature = "testos"))] 
 pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
     let mut gpt = GuestPageTable::new()?;
     let meta = MachineMeta::parse(dtb);
@@ -458,16 +456,9 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
     debug!("map dw uart");
 
     gpt.map_region(
-        0x70000000,
-        0x70000000,
-        0x0040_0000,
-        MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE | MappingFlags::USER,
-    )?;
-
-    gpt.map_region(
-        0xffff_0000_4008_0000,
-        0x7020_0000,
-        0x0040_0000,
+        0x7000_0000,
+        0x7000_0000,
+        0x0080_0000,
         MappingFlags::READ | MappingFlags::WRITE | MappingFlags::EXECUTE | MappingFlags::USER,
     )?;
 
@@ -476,5 +467,7 @@ pub fn setup_gpm(dtb: usize, kernel_entry: usize) -> Result<GuestPageTable> {
 
 // make A=apps/hv ARCH=aarch64 HV=y PLATFORM=qemu-virt-aarch64 GIC_V3=y LOG=debug GUEST=nimbos build
 
-// qemu-system-aarch64 -m 3G -smp 1 -cpu cortex-a72 -machine virt -kernel apps/hv/hv_qemu-virt-aarch64.bin\
-// -machine virtualization=on,gic-version=3 -nographic
+/*
+qemu-system-aarch64 -m 3G -smp 1 -cpu cortex-a72 -machine virt -kernel apps/hv/hv_qemu-virt-aarch64.bin\
+ -machine virtualization=on,gic-version=3 -nographic
+ */
