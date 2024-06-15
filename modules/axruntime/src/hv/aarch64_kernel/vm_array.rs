@@ -75,7 +75,7 @@ pub fn init_vm_emu_device(vm_id: usize) {
                 EmuDeviceType::EmuDeviceTGicd,
                 vm.vm_id,
                 idx,
-                axconfig::GUEST1_GICD_BASE_PADDR, // emu_dev.base_ipa,
+                axconfig::GICD_PADDR, // emu_dev.base_ipa,
                 0x10000,       // emu_dev.length,
                 emu_intc_handler,
             );
@@ -86,8 +86,8 @@ pub fn init_vm_emu_device(vm_id: usize) {
                 EmuDeviceType::EmuDeviceTGICR,
                 vm.vm_id,
                 idx,
-                axconfig::GUEST1_GICR_BASE_PADDR,
-                0x10_0000,
+                axconfig::GICR_PADDR,
+                axconfig::GICR_SIZE,
                 emul_vgicr_handler,
             );
             emu_vgicr_init(vm, idx);

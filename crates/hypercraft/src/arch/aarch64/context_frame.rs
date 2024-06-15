@@ -1,7 +1,7 @@
 use core::arch::asm;
 use core::arch::global_asm;
 use core::fmt::Formatter;
-
+use crate::arch::gicv3::InterruptContextTrait;
 use cortex_a::registers::*;
 
 use crate::{msr, mrs};

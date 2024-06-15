@@ -98,13 +98,9 @@ impl GicState {
             sre_el1: 0,
         }
     }
-
-    pub fn save_state(&mut self) {}
-
-    pub fn restore_state(&self) {}
 }
 
-trait InterruptContextTrait {
+pub trait InterruptContextTrait {
     fn save_state(&mut self);
     fn restore_state(&self);
 }

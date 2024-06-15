@@ -33,8 +33,8 @@ guest-regions = [
 ]
 
 guest1-physmem-start = "0x7000_0000"
-guest1-kernel-offset = "0x20_0000"
-guest2-physmem-start = "0x8000_0000"
+guest1-kernel-offset = "0x20_0000" # linux
+#guest1-kernel-offset = "0x8_0000" #nimbos
 
 # VirtIO MMIO regions with format (`base_paddr`, `size`).
 virtio-mmio-regions = [

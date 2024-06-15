@@ -119,14 +119,13 @@ pub fn emu_intc_handler(_emu_dev_id: usize, emu_ctx: &EmuContext) -> bool {
 
 #[cfg(feature = "gic_v3")]
 pub fn emu_intc_init(vm: &mut VM<HyperCraftHalImpl, GuestPageTable>, emu_dev_id: usize) {
-    // let vgic_cpu_num = vm.config().cpu_num();
-    // vm.init_intc_mode(true);
+    GICH.set_hcr(0x80080019);
+    for vcpu in vm.vcpus.get_vcpu_mut(0) {
+         vcpu.set_hcr(0x80080019);
+    }
 
     let vgic_cpu_num = 1;
-
-
     let vgic = Arc::new(Vgic::<HyperCraftHalImpl, GuestPageTable>::default());
-
     let mut vgicd = vgic.vgicd.lock();
     vgicd.typer = (GICD.typer() & !(GICD_TYPER_CPUNUM_MSK | GICD_TYPER_LPIS) as u32)
         | ((((vm.vcpu_num() - 1) << GICD_TYPER_CPUNUM_OFF) & GICD_TYPER_CPUNUM_MSK) as u32);

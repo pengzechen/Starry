@@ -156,6 +156,11 @@ impl <H:HyperCraftHal> VCpu<H> {
         self.regs.guest_trap_context_regs.set_gpr(idx, val);
     }
 
+    pub fn set_hcr(&mut self, hcr: u64) {
+        self.regs.vm_system_regs.hcr_el2 = hcr;
+    }
+
+
     /// Init guest context. Also set some el2 register value.
     fn init_vm_context(&mut self) {
         CNTHCTL_EL2.modify(CNTHCTL_EL2::EL1PCEN::SET + CNTHCTL_EL2::EL1PCTEN::SET);
