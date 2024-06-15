@@ -27,10 +27,7 @@ guest-regions = [
 ]
 
 guest1-physmem-start = "0x7000_0000"
-guest1-kernel-offset = "0x8_0000"
-guest2-physmem-start = "0x8000_0000"
-
-
+guest1-kernel-offset = "0x20_0000"
 virtio-mmio-regions = []
 
 # Base physical address of the PCIe ECAM space.
@@ -49,9 +46,6 @@ gicd-paddr = "0xfe600000"
 # GICR Address
 gicc-paddr = "0xfe680000"
 gicr-paddr = "0xfe680000"
-
-# HV GUEST emulate GIC address
-guest1-gicd-base-paddr = "0x0800_0000"
-guest1-gicr-base-paddr = "0x080a_0000"
+gicr-size = "0x100000"
 # PSCI
 psci-method = "smc"

@@ -72,7 +72,7 @@ fn test_dtbdata_high() {
         let kernel_start_addr = guestkernel_start as usize;
         unsafe {
             copy_data(dtb_start_addr as *mut u8, vm1_dtb as *mut u8, 0x20_0000);
-            copy_data(kernel_start_addr as *mut u8, vm1_kernel_entry as *mut u8, 0x280_0000);
+            copy_data(kernel_start_addr as *mut u8, vm1_kernel_entry as *mut u8, 0x320_0000);
         }
 
         // boot cpu 
