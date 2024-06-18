@@ -123,14 +123,10 @@ pub fn init_vm_passthrough_device(vm_id: usize) {
     if let Some(vm_option) = VM_ARRAY.get_mut(vm_id) {
         if let Some(vm) = vm_option {
             // hard code for qemu vm
-            let mut irqs = Vec::new();
-            irqs.push(33);  
-            irqs.push(27);  // virtual timer
-            irqs.push(30);
-            irqs.push(32 + 0x28);
-            irqs.push(32 + 0x29);
-            irqs.push(0x3e + 0x11);  // what interrupt????
-            for irq in irqs {
+            //let mut qemu_irqs = vec!(33,27,30,32+0x28, 32+0x29, 0x3e+0x11);
+            let mut rk3588_irqs = Vec::from([20,23,26,27,30,321,365,370]);
+
+            for irq in rk3588_irqs {
                 // debug!("this is irq: {:#x}", irq);
                 if !interrupt_vm_register(vm, irq) {
                     warn!("vm{} register irq{} failed", vm_id, irq);

@@ -28,6 +28,7 @@ extern "C" {
     fn data_abort_handler(ctx: &mut ContextFrame);
     fn hvc_handler(ctx: &mut ContextFrame);
     fn smc_handler(ctx: &mut ContextFrame);
+    fn sysreg_handler(iss: u32, ctx: &mut ContextFrame);
 }
 
 #[repr(u8)]
@@ -66,8 +67,6 @@ fn current_spxel_irq(ctx: &mut ContextFrame) {
     lower_aarch64_irq(ctx);
 }
 
-
-
 /// deal with lower aarch64 interruption exception
 #[no_mangle]
 fn lower_aarch64_irq(ctx: &mut ContextFrame) {
@@ -77,6 +76,16 @@ fn lower_aarch64_irq(ctx: &mut ContextFrame) {
     let (irq, src) = gicc_get_current_irq();
     //debug!("src {} id{}", src, irq);
     crate::trap::handle_irq_extern_hv(irq, src, ctx);
+}
+
+#[inline(always)]
+pub fn exception_esr() -> usize {
+    cortex_a::registers::ESR_EL2.get() as usize
+}
+
+#[inline(always)]
+pub fn exception_iss() -> usize {
+    exception_esr() & ((1 << 25) - 1)
 }
 
 /// deal with lower aarch64 synchronous exception
@@ -101,7 +110,9 @@ fn lower_aarch64_synchronous(ctx: &mut ContextFrame) {
         0x17 => unsafe {
             smc_handler(ctx);
         },
-        // 0x18 todo？
+        0x18 => unsafe {
+            sysreg_handler(exception_iss() as u32,ctx);
+        },
         _ => {
             panic!(
                 "handler not presents for EC_{} @ipa 0x{:x}, @pc 0x{:x}, @esr 0x{:x}, @sctlr_el1 0x{:x}, @vttbr_el2 0x{:x}, @vtcr_el2: {:#x} hcr: {:#x} ctx:{}",

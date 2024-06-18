@@ -25,11 +25,11 @@
 		compatible = "qemu,platform\0simple-bus";
 	};
 
-	8250@9000000 {
-		clock-names = "uartclk\0apb_pclk";
+	8250@feb50000 {
+		clock-names = "apb_pclk";
 		clocks = <0x8000 0x8000>;
-		interrupts = <0x00 0x01 0x04>;
-		reg = <0x00 0x9000000 0x00 0x1000>;
+		interrupts = <0 333 04>;
+		reg = <0x00 0xfeb50000 0x00 0x1000>;
 		compatible = "snps,dw-apb-uart";
 	};
 
@@ -59,7 +59,8 @@
 	};
 
 	timer {
-		interrupts = <0x01 0x0d 0x04 0x01 0x0e 0x04 0x01 0x0b 0x04 0x01 0x0a 0x04>;
+		interrupts = 
+		<0x01 0x0d 0x04 0x01 0x0e 0x04 0x01 0x0b 0x04 0x01 0x0a 0x04>;
 		always-on;
 		compatible = "arm,armv8-timer";
 	};
@@ -73,7 +74,7 @@
 	};
 
 	chosen {
-		bootargs = "init=/init console=ttyAMA0";
-		stdout-path = "/8250@9000000";
+		bootargs = "rdinit=/bin/sh console=ttyS0,1500000 earlycon=uart8250,mmio32,0xfeb50000";
+		stdout-path = "/8250@feb50000";
 	};
 };

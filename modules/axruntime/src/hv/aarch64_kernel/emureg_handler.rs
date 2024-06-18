@@ -6,17 +6,12 @@ use super::{active_vm, current_cpu};
 use hypercraft::arch::emu::{EmuContext, EmuDevs};
 use hypercraft::arch::emu::*;
 
-// ==================== EMU reg ======================
-
 pub fn vgic_icc_sre_handler(_emu_dev_id: usize, emu_ctx: &EmuContext) -> bool {
     if !emu_ctx.write {
         current_cpu().set_gpr(emu_ctx.reg, 0x1);
     }
     true
 }
-
-
-
 
 /// Static RwLock containing a vector of EmuRegEntry instances, representing emulator registers.
 static EMU_REGS_LIST: RwLock<Vec<EmuRegEntry>> = RwLock::new(Vec::new());

@@ -87,7 +87,7 @@
 	};
 
 	chosen {
-		bootargs = "init=/init console=ttyAMA0";
+		bootargs = "init=/init console=ttyAMA0 earlycon=pl011,mmio32,0x9000000";
 		stdout-path = "/pl011@9000000";
 	};
 };
