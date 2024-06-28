@@ -17,6 +17,7 @@ paging = ["axalloc", "page_table"]
 irq = []
 tls = ["alloc"]
 default = []
+hv = ["paging", "axconfig/hv", "page_table_entry/hv", "percpu/hv"]
 
 [dependencies]
 log = "0.4"
@@ -53,6 +54,7 @@ tock-registers = "0.8"
 arm_gic = { path = "../../crates/arm_gic" }
 arm_pl011 = { path = "../../crates/arm_pl011" }
 dw_apb_uart = { path = "../../crates/dw_apb_uart" }
+cortex-a = "8.1.1"
 
 [build-dependencies]
 axconfig = { path = "../axconfig" }
