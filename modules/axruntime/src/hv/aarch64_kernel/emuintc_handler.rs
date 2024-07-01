@@ -321,6 +321,11 @@ pub fn emu_intc_init(vm: &mut VM<HyperCraftHalImpl, GuestPageTable>, emu_dev_id:
     // let vgic_cpu_num = vm.config().cpu_num();
     // vm.init_intc_mode(true);
 
+    GICH.set_hcr(0x80080019);
+    for vcpu in vm.vcpus.get_vcpu_mut(0) {
+         vcpu.set_hcr(0x80080019);
+    }
+
     let vgic_cpu_num = 1;
     
 
