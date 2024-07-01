@@ -8,22 +8,54 @@
 // MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 // See the Mulan PSL v2 for more details.
 
+use super::exception_utils::*;
+use alloc::collections::BTreeMap;
 use core::arch::global_asm;
-// use hypercraft::arch::ContextFrame;
-// use hypercraft::arch::ContextFrameTrait;
+use spin::RwLock;
 use tock_registers::interfaces::*;
-
-// use super::exception_utils::*;
-// use crate::platform::aarch64_common::gic::*;
 
 global_asm!(include_str!("exception.S"));
 use super::TrapFrame;
 
-// extern "C" {
-//     fn data_abort_handler(ctx: &mut ContextFrame);
-//     fn hvc_handler(ctx: &mut ContextFrame);
-//     fn smc_handler(ctx: &mut ContextFrame);
-// }
+type ExceptionHandler = fn(&mut TrapFrame);
+static LOWER_AARCH64_SYNCHRONOUS_HANDLERS: RwLock<BTreeMap<usize, ExceptionHandler>> =
+    RwLock::new(BTreeMap::new());
+
+// esr fields [31:26]
+const MAX_EXCEPTION_COUNT: usize = 64;
+
+/// AARCH64 Exception handler registration.
+///
+/// It also enables the IRQ if the registration succeeds. It returns `false` if
+/// the registration failed.
+#[allow(dead_code)]
+pub fn register_exception_handler_aarch64(exception_class: usize, handler: ExceptionHandler) -> bool {
+    if exception_class < MAX_EXCEPTION_COUNT {
+        let mut handlers = LOWER_AARCH64_SYNCHRONOUS_HANDLERS.write();
+        handlers.insert(exception_class, handler);
+        return true;
+    }
+}
+
+fn dispatch_exception(exception_class: usize, tf: &mut TrapFrame) {
+    let handlers = LOWER_AARCH64_SYNCHRONOUS_HANDLERS.read();
+    if let Some(handler) = handlers.get(&exception_class) {
+        handler(tf);
+    } else {
+        panic!(
+            "handler not presents for EC_{} @ipa 0x{:x}, @pc 0x{:x}, @esr 0x{:x}, @sctlr_el1 0x{:x}, @vttbr_el2 0x{:x}, @vtcr_el2: {:#x} hcr: {:#x} ctx:{}",
+            exception_class(),
+            exception_fault_addr(),
+            tf.elr,
+            exception_esr(),
+            cortex_a::registers::SCTLR_EL1.get() as usize,
+            cortex_a::registers::VTTBR_EL2.get() as usize,
+            cortex_a::registers::VTCR_EL2.get() as usize,
+            cortex_a::registers::HCR_EL2.get() as usize,
+            tf
+        );
+    }
+}
 
 #[repr(u8)]
 #[derive(Debug)]
@@ -56,57 +88,26 @@ fn invalid_exception_el2(tf: &mut TrapFrame, kind: TrapKind, source: TrapSource)
 
 // /// deal with lower aarch64 interruption exception
 // #[no_mangle]
-// fn current_spxel_irq(ctx: &mut ContextFrame) {
-//     debug!("IRQ stay in the same el!!!!!!!!!!!!!!!");
+// fn current_spxel_irq(ctx: &mut TrapFrame) {
 //     lower_aarch64_irq(ctx);
 // }
 
 // /// deal with lower aarch64 interruption exception
 // #[no_mangle]
-// fn lower_aarch64_irq(ctx: &mut ContextFrame) {
-//     debug!("IRQ routed to EL2!!!!!!!!!!!!!!!");
-//     // read_timer_regs();
+// fn lower_aarch64_irq(ctx: &mut TrapFrame) {
 //     let (irq, src) = gicc_get_current_irq();
 //     debug!("src {} id{}", src, irq);
 //     crate::trap::handle_irq_extern_hv(irq, src, ctx);
 // }
 
-// /// deal with lower aarch64 synchronous exception
-// #[no_mangle]
-// fn lower_aarch64_synchronous(ctx: &mut ContextFrame) {
-//     debug!(
-//         "enter lower_aarch64_synchronous exception class:0x{:X}",
-//         exception_class()
-//     );
-//     // current_cpu().set_context_addr(ctx);
-
-//     match exception_class() {
-//         0x24 => {
-//             // info!("Core[{}] data_abort_handler", cpu_id());
-//             unsafe {
-//                 data_abort_handler(ctx);
-//             }
-//         }
-//         0x16 => unsafe {
-//             hvc_handler(ctx);
-//         },
-//         0x17 => unsafe {
-//             smc_handler(ctx);
-//         },
-//         // 0x18 todo？
-//         _ => {
-//             panic!(
-//                 "handler not presents for EC_{} @ipa 0x{:x}, @pc 0x{:x}, @esr 0x{:x}, @sctlr_el1 0x{:x}, @vttbr_el2 0x{:x}, @vtcr_el2: {:#x} hcr: {:#x} ctx:{}",
-//                 exception_class(),
-//                 exception_fault_addr(),
-//                 (*ctx).exception_pc(),
-//                 exception_esr(),
-//                 cortex_a::registers::SCTLR_EL1.get() as usize,
-//                 cortex_a::registers::VTTBR_EL2.get() as usize,
-//                 cortex_a::registers::VTCR_EL2.get() as usize,
-//                 cortex_a::registers::HCR_EL2.get() as usize,
-//                 ctx
-//             );
-//         }
-//     }
-// }
+/// deal with lower aarch64 synchronous exception
+#[no_mangle]
+fn lower_aarch64_synchronous(tf: &mut TrapFrame) {
+    debug!(
+        "enter lower_aarch64_synchronous exception class:0x{:X}",
+        exception_class()
+    );
+    // 0x16: hvc_handler
+    // 0x24: data_abort_handler
+    dispatch_exception(exception_class(), tf);
+}

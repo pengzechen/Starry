@@ -1,5 +1,4 @@
 mod exception;
 pub mod exception_utils;
 
-// mod sync;
-// mod guest_psci;
+pub use exception::register_exception_handler_aarch64;
