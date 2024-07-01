@@ -11,6 +11,7 @@ use arm_gicv3::bit_extract;
 use arm_gicv3::GIC_LRS_NUM;
 
 pub use arm_gicv3::GIC_INTS_MAX as MAX_IRQ_COUNT;
+pub use hypercraft::IrqState;
 
 use crate::cpu::this_cpu_id;
 
@@ -168,6 +169,7 @@ pub fn gic_cpu_init() {
     let cpu_id = this_cpu_id();
     debug!("this cpu id {}", cpu_id);
     GICR.init(cpu_id);
+    GICH.init();
     GICC.init();
 }
 
@@ -221,6 +223,11 @@ pub fn gic_get_act(int_id: usize) -> bool {
     } else {
         GICR.get_act(int_id, this_cpu_id() as u32)
     }
+}
+
+pub fn gic_set_state(int_id: usize, state: usize, gicr_id: u32) {
+    gic_set_act(int_id, (state & IrqState::IrqSActive as usize) != 0, gicr_id);
+    gic_set_pend(int_id, (state & IrqState::IrqSPend as usize) != 0, gicr_id);
 }
 
 

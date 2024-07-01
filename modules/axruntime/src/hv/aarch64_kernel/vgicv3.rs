@@ -36,7 +36,7 @@ use arm_gicv3::platform::PLAT_DESC;
 use arm_gicv3::gic_is_priv;
 use hypercraft::arch::utils::bit_extract;
 use hypercraft::arch::utils::bit_get;
-use hypercraft::gicv3::gic_set_state;
+use axhal::gicv3::gic_set_state;
 
 use axhal::gicv3::gic_lrs;
 

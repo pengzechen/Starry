@@ -309,7 +309,7 @@ impl GicDistributor {
     }
 
     pub fn global_init(&self) {
-        let int_num = gic_max_spi();
+        let int_num = gic_max_spi(self);
         debug!("file: arm_gicv3 lib, func global_init, int_num: {}", int_num);
         for i in (GIC_PRIVATE_INT_NUM / 32)..(int_num / 32) {
             self.IGROUPR[i].set(u32::MAX);
@@ -785,10 +785,12 @@ impl GicCpuInterface {
         }
 
         isb();
-
-        for i in 0..gich_lrs_num() {
-            GICH.set_lr(i, 0);
-        }
+        
+        // 这里不希望出现 GICH 这个全局的静态变量
+        // 放在 GICH.init() 中实现
+        // for i in 0..gich_lrs_num() {
+        //     GICH.set_lr(i, 0);
+        // }
 
         let pmr = ICC_PMR_EL1::read();
         // SAFETY: Set the priority mask[7:0] to 0xff means min prio.
@@ -847,6 +849,14 @@ impl GicCpuInterface {
 pub struct GicHypervisorInterface;
 
 impl GicHypervisorInterface {
+
+    // 写 0 到所有 lr 寄存器
+    pub fn init(&self) {
+        for i in 0..gich_lrs_num() {
+            self.set_lr(i, 0);
+        }
+    }
+
     pub fn hcr(&self) -> usize {
         ICH_HCR_EL2::read()
     }
@@ -941,8 +951,8 @@ pub static GICR: DeviceRef<GicRedistributor> = unsafe { DeviceRef::new((platform
     (ICH_VTR_EL2::read() & GICH_VTR_MSK) + 1
 }
 
-#[inline(always)] pub fn gic_max_spi() -> usize {
-    let typer = GICD.TYPER.get();
+#[inline(always)] pub fn gic_max_spi(gicd: &GicDistributor) -> usize {
+    let typer = gicd.TYPER.get();
     let value = typer & GICD_TYPER_ITLINESNUM_LEN as u32;
     (32 * (value + 1)) as usize
 }
@@ -955,21 +965,23 @@ pub static GICR: DeviceRef<GicRedistributor> = unsafe { DeviceRef::new((platform
     int_id < GIC_SGIS_NUM
 }
 
-pub fn gic_set_act(int_id: usize, act: bool, gicr_id: u32) {
-    if !gic_is_priv(int_id) {
-        GICD.set_act(int_id, act);
-    } else {
-        GICR.set_act(int_id, act, gicr_id);
-    }
-}
+// 这两个函数移到 hal -> gicv3 中实现
+// pub fn gic_set_act(int_id: usize, act: bool, gicr_id: u32) {
+//     if !gic_is_priv(int_id) {
+//         GICD.set_act(int_id, act);
+//     } else {
+//         GICR.set_act(int_id, act, gicr_id);
+//     }
+// }
 
-pub fn gic_set_pend(int_id: usize, pend: bool, gicr_id: u32) {
-    if !gic_is_priv(int_id) {
-        GICD.set_pend(int_id, pend);
-    } else {
-        GICR.set_pend(int_id, pend, gicr_id);
-    }
-}
+// 这两个函数移到 hal -> gicv3 中实现
+// pub fn gic_set_pend(int_id: usize, pend: bool, gicr_id: u32) {
+//     if !gic_is_priv(int_id) {
+//         GICD.set_pend(int_id, pend);
+//     } else {
+//         GICR.set_pend(int_id, pend, gicr_id);
+//     }
+// }
 
 pub use platform::cpuid2mpidr;
 
