@@ -112,6 +112,7 @@ pub(crate) fn init_secondary() {
 }
 
 fn gic_global_init() {
+    #[cfg(feature = "hv")]
     set_gic_lrs(GICH.get_lrs_num());
     GICD.lock().global_init();
 }
@@ -166,10 +167,12 @@ pub fn gic_is_priv(int_id: usize) -> bool {
     int_id < GIC_PRIVATE_INT_NUM
 }
 
+#[cfg(feature = "hv")]
 pub fn gic_lrs() -> usize {
     *GIC_LRS_NUM.lock()
 }
 
+#[cfg(feature = "hv")]
 pub fn set_gic_lrs(lrs: usize) {
     let mut gic_lrs = GIC_LRS_NUM.lock();
     *gic_lrs = lrs;

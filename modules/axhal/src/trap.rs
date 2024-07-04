@@ -12,15 +12,24 @@ use hypercraft::arch::ContextFrame;
 ///
 /// [1]: crate_interface::def_interface
 /// [2]: crate_interface::impl_interface
+#[cfg(all(feature = "hv", target_arch = "aarch64"))]
 #[def_interface]
 pub trait TrapHandler {
     /// Handles interrupt requests for the given IRQ number.
     fn handle_irq(irq_num: usize);
-    #[cfg(all(feature = "hv", target_arch = "aarch64"))]
+    
     /// Handles interrupt requests for the given IRQ number for route to el2.
     fn handle_irq_hv(irq_num: usize, src: usize, ctx: &mut ContextFrame);
     // more e.g.: handle_page_fault();
 }
+
+#[cfg(all(not(feature = "hv"), target_arch = "aarch64"))]
+#[def_interface]
+pub trait TrapHandler {
+    /// Handles interrupt requests for the given IRQ number.
+    fn handle_irq(irq_num: usize);
+}
+
 
 /// Call the external IRQ handler.
 #[allow(dead_code)]
