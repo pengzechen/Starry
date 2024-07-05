@@ -49,9 +49,9 @@ pub fn set_oneshot_timer(deadline_ns: u64) {
     if cnptct < cnptct_deadline {
         let interval = cnptct_deadline - cnptct;
         debug_assert!(interval <= u32::MAX as u64);
-        msr!(CNTHP_TVAL_EL2, interval as u64);
+        core::arch::asm!("msr CNTHP_TVAL_EL2, {}", in(reg) interval);
     } else {
-        msr!(CNTHP_TVAL_EL2, 0);
+        core::arch::asm!("msr CNTHP_TVAL_EL2, 0");
     }
 }
 
@@ -75,8 +75,10 @@ pub(crate) fn init_percpu() {
         // ENABLE, bit [0]， Enables the timer.
         let ctl = 1;
         let tval = 0;
-        msr!(CNTHP_CTL_EL2, ctl);
-        msr!(CNTHP_TVAL_EL2, tval);
+        unsafe {
+            core::arch::asm!("msr CNTHP_CTL_EL2, {}", in(reg) ctl);
+            core::arch::asm!("msr CNTHP_TVAL_EL2, {}", in(reg) tval);
+        }
     }
     crate::platform::irq::set_enable(crate::platform::irq::TIMER_IRQ_NUM, true);
 }

@@ -24,21 +24,8 @@ fn exception_far() -> usize {
 #[inline(always)]
 fn exception_hpfar() -> usize {
     let hpfar: u64;
-    mrs!(hpfar, HPFAR_EL2);
+    unsafe{core::arch::asm!("mrs {}, HPFAR_EL2", out(reg) hpfar);}
     hpfar as usize
-}
-
-pub fn read_timer_regs()  {
-    let cntvoff_el2: u64;
-    let cntv_cval_el0: u64;
-    let cntvct_el0: u64;
-    let cntpct_el0: u64;
-    let cntv_ctl_el0: u64;
-    mrs!(cntvoff_el2, CNTVOFF_EL2);
-    mrs!(cntv_cval_el0, CNTV_CVAL_EL0);
-    mrs!(cntvct_el0, CNTVCT_EL0);
-    mrs!(cntpct_el0, CNTPCT_EL0);
-    mrs!(cntv_ctl_el0, CNTV_CTL_EL0);
 }
 
 #[allow(non_upper_case_globals)]
