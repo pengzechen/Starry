@@ -1,5 +1,4 @@
 use tock_registers::interfaces::*;
-use crate::mrs;
 
 #[inline(always)]
 pub fn exception_esr() -> usize {
