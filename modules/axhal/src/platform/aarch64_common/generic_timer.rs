@@ -3,7 +3,6 @@
 use aarch64_cpu::registers::{CNTFRQ_EL0, CNTPCT_EL0, CNTP_CTL_EL0, CNTP_TVAL_EL0};
 use ratio::Ratio;
 use tock_registers::interfaces::{Readable, Writeable};
-use super::msr;
 
 static mut CNTPCT_TO_NANOS_RATIO: Ratio = Ratio::zero();
 static mut NANOS_TO_CNTPCT_RATIO: Ratio = Ratio::zero();
@@ -49,9 +48,9 @@ pub fn set_oneshot_timer(deadline_ns: u64) {
     if cnptct < cnptct_deadline {
         let interval = cnptct_deadline - cnptct;
         debug_assert!(interval <= u32::MAX as u64);
-        core::arch::asm!("msr CNTHP_TVAL_EL2, {}", in(reg) interval);
+        unsafe{core::arch::asm!("msr CNTHP_TVAL_EL2, {}", in(reg) interval);}
     } else {
-        core::arch::asm!("msr CNTHP_TVAL_EL2, 0");
+        unsafe{core::arch::asm!("msr CNTHP_TVAL_EL2, 0");}
     }
 }
 
