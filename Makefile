@@ -157,7 +157,7 @@ OUT_ELF := $(OUT_DIR)/$(APP_NAME)_$(PLATFORM_NAME).elf
 OUT_BIN := $(OUT_DIR)/$(APP_NAME)_$(PLATFORM_NAME).bin
 
 ifeq ($(HV), y)
-	LD_SCRIPT = $(CURDIR)/modules/axhal/linker_$(PLATFORM)_hv.lds
+	LD_SCRIPT = $(CURDIR)/modules/axhal/linker_$(PLATFORM_NAME)_hv.lds
 endif
 
 all: build

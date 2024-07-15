@@ -63,7 +63,7 @@
 .p2align 7
     SAVE_REGS_EL2
     mov     x0, sp
-    bl      invalid_exception_el2
+    bl      handle_irq_exception
     b       .Lexception_return_el2
 .endm
 
@@ -79,7 +79,7 @@
 .p2align 7
     SAVE_REGS_EL2
     mov     x0, sp
-    bl      invalid_exception_el2
+    bl      lower_aarch64_synchronous
     b       .Lexception_return_el2
 .endm
 
