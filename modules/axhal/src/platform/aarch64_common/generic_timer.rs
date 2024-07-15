@@ -50,7 +50,7 @@ pub fn set_oneshot_timer(deadline_ns: u64) {
         debug_assert!(interval <= u32::MAX as u64);
         unsafe{core::arch::asm!("msr CNTHP_TVAL_EL2, {}", in(reg) interval);}
     } else {
-        unsafe{core::arch::asm!("msr CNTHP_TVAL_EL2, 0");}
+        unsafe{core::arch::asm!("msr CNTHP_TVAL_EL2, {}", in(reg) 0);}
     }
 }
 
