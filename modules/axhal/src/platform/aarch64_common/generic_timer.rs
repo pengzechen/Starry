@@ -28,7 +28,7 @@ pub fn nanos_to_ticks(nanos: u64) -> u64 {
 /// Set a one-shot timer.
 ///
 /// A timer interrupt will be triggered at the given deadline (in nanoseconds).
-#[cfg(feature = "irq")]
+#[cfg(all(feature = "irq", not(feature = "hv")))]
 pub fn set_oneshot_timer(deadline_ns: u64) {
     let cnptct = CNTPCT_EL0.get();
     let cnptct_deadline = nanos_to_ticks(deadline_ns);
@@ -38,6 +38,19 @@ pub fn set_oneshot_timer(deadline_ns: u64) {
         CNTP_TVAL_EL0.set(interval);
     } else {
         CNTP_TVAL_EL0.set(0);
+    }
+}
+
+#[cfg(all(feature = "irq", feature = "hv"))]
+pub fn set_oneshot_timer(deadline_ns: u64) {
+    let cnptct = CNTPCT_EL0.get();
+    let cnptct_deadline = nanos_to_ticks(deadline_ns);
+    if cnptct < cnptct_deadline {
+        let interval = cnptct_deadline - cnptct;
+        debug_assert!(interval <= u32::MAX as u64);
+        unsafe{core::arch::asm!("msr CNTHP_TVAL_EL2, {}", in(reg) interval);}
+    } else {
+        unsafe{core::arch::asm!("msr CNTHP_TVAL_EL2, {}", in(reg) 0);}
     }
 }
 
@@ -51,10 +64,20 @@ pub(crate) fn init_early() {
 }
 
 pub(crate) fn init_percpu() {
-    #[cfg(feature = "irq")]
+    #[cfg(all(feature = "irq", not(feature = "hv")))]
     {
         CNTP_CTL_EL0.write(CNTP_CTL_EL0::ENABLE::SET);
         CNTP_TVAL_EL0.set(0);
-        crate::platform::irq::set_enable(crate::platform::irq::TIMER_IRQ_NUM, true);
     }
+    #[cfg(all(feature = "irq", feature = "hv"))]
+    {
+        // ENABLE, bit [0]， Enables the timer.
+        let ctl = 1;
+        let tval = 0;
+        unsafe {
+            core::arch::asm!("msr CNTHP_CTL_EL2, {}", in(reg) ctl);
+            core::arch::asm!("msr CNTHP_TVAL_EL2, {}", in(reg) tval);
+        }
+    }
+    crate::platform::irq::set_enable(crate::platform::irq::TIMER_IRQ_NUM, true);
 }

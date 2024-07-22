@@ -93,6 +93,7 @@ register_structs! {
 /// - visibility of the state of each interrupt
 /// - a mechanism for software to set or clear the pending state of a peripheral
 ///   interrupt.
+#[derive(Debug, Clone)]
 pub struct GicDistributor {
     base: NonNull<GicDistributorRegs>,
     max_irqs: usize,
@@ -111,6 +112,7 @@ pub struct GicDistributor {
 /// - setting an interrupt priority mask for the processor
 /// - defining the preemption policy for the processor
 /// - determining the highest priority pending interrupt for the processor.
+#[derive(Debug, Clone)]
 pub struct GicCpuInterface {
     base: NonNull<GicCpuInterfaceRegs>,
 }
@@ -177,6 +179,25 @@ impl GicDistributor {
         }
     }
 
+    /// Get interrupt priority.
+    pub fn get_priority(&self, int_id: usize) -> usize {
+        let idx = (int_id * 8) / 32;
+        let off = (int_id * 8) % 32;
+        ((self.regs().IPRIORITYR[idx].get() >> off) & 0xff) as usize
+    }
+
+    /// Set interrupt priority.
+    pub fn set_priority(&self, int_id: usize, priority: u8) {
+        let idx = (int_id * 8) / 32;
+        let offset = (int_id * 8) % 32;
+        let mask: u32 = 0xff << offset;
+
+        let prev_reg_val = self.regs().IPRIORITYR[idx].get();
+        // clear target int_id priority and set its priority.
+        let reg_val = (prev_reg_val & !mask) | (((priority as u32) << offset) & mask);
+        self.regs().IPRIORITYR[idx].set(reg_val);
+    }
+
     /// Initializes the GIC distributor.
     ///
     /// It disables all interrupts, sets the target of all SPIs to CPU 0,
@@ -192,11 +213,13 @@ impl GicDistributor {
         for i in (0..max_irqs).step_by(32) {
             self.regs().ICENABLER[i / 32].set(u32::MAX);
             self.regs().ICPENDR[i / 32].set(u32::MAX);
+            self.regs().ICACTIVER[i / 32].set(u32::MAX);
         }
         if self.cpu_num() > 1 {
             for i in (SPI_RANGE.start..max_irqs).step_by(4) {
                 // Set external interrupts to target cpu 0
                 self.regs().ITARGETSR[i / 4].set(0x01_01_01_01);
+                self.regs().IPRIORITYR[i / 4].set(u32::MAX);
             }
         }
         // Initialize all the SPIs to edge triggered
@@ -235,7 +258,7 @@ impl GicCpuInterface {
     /// specified interrupt. (write GICC_EOIR)
     ///
     /// The value written must be the value returns from [`Self::iar`].
-    pub fn eoi(&self, iar: u32) {
+    pub fn set_eoi(&self, iar: u32) {
         self.regs().EOIR.set(iar);
     }
 
@@ -255,7 +278,7 @@ impl GicCpuInterface {
         let vector = iar & 0x3ff;
         if vector < 1020 {
             handler(vector);
-            self.eoi(iar);
+            self.set_eoi(iar);
         } else {
             // spurious
         }
@@ -269,6 +292,9 @@ impl GicCpuInterface {
     pub fn init(&self) {
         // enable GIC0
         self.regs().CTLR.set(1);
+        // #[cfg(feature = "hv")]
+        // // set EOImodeNS and EN bit for hypervisor
+        // self.regs().CTLR.set(1| 0x200);
         // unmask interrupts at all priority levels
         self.regs().PMR.set(0xff);
     }

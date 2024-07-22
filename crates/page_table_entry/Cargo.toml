@@ -9,6 +9,10 @@ homepage = "https://github.com/arceos-org/arceos"
 repository = "https://github.com/arceos-org/arceos/tree/main/crates/page_table_entry"
 documentation = "https://arceos-org.github.io/arceos/page_table_entry/index.html"
 
+[features]
+hv = []
+default = ["hv"]
+
 [dependencies]
 bitflags = "2.6"
 memory_addr = { path = "../memory_addr" }

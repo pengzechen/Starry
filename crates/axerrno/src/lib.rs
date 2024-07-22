@@ -271,6 +271,13 @@ impl fmt::Display for LinuxError {
     }
 }
 
+#[cfg(target_arch = "x86_64")]
+impl From<x86::vmx::VmFail> for AxError {
+    fn from(err: x86::vmx::VmFail) -> Self {
+        ax_err_type!(BadState, format_args!("VMX instruction failed: {:?}", err))
+    }
+}
+
 #[doc(hidden)]
 pub mod __priv {
     pub use log::warn;
