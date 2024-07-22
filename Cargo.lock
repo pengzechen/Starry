@@ -289,6 +289,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "66ccd41dd4ef364e2385901a5c2a3adea974a41eccb2529c1f24e4c8bc93d834"
 dependencies = [
  "log",
+ "x86",
 ]
 
 [[package]]
@@ -375,6 +376,7 @@ dependencies = [
  "axlog",
  "bitflags 2.6.0",
  "cfg-if",
+ "cortex-a",
  "dw_apb_uart",
  "handler_table",
  "int_ratio",
@@ -695,6 +697,15 @@ name = "core_detect"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f8f80099a98041a3d1622845c271458a2d73e688351bf3cb999266764b81d48"
+
+[[package]]
+name = "cortex-a"
+version = "8.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8256fd5103e10027467cc7a97c9ff27fcc4547ea24864da0aff2e7aef6e18e28"
+dependencies = [
+ "tock-registers",
+]
 
 [[package]]
 name = "crate_interface"
