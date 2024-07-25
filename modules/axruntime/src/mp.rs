@@ -30,7 +30,7 @@ pub fn start_secondary_cpus(primary_cpu_id: usize) {
 ///
 /// It is called from the bootstrapping code in [axhal].
 #[no_mangle]
-pub extern "C" fn rust_main_secondary(cpu_id: usize) -> ! {
+pub extern "C" fn rust_main_secondary(cpu_id: usize)  {
     ENTERED_CPUS.fetch_add(1, Ordering::Relaxed);
     info!("Secondary CPU {:x} started.", cpu_id);
 
@@ -54,11 +54,20 @@ pub extern "C" fn rust_main_secondary(cpu_id: usize) -> ! {
 
     #[cfg(all(feature = "tls", not(feature = "multitask")))]
     super::init_tls();
-
-    #[cfg(feature = "multitask")]
-    axtask::run_idle();
-    #[cfg(not(feature = "multitask"))]
-    loop {
-        axhal::arch::wait_for_irqs();
+    
+    // 前期做 pe->vpe->vm 暂时直接跑到后面初始化vm
+    // 后面 vpe 被thread管理应该可以使用这里的multitask
+    #[cfg(not(feature = "hv"))] 
+    {
+        #[cfg(feature = "multitask")]
+        axtask::run_idle();
+        #[cfg(not(feature = "multitask"))]
+        loop {
+            axhal::arch::wait_for_irqs();
+        }
     }
+    extern "C" {
+        fn main2();
+    }
+    unsafe { main2() }
 }

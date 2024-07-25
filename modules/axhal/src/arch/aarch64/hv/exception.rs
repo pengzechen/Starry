@@ -100,6 +100,9 @@ fn lower_aarch64_synchronous(tf: &mut TrapFrame) {
         "enter lower_aarch64_synchronous exception class:0x{:X}",
         exception_class()
     );
+    if exception_class() == 0x20 {
+        panic!("invalid ec");
+    }
     // 0x16: hvc_handler
     // 0x24: data_abort_handler
     call_handler(exception_class(), tf);

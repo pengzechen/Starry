@@ -330,3 +330,36 @@ unsafe extern "C" fn _start() -> ! {
         options(noreturn),
     );
 }
+
+
+/// The earliest entry point for the secondary CPUs.
+#[cfg(feature = "hv")]
+#[cfg(feature = "smp")]
+#[naked]
+#[no_mangle]
+#[link_section = ".text.boot"]
+unsafe extern "C" fn _start_secondary() -> ! {
+    core::arch::asm!("
+        mrs     x19, mpidr_el1
+        and     x19, x19, #0xffffff     // get current CPU id
+
+        mov     sp, x0
+        bl      {switch_to_el2}         // switch to EL1
+        bl      {enable_fp}             // enable fp/neon
+        bl      {init_mmu_el2}
+
+        mov     x8, {phys_virt_offset}  // set SP to the high address
+        add     sp, sp, x8
+
+        mov     x0, x19                 // call rust_entry_secondary(cpu_id)
+        ldr     x8, ={entry}
+        blr     x8
+        b      .",
+        switch_to_el2 = sym switch_to_el2,
+        init_mmu_el2 = sym init_mmu_el2,
+        enable_fp = sym enable_fp,
+        phys_virt_offset = const axconfig::PHYS_VIRT_OFFSET,
+        entry = sym crate::platform::rust_entry_secondary,
+        options(noreturn),
+    )
+}
