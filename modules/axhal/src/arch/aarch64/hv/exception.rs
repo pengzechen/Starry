@@ -96,10 +96,10 @@ fn invalid_exception_el2(tf: &mut TrapFrame, kind: TrapKind, source: TrapSource)
 /// deal with lower aarch64 synchronous exception
 #[no_mangle]
 fn lower_aarch64_synchronous(tf: &mut TrapFrame) {
-    debug!(
-        "enter lower_aarch64_synchronous exception class:0x{:X}",
-        exception_class()
-    );
+    // debug!(
+    //     "enter lower_aarch64_synchronous exception class:0x{:X}",
+    //     exception_class()
+    // );
     if exception_class() == 0x20 {
         panic!("invalid ec");
     }

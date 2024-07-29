@@ -67,7 +67,18 @@ pub extern "C" fn rust_main_secondary(cpu_id: usize)  {
         }
     }
     extern "C" {
+        fn main1();
         fn main2();
     }
-    unsafe { main2() }
+    use axhal::cpu::this_cpu_id;
+    if this_cpu_id() == 1 {
+        unsafe { main1() }
+    } else if this_cpu_id() == 2 {
+        unsafe { main2() }
+    } else {
+        warn!("================= ERROR =========================");
+        loop {
+            axhal::arch::wait_for_irqs();
+        }
+    }
 }
