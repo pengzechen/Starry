@@ -1,5 +1,5 @@
 use crate::{irq::IrqHandler, mem::phys_to_virt};
-use arm_gic::gic_v2::{GicCpuInterface, GicDistributor};
+use arm_gic::gic_v2::*;
 use arm_gic::{translate_irq, InterruptType};
 use memory_addr::PhysAddr;
 use spinlock::SpinNoIrq;
@@ -21,16 +21,15 @@ pub const UART_IRQ_NUM: usize = translate_irq(axconfig::UART_IRQ, InterruptType:
 const GICD_BASE: PhysAddr = PhysAddr::from(axconfig::GICD_PADDR);
 const GICC_BASE: PhysAddr = PhysAddr::from(axconfig::GICC_PADDR);
 
-static GICD: SpinNoIrq<GicDistributor> =
-    SpinNoIrq::new(GicDistributor::new(phys_to_virt(GICD_BASE).as_mut_ptr()));
+// static GICD: SpinNoIrq<GicDistributor> = SpinNoIrq::new(GicDistributor::new(phys_to_virt(GICD_BASE).as_mut_ptr()));
 
 // per-CPU, no lock
-static GICC: GicCpuInterface = GicCpuInterface::new(phys_to_virt(GICC_BASE).as_mut_ptr());
+// static GICC: GicCpuInterface = GicCpuInterface::new(phys_to_virt(GICC_BASE).as_mut_ptr());
 
 /// Enables or disables the given IRQ.
 pub fn set_enable(irq_num: usize, enabled: bool) {
     trace!("GICD set enable: {} {}", irq_num, enabled);
-    GICD.lock().set_enable(irq_num as _, enabled);
+    unsafe { GICD.set_enable(irq_num as _, enabled); }
 }
 
 /// Registers an IRQ handler for the given IRQ.
@@ -48,18 +47,24 @@ pub fn register_handler(irq_num: usize, handler: IrqHandler) -> bool {
 /// up in the IRQ handler table and calls the corresponding handler. If
 /// necessary, it also acknowledges the interrupt controller after handling.
 pub fn dispatch_irq(_unused: usize) {
-    GICC.handle_irq(|irq_num| crate::irq::dispatch_irq_common(irq_num as _));
+    unsafe { GICC.handle_irq(|irq_num| crate::irq::dispatch_irq_common(irq_num as _)); }
 }
 
 /// Initializes GICD, GICC on the primary CPU.
 pub(crate) fn init_primary() {
     info!("Initialize GICv2...");
-    GICD.lock().init();
-    GICC.init();
+    //GICD.lock().init();
+    //GICC.init();
+    GicDistributor::init_base(phys_to_virt(GICD_BASE).as_mut_ptr());
+    GicCpuInterface::init_base(phys_to_virt(GICC_BASE).as_mut_ptr());
+    unsafe { GICD.init(); }
+    unsafe { GICC.init(); }
 }
 
 /// Initializes GICC on secondary CPUs.
 #[cfg(feature = "smp")]
 pub(crate) fn init_secondary() {
-    GICC.init();
+    // GICC.init();
+    GicCpuInterface::init_base(phys_to_virt(GICC_BASE).as_mut_ptr());
+    unsafe { GICC.init(); }
 }

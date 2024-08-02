@@ -68,6 +68,7 @@ pub(crate) fn init_percpu() {
     {
         CNTP_CTL_EL0.write(CNTP_CTL_EL0::ENABLE::SET);
         CNTP_TVAL_EL0.set(0);
+        crate::platform::irq::set_enable(crate::platform::irq::TIMER_IRQ_NUM, true);
     }
     #[cfg(all(feature = "irq", feature = "hv"))]
     {
@@ -79,5 +80,5 @@ pub(crate) fn init_percpu() {
             core::arch::asm!("msr CNTHP_TVAL_EL2, {}", in(reg) tval);
         }
     }
-    crate::platform::irq::set_enable(crate::platform::irq::TIMER_IRQ_NUM, true);
+    
 }

@@ -12,7 +12,7 @@ use tock_registers::registers::{ReadOnly, ReadWrite, WriteOnly};
 register_structs! {
     /// GIC Distributor registers.
     #[allow(non_snake_case)]
-    GicDistributorRegs {
+    pub GicDistributor {
         /// Distributor Control Register.
         (0x0000 => CTLR: ReadWrite<u32>),
         /// Interrupt Controller Type Register.
@@ -50,7 +50,7 @@ register_structs! {
 register_structs! {
     /// GIC CPU Interface registers.
     #[allow(non_snake_case)]
-    GicCpuInterfaceRegs {
+    pub GicCpuInterface {
         /// CPU Interface Control Register.
         (0x0000 => CTLR: ReadWrite<u32>),
         /// Interrupt Priority Mask Register.
@@ -93,11 +93,15 @@ register_structs! {
 /// - visibility of the state of each interrupt
 /// - a mechanism for software to set or clear the pending state of a peripheral
 ///   interrupt.
+
+/* 
 #[derive(Debug, Clone)]
 pub struct GicDistributor {
     base: NonNull<GicDistributorRegs>,
     max_irqs: usize,
 }
+*/
+// type GicDistributor = GicDistributorRegs;
 
 /// The GIC CPU interface.
 ///
@@ -112,10 +116,16 @@ pub struct GicDistributor {
 /// - setting an interrupt priority mask for the processor
 /// - defining the preemption policy for the processor
 /// - determining the highest priority pending interrupt for the processor.
+
+/* 
 #[derive(Debug, Clone)]
 pub struct GicCpuInterface {
     base: NonNull<GicCpuInterfaceRegs>,
 }
+*/
+
+// type GicCpuInterface = GicCpuInterfaceRegs;
+
 
 unsafe impl Send for GicDistributor {}
 unsafe impl Sync for GicDistributor {}
@@ -123,33 +133,33 @@ unsafe impl Sync for GicDistributor {}
 unsafe impl Send for GicCpuInterface {}
 unsafe impl Sync for GicCpuInterface {}
 
+use crate::device_ref::*;
+
+pub static mut GICD: DeviceRef<GicDistributor> = unsafe { DeviceRef::new() };
+pub static mut GICC: DeviceRef<GicCpuInterface> = unsafe { DeviceRef::new() };
+static GICD_LOCK: spinlock::SpinNoIrq<()> = spinlock::SpinNoIrq::new(());
+
 impl GicDistributor {
     /// Construct a new GIC distributor instance from the base address.
-    pub const fn new(base: *mut u8) -> Self {
-        Self {
-            base: NonNull::new(base).unwrap().cast(),
-            max_irqs: GIC_MAX_IRQ,
-        }
-    }
 
-    const fn regs(&self) -> &GicDistributorRegs {
-        unsafe { self.base.as_ref() }
+    pub fn init_base(base: *mut u8) {
+        unsafe { GICD.dev_init(base as * const GicDistributor); }
     }
-
+    
     /// The number of implemented CPU interfaces.
     pub fn cpu_num(&self) -> usize {
-        ((self.regs().TYPER.get() as usize >> 5) & 0b111) + 1
+        ((self.TYPER.get() as usize >> 5) & 0b111) + 1
     }
 
     /// The maximum number of interrupts that the GIC supports
     pub fn max_irqs(&self) -> usize {
-        ((self.regs().TYPER.get() as usize & 0b11111) + 1) * 32
+        ((self.TYPER.get() as usize & 0b11111) + 1) * 32
     }
 
     /// Configures the trigger mode for the given interrupt.
     pub fn configure_interrupt(&mut self, vector: usize, tm: TriggerMode) {
         // Only configurable for SPI interrupts
-        if vector >= self.max_irqs || vector < SPI_RANGE.start {
+        if vector < SPI_RANGE.start {
             return;
         }
 
@@ -157,33 +167,40 @@ impl GicDistributor {
         // 16 irqs encoded per ICFGR register
         let reg_idx = vector >> 4;
         let bit_shift = ((vector & 0xf) << 1) + 1;
-        let mut reg_val = self.regs().ICFGR[reg_idx].get();
+        
+        let lock = GICD_LOCK.lock();
+        let mut reg_val = self.ICFGR[reg_idx].get();
         match tm {
             TriggerMode::Edge => reg_val |= 1 << bit_shift,
             TriggerMode::Level => reg_val &= !(1 << bit_shift),
         }
-        self.regs().ICFGR[reg_idx].set(reg_val);
+        self.ICFGR[reg_idx].set(reg_val);
+        drop(lock);
     }
 
     /// Enables or disables the given interrupt.
     pub fn set_enable(&mut self, vector: usize, enable: bool) {
-        if vector >= self.max_irqs {
-            return;
-        }
+        // if vector >= self.max_irqs {
+        //     return;
+        // }
+
         let reg = vector / 32;
         let mask = 1 << (vector % 32);
+
+        let lock = GICD_LOCK.lock();
         if enable {
-            self.regs().ISENABLER[reg].set(mask);
+            self.ISENABLER[reg].set(mask);
         } else {
-            self.regs().ICENABLER[reg].set(mask);
+            self.ICENABLER[reg].set(mask);
         }
+        drop(lock);
     }
 
     /// Get interrupt priority.
     pub fn get_priority(&self, int_id: usize) -> usize {
         let idx = (int_id * 8) / 32;
         let off = (int_id * 8) % 32;
-        ((self.regs().IPRIORITYR[idx].get() >> off) & 0xff) as usize
+        ((self.IPRIORITYR[idx].get() >> off) & 0xff) as usize
     }
 
     /// Set interrupt priority.
@@ -192,10 +209,12 @@ impl GicDistributor {
         let offset = (int_id * 8) % 32;
         let mask: u32 = 0xff << offset;
 
-        let prev_reg_val = self.regs().IPRIORITYR[idx].get();
+        let lock = GICD_LOCK.lock();
+        let prev_reg_val = self.IPRIORITYR[idx].get();
         // clear target int_id priority and set its priority.
         let reg_val = (prev_reg_val & !mask) | (((priority as u32) << offset) & mask);
-        self.regs().IPRIORITYR[idx].set(reg_val);
+        self.IPRIORITYR[idx].set(reg_val);
+        drop(lock);
     }
 
     /// Initializes the GIC distributor.
@@ -206,20 +225,19 @@ impl GicDistributor {
     /// This function should be called only once.
     pub fn init(&mut self) {
         let max_irqs = self.max_irqs();
-        assert!(max_irqs <= GIC_MAX_IRQ);
-        self.max_irqs = max_irqs;
+        assert!(max_irqs <= GIC_MAX_IRQ);;
 
         // Disable all interrupts
         for i in (0..max_irqs).step_by(32) {
-            self.regs().ICENABLER[i / 32].set(u32::MAX);
-            self.regs().ICPENDR[i / 32].set(u32::MAX);
-            self.regs().ICACTIVER[i / 32].set(u32::MAX);
+            self.ICENABLER[i / 32].set(u32::MAX);
+            self.ICPENDR[i / 32].set(u32::MAX);
+            self.ICACTIVER[i / 32].set(u32::MAX);
         }
         if self.cpu_num() > 1 {
             for i in (SPI_RANGE.start..max_irqs).step_by(4) {
                 // Set external interrupts to target cpu 0
-                self.regs().ITARGETSR[i / 4].set(0x01_01_01_01);
-                self.regs().IPRIORITYR[i / 4].set(u32::MAX);
+                self.ITARGETSR[i / 4].set(0x01_01_01_01);
+                self.IPRIORITYR[i / 4].set(u32::MAX);
             }
         }
         // Initialize all the SPIs to edge triggered
@@ -228,21 +246,16 @@ impl GicDistributor {
         }
 
         // enable GIC0
-        self.regs().CTLR.set(1);
+        self.CTLR.set(1);
     }
 }
 
 impl GicCpuInterface {
-    /// Construct a new GIC CPU interface instance from the base address.
-    pub const fn new(base: *mut u8) -> Self {
-        Self {
-            base: NonNull::new(base).unwrap().cast(),
-        }
+
+    pub fn init_base(base: *mut u8) {
+        unsafe { GICC.dev_init(base as * const GicCpuInterface); }
     }
 
-    const fn regs(&self) -> &GicCpuInterfaceRegs {
-        unsafe { self.base.as_ref() }
-    }
 
     /// Returns the interrupt ID of the highest priority pending interrupt for
     /// the CPU interface. (read GICC_IAR)
@@ -251,7 +264,7 @@ impl GicCpuInterface {
     /// or the CPU interface are disabled, or there is no pending interrupt on
     /// the CPU interface.
     pub fn iar(&self) -> u32 {
-        self.regs().IAR.get()
+        self.IAR.get()
     }
 
     /// Informs the CPU interface that it has completed the processing of the
@@ -259,7 +272,7 @@ impl GicCpuInterface {
     ///
     /// The value written must be the value returns from [`Self::iar`].
     pub fn set_eoi(&self, iar: u32) {
-        self.regs().EOIR.set(iar);
+        self.EOIR.set(iar);
     }
 
     /// handles the signaled interrupt.
@@ -291,11 +304,11 @@ impl GicCpuInterface {
     /// This function should be called only once.
     pub fn init(&self) {
         // enable GIC0
-        self.regs().CTLR.set(1);
+        self.CTLR.set(1);
         // #[cfg(feature = "hv")]
         // // set EOImodeNS and EN bit for hypervisor
-        // self.regs().CTLR.set(1| 0x200);
+        // self.CTLR.set(1| 0x200);
         // unmask interrupts at all priority levels
-        self.regs().PMR.set(0xff);
+        self.PMR.set(0xff);
     }
 }

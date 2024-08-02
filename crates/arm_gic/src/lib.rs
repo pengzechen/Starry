@@ -8,6 +8,15 @@
 
 pub mod gic_v2;
 
+mod device_ref;
+
+pub use gic_v2::GICC;
+pub use gic_v2::GICD;
+pub use gic_v2::GicDistributor;
+pub use gic_v2::GicCpuInterface;
+
+
+
 use core::ops::Range;
 
 /// Interrupt ID 0-15 are used for SGIs (Software-generated interrupt).
