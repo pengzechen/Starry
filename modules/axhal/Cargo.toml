@@ -59,6 +59,7 @@ arm_gicv2 = "0.1"
 arm_pl011 = "0.1"
 arm_pl031 = { version = "0.2", optional = true }
 dw_apb_uart = "0.1"
+cortex-a = "8.1.1"
 
 [build-dependencies]
 axconfig = { workspace = true }
