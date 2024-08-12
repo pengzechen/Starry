@@ -79,6 +79,6 @@ pub(crate) fn init_percpu() {
             core::arch::asm!("msr CNTHP_CTL_EL2, {}", in(reg) ctl);
             core::arch::asm!("msr CNTHP_TVAL_EL2, {}", in(reg) tval);
         }
+        crate::platform::irq::set_enable(crate::platform::irq::TIMER_IRQ_NUM, true);
     }
-    
 }

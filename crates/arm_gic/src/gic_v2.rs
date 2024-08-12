@@ -9,6 +9,11 @@ use tock_registers::interfaces::{Readable, Writeable};
 use tock_registers::register_structs;
 use tock_registers::registers::{ReadOnly, ReadWrite, WriteOnly};
 
+const GIC_SGIS_NUM:         usize = 16;
+pub const GIC_CONFIG_BITS:  usize = 2;
+const GIC_SEC_REGS_NUM:     usize = 1024 * 2 / 32;
+pub const GIC_SGI_REGS_NUM: usize = GIC_SGIS_NUM * 8 / 32;
+
 register_structs! {
     /// GIC Distributor registers.
     #[allow(non_snake_case)]
@@ -40,10 +45,14 @@ register_structs! {
         (0x0800 => ITARGETSR: [ReadWrite<u32>; 0x100]),
         /// Interrupt Configuration Registers.
         (0x0c00 => ICFGR: [ReadWrite<u32>; 0x40]),
-        (0x0d00 => _reserved_1),
-        /// Software Generated Interrupt Register.
+        (0x0d00 => reserve1),
+        (0x0e00 => NSACR: [ReadWrite<u32>; GIC_SEC_REGS_NUM]),
         (0x0f00 => SGIR: WriteOnly<u32>),
-        (0x0f04 => @END),
+        (0x0f04 => reserve2),
+        (0x0f10 => CPENDSGIR: [ReadWrite<u32>; GIC_SGI_REGS_NUM]),
+        (0x0f20 => SPENDSGIR: [ReadWrite<u32>; GIC_SGI_REGS_NUM]),
+        (0x0f30 => _reserved_3),
+        (0x1000 => @END),
     }
 }
 
@@ -139,11 +148,29 @@ pub static mut GICD: DeviceRef<GicDistributor> = unsafe { DeviceRef::new() };
 pub static mut GICC: DeviceRef<GicCpuInterface> = unsafe { DeviceRef::new() };
 static GICD_LOCK: spinlock::SpinNoIrq<()> = spinlock::SpinNoIrq::new(());
 
+pub fn gic_is_sgi(int_id: usize) -> bool {
+    int_id < 16
+}
+
+
+
 impl GicDistributor {
     /// Construct a new GIC distributor instance from the base address.
 
     pub fn init_base(base: *mut u8) {
         unsafe { GICD.dev_init(base as * const GicDistributor); }
+    }
+
+    pub fn gicd_base() -> usize {
+        unsafe { GICD.addr() }
+    }
+
+    pub fn get_typer() -> u32 {
+        unsafe { GICD.TYPER.get() }
+    }
+
+    pub fn get_iidr() -> u32 {
+        unsafe { GICD.IIDR.get() }
     }
     
     /// The number of implemented CPU interfaces.
@@ -157,7 +184,7 @@ impl GicDistributor {
     }
 
     /// Configures the trigger mode for the given interrupt.
-    pub fn configure_interrupt(&mut self, vector: usize, tm: TriggerMode) {
+    pub fn configure_interrupt(vector: usize, tm: TriggerMode) {
         // Only configurable for SPI interrupts
         if vector < SPI_RANGE.start {
             return;
@@ -169,17 +196,18 @@ impl GicDistributor {
         let bit_shift = ((vector & 0xf) << 1) + 1;
         
         let lock = GICD_LOCK.lock();
-        let mut reg_val = self.ICFGR[reg_idx].get();
+        let mut reg_val;
+        unsafe{ reg_val = GICD.ICFGR[reg_idx].get(); }
         match tm {
             TriggerMode::Edge => reg_val |= 1 << bit_shift,
             TriggerMode::Level => reg_val &= !(1 << bit_shift),
         }
-        self.ICFGR[reg_idx].set(reg_val);
+        unsafe{ GICD.ICFGR[reg_idx].set(reg_val); }
         drop(lock);
     }
 
     /// Enables or disables the given interrupt.
-    pub fn set_enable(&mut self, vector: usize, enable: bool) {
+    pub fn set_enable(vector: usize, enable: bool) {
         // if vector >= self.max_irqs {
         //     return;
         // }
@@ -189,9 +217,9 @@ impl GicDistributor {
 
         let lock = GICD_LOCK.lock();
         if enable {
-            self.ISENABLER[reg].set(mask);
+            unsafe { GICD.ISENABLER[reg].set(mask); }
         } else {
-            self.ICENABLER[reg].set(mask);
+            unsafe{ GICD.ICENABLER[reg].set(mask); }
         }
         drop(lock);
     }
@@ -204,16 +232,118 @@ impl GicDistributor {
     }
 
     /// Set interrupt priority.
-    pub fn set_priority(&self, int_id: usize, priority: u8) {
+    pub fn set_priority(int_id: usize, priority: u8) {
         let idx = (int_id * 8) / 32;
         let offset = (int_id * 8) % 32;
         let mask: u32 = 0xff << offset;
 
         let lock = GICD_LOCK.lock();
-        let prev_reg_val = self.IPRIORITYR[idx].get();
-        // clear target int_id priority and set its priority.
-        let reg_val = (prev_reg_val & !mask) | (((priority as u32) << offset) & mask);
-        self.IPRIORITYR[idx].set(reg_val);
+        unsafe {
+            let prev_reg_val = GICD.IPRIORITYR[idx].get();
+            // clear target int_id priority and set its priority.
+            let reg_val = (prev_reg_val & !mask) | (((priority as u32) << offset) & mask);
+            GICD.IPRIORITYR[idx].set(reg_val);
+        }
+        drop(lock);
+    }
+
+    pub fn trgt(int_id: usize) -> usize {
+        let idx = (int_id * 8) / 32;
+        let off = (int_id * 8) % 32;
+        unsafe{ ((GICD.ITARGETSR[idx].get() >> off) & 0xff) as usize }
+    }
+
+    pub fn set_trgt(int_id: usize, trgt: u8) {
+        let idx = (int_id * 8) / 32;
+        let off = (int_id * 8) % 32;
+        let mask: u32 = 0b11111111 << off;
+
+        let lock = GICD_LOCK.lock();
+        unsafe{ 
+            let prev = GICD.ITARGETSR[idx].get();
+            let value = (prev & !mask) | (((trgt as u32) << off) & mask);
+            GICD.ITARGETSR[idx].set(value); 
+        }
+        drop(lock);
+    }
+
+    pub fn set_act(int_id: usize, act: bool) {
+        let reg_ind = int_id / 32;
+        let mask = 1 << (int_id % 32);
+
+        let lock = GICD_LOCK.lock();
+        if act {
+            unsafe { GICD.ISACTIVER[reg_ind].set(mask); }
+        } else {
+            unsafe { GICD.ICACTIVER[reg_ind].set(mask); }
+        }
+        drop(lock);
+    }
+
+    pub fn set_pend(int_id: usize, pend: bool) {
+        let lock = GICD_LOCK.lock();
+        if gic_is_sgi(int_id) {
+            let reg_ind = int_id / 4;
+            let off = (int_id % 4) * 8;
+            if pend {
+                // TODO: current_cpu().id
+                // self.SPENDSGIR[reg_ind].set(1 << (off + current_cpu().id));
+                unsafe { GICD.SPENDSGIR[reg_ind].set(1 << (off + 1)); }
+            } else {
+                unsafe { GICD.CPENDSGIR[reg_ind].set(0b11111111 << off); }
+            }
+        } else {
+            let reg_ind = int_id / 32;
+            let mask = 1 << (int_id % 32);
+            if pend {
+                unsafe { GICD.ISPENDR[reg_ind].set(mask); }
+            } else {
+                unsafe { GICD.ICPENDR[reg_ind].set(mask); }
+            }
+        }
+
+        drop(lock);
+    }
+
+    pub fn state(int_id: usize) -> usize {
+        let reg_ind = int_id / 32;
+        let mask = 1 << (int_id % 32);
+        let pend;
+        let act;
+
+        let lock = GICD_LOCK.lock();
+
+        unsafe {
+            pend = if (GICD.ISPENDR[reg_ind].get() & mask) != 0 {
+                1
+            } else {
+                0
+            };
+            act = if (GICD.ISACTIVER[reg_ind].get() & mask) != 0 {
+                2
+            } else {
+                0
+            };
+        }
+        drop(lock);
+        pend | act
+    }
+
+    pub fn set_state(int_id: usize, state: usize) {
+        Self::set_act(int_id, (state & 2) != 0);
+        Self::set_pend(int_id, (state & 1) != 0);
+    }
+
+    pub fn set_icfgr(int_id: usize, cfg: u8) {
+        let lock = GICD_LOCK.lock();
+        let reg_ind = (int_id * GIC_CONFIG_BITS) / 32;
+        let off = (int_id * GIC_CONFIG_BITS) % 32;
+        let mask = 0b11 << off;
+
+        unsafe{ 
+            let icfgr = GICD.ICFGR[reg_ind].get();
+            GICD.ICFGR[reg_ind].set((icfgr & !mask) | (((cfg as u32) << off) & mask));
+        }
         drop(lock);
     }
 
@@ -242,7 +372,7 @@ impl GicDistributor {
         }
         // Initialize all the SPIs to edge triggered
         for i in SPI_RANGE.start..max_irqs {
-            self.configure_interrupt(i, TriggerMode::Edge);
+            Self::configure_interrupt(i, TriggerMode::Edge);
         }
 
         // enable GIC0
@@ -265,6 +395,15 @@ impl GicCpuInterface {
     /// the CPU interface.
     pub fn iar(&self) -> u32 {
         self.IAR.get()
+    }
+
+    pub fn ctrlr() -> u32 {
+        unsafe {
+            GICC.CTLR.get()
+        }
+    }
+    pub fn set_ctrlr(val: u32) {
+        unsafe { GICC.CTLR.set(val as u32); }
     }
 
     /// Informs the CPU interface that it has completed the processing of the

@@ -29,7 +29,7 @@ const GICC_BASE: PhysAddr = PhysAddr::from(axconfig::GICC_PADDR);
 /// Enables or disables the given IRQ.
 pub fn set_enable(irq_num: usize, enabled: bool) {
     trace!("GICD set enable: {} {}", irq_num, enabled);
-    unsafe { GICD.set_enable(irq_num as _, enabled); }
+    GicDistributor::set_enable(irq_num as _, enabled);
 }
 
 /// Registers an IRQ handler for the given IRQ.
