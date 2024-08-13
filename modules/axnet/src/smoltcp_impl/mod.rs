@@ -10,10 +10,10 @@ use core::cell::RefCell;
 use core::ops::DerefMut;
 
 use axdriver::prelude::*;
-use axhal::time::{current_time_nanos, NANOS_PER_MICROS};
+use axdriver_net::{DevError, NetBufPtr};
+use axhal::time::{wall_time_nanos, NANOS_PER_MICROS};
 use axsync::Mutex;
-use driver_net::{DevError, NetBufPtr};
-use lazy_init::LazyInit;
+use lazyinit::LazyInit;
 use smoltcp::iface::{Config, Interface, SocketHandle, SocketSet};
 use smoltcp::phy::{Device, DeviceCapabilities, Medium, RxToken, TxToken};
 use smoltcp::socket::{self, AnySocket};
@@ -145,7 +145,7 @@ impl InterfaceWrapper {
     }
 
     fn current_time() -> Instant {
-        Instant::from_micros_const((current_time_nanos() / NANOS_PER_MICROS) as i64)
+        Instant::from_micros_const((wall_time_nanos() / NANOS_PER_MICROS) as i64)
     }
 
     pub fn name(&self) -> &str {
@@ -319,9 +319,9 @@ pub(crate) fn init(net_dev: AxNetDevice) {
     eth0.setup_ip_addr(ip, IP_PREFIX);
     eth0.setup_gateway(gateway);
 
-    ETH0.init_by(eth0);
-    SOCKET_SET.init_by(SocketSetWrapper::new());
-    LISTEN_TABLE.init_by(ListenTable::new());
+    ETH0.init_once(eth0);
+    SOCKET_SET.init_once(SocketSetWrapper::new());
+    LISTEN_TABLE.init_once(ListenTable::new());
 
     info!("created net interface {:?}:", ETH0.name());
     info!("  ether:    {}", ETH0.ethernet_address());

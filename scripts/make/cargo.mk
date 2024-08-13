@@ -11,31 +11,31 @@ endif
 build_args-release := --release
 
 build_args := \
+  -Z unstable-options \
   --target $(TARGET) \
-  --target-dir $(CURDIR)/target \
+  --target-dir $(TARGET_DIR) \
   $(build_args-$(MODE)) \
   $(verbose)
 
-RUSTFLAGS := -C link-arg=-T$(LD_SCRIPT) -C link-arg=-no-pie
-RUSTDOCFLAGS := --enable-index-page -Zunstable-options -D rustdoc::broken_intra_doc_links
+RUSTFLAGS := -C link-arg=-T$(LD_SCRIPT) -C link-arg=-no-pie -C link-arg=-znostart-stop-gc
+RUSTDOCFLAGS := -Z unstable-options --enable-index-page -D rustdoc::broken_intra_doc_links
 
 ifeq ($(MAKECMDGOALS), doc_check_missing)
   RUSTDOCFLAGS += -D missing-docs
 endif
 
 define cargo_build
-  $(call run_cmd,cargo build,$(build_args) $(1) --features "$(strip $(2))")
+  $(call run_cmd,cargo -C $(1) build,$(build_args) --features "$(strip $(2))")
 endef
 
 clippy_args := -A clippy::new_without_default
 
 define cargo_clippy
   $(call run_cmd,cargo clippy,--all-features --workspace --exclude axlog $(1) $(verbose) -- $(clippy_args))
-  $(call run_cmd,cargo clippy,-p axlog -p percpu -p percpu_macros $(1) $(verbose) -- $(clippy_args))
+  $(call run_cmd,cargo clippy,-p axlog $(1) $(verbose) -- $(clippy_args))
 endef
 
 all_packages := \
-  $(shell ls $(CURDIR)/crates) \
   $(shell ls $(CURDIR)/modules) \
   axfeat arceos_api axstd axlibc
 
@@ -45,6 +45,4 @@ define cargo_doc
   $(foreach p,$(all_packages), \
     $(call run_cmd,cargo rustdoc,--all-features -p $(p) $(verbose))
   )
-  @# for some crates, re-generate without `--all-features`
-  $(call run_cmd,cargo doc,--no-deps -p percpu $(verbose))
 endef

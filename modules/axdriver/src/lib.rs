@@ -38,9 +38,9 @@
 //! # Other Cargo Features
 //!
 //! - `dyn`: use the dynamic device model (see above).
-//! - `bus-mmio`: use device tree to probe all MMIO devices. This feature is
+//! - `bus-mmio`: use device tree to probe all MMIO devices.
+//! - `bus-pci`: use PCI bus to probe all PCI devices. This feature is
 //!    enabeld by default.
-//! - `bus-pci`: use PCI bus to probe all PCI devices.
 //! - `virtio`: use VirtIO devices. This is enabled if any of `virtio-blk`,
 //!   `virtio-net` or `virtio-gpu` is enabled.
 //! - `net`: use network devices. This is enabled if any feature of network
@@ -49,8 +49,8 @@
 //! - `block`: use block storage devices. Similar to the `net` feature.
 //! - `display`: use graphics display devices. Similar to the `net` feature.
 //!
-//! [`VirtioNetDev`]: driver_virtio::VirtIoNetDev
-//! [`Box<dyn NetDriverOps>`]: driver_net::NetDriverOps
+//! [`VirtioNetDev`]: axdriver_virtio::VirtIoNetDev
+//! [`Box<dyn NetDriverOps>`]: axdriver_net::NetDriverOps
 //! [trait objects]: https://doc.rust-lang.org/book/ch17-02-trait-objects.html
 //! [dyn]: https://doc.rust-lang.org/std/keyword.dyn.html
 

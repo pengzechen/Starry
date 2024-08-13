@@ -15,7 +15,6 @@
     feature = "dummy-if-not-enabled"
 ))]
 extern crate alloc;
-extern crate axruntime;
 
 #[macro_use]
 mod macros;
@@ -43,8 +42,10 @@ pub mod time {
     }
 
     define_api! {
-        /// Returns the current clock time.
-        pub fn ax_current_time() -> AxTimeValue;
+        /// Returns the time elapsed since system boot.
+        pub fn ax_monotonic_time() -> AxTimeValue;
+        /// Returns the time elapsed since epoch, also known as realtime.
+        pub fn ax_wall_time() -> AxTimeValue;
     }
 }
 
@@ -54,14 +55,50 @@ pub mod mem {
 
     define_api! {
         @cfg "alloc";
-        /// Allocate a continuous memory blocks with the given `layout` in
+        /// Allocates a continuous memory blocks with the given `layout` in
         /// the global allocator.
         ///
         /// Returns [`None`] if the allocation fails.
-        pub fn ax_alloc(layout: Layout) -> Option<NonNull<u8>>;
-        /// Deallocate the memory block at the given `ptr` pointer with the given
+        ///
+        /// # Safety
+        ///
+        /// This function is unsafe because it requires users to manually manage
+        /// the buffer life cycle.
+        pub unsafe fn ax_alloc(layout: Layout) -> Option<NonNull<u8>>;
+        /// Deallocates the memory block at the given `ptr` pointer with the given
         /// `layout`, which should be allocated by [`ax_alloc`].
-        pub fn ax_dealloc(ptr: NonNull<u8>, layout: Layout);
+        ///
+        /// # Safety
+        ///
+        /// This function is unsafe because it requires users to manually manage
+        /// the buffer life cycle.
+        pub unsafe fn ax_dealloc(ptr: NonNull<u8>, layout: Layout);
+    }
+
+    define_api_type! {
+        @cfg "dma";
+        pub type DMAInfo;
+    }
+
+    define_api! {
+        @cfg "dma";
+        /// Allocates **coherent** memory that meets Direct Memory Access (DMA)
+        /// requirements.
+        ///
+        /// Returns [`None`] if the allocation fails.
+        ///
+        /// # Safety
+        ///
+        /// This function is unsafe because it requires users to manually manage
+        /// the buffer life cycle.
+        pub unsafe fn ax_alloc_coherent(layout: Layout) -> Option<DMAInfo>;
+        /// Deallocates coherent memory previously allocated.
+        ///
+        /// # Safety
+        ///
+        /// This function is unsafe because it requires users to manually manage
+        /// the buffer life cycle.
+        pub unsafe fn ax_dealloc_coherent(dma: DMAInfo, layout: Layout);
     }
 }
 
@@ -336,4 +373,33 @@ pub mod io {
     define_api_type! {
         pub type AxPollState;
     }
+}
+
+/// Re-exports of ArceOS modules.
+///
+/// You should prefer to use other APIs rather than these modules. The modules
+/// here should only be used if other APIs do not meet your requirements.
+pub mod modules {
+    pub use axconfig;
+    pub use axhal;
+    pub use axlog;
+    pub use axruntime;
+    pub use axsync;
+
+    #[cfg(feature = "alloc")]
+    pub use axalloc;
+    #[cfg(feature = "display")]
+    pub use axdisplay;
+    #[cfg(feature = "dma")]
+    pub use axdma;
+    #[cfg(any(feature = "fs", feature = "net", feature = "display"))]
+    pub use axdriver;
+    #[cfg(feature = "fs")]
+    pub use axfs;
+    #[cfg(feature = "paging")]
+    pub use axmm;
+    #[cfg(feature = "net")]
+    pub use axnet;
+    #[cfg(feature = "multitask")]
+    pub use axtask;
 }

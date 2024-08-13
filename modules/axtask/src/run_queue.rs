@@ -1,8 +1,8 @@
 use alloc::collections::VecDeque;
 use alloc::sync::Arc;
-use lazy_init::LazyInit;
+use kspin::SpinNoIrq;
+use lazyinit::LazyInit;
 use scheduler::BaseScheduler;
-use spinlock::SpinNoIrq;
 
 use crate::task::{CurrentTask, TaskState};
 use crate::{AxTaskRef, Scheduler, TaskInner, WaitQueue};
@@ -136,7 +136,7 @@ impl AxRunQueue {
         assert!(curr.is_running());
         assert!(!curr.is_idle());
 
-        let now = axhal::time::current_time();
+        let now = axhal::time::wall_time();
         if now < deadline {
             crate::timers::set_alarm_wakeup(deadline, curr.clone());
             curr.set_state(TaskState::Blocked);
@@ -216,18 +216,22 @@ fn gc_entry() {
 pub(crate) fn init() {
     const IDLE_TASK_STACK_SIZE: usize = 4096;
     let idle_task = TaskInner::new(|| crate::run_idle(), "idle".into(), IDLE_TASK_STACK_SIZE);
-    IDLE_TASK.with_current(|i| i.init_by(idle_task.clone()));
+    IDLE_TASK.with_current(|i| {
+        i.init_once(idle_task.clone());
+    });
 
     let main_task = TaskInner::new_init("main".into());
     main_task.set_state(TaskState::Running);
 
-    RUN_QUEUE.init_by(AxRunQueue::new());
+    RUN_QUEUE.init_once(AxRunQueue::new());
     unsafe { CurrentTask::init_current(main_task) }
 }
 
 pub(crate) fn init_secondary() {
     let idle_task = TaskInner::new_init("idle".into());
     idle_task.set_state(TaskState::Running);
-    IDLE_TASK.with_current(|i| i.init_by(idle_task.clone()));
+    IDLE_TASK.with_current(|i| {
+        i.init_once(idle_task.clone());
+    });
     unsafe { CurrentTask::init_current(idle_task) }
 }

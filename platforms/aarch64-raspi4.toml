@@ -16,6 +16,12 @@ kernel-base-vaddr = "0xffff_0000_0008_0000"
 # Linear mapping offset, for quick conversions between physical and virtual
 # addresses.
 phys-virt-offset = "0xffff_0000_0000_0000"
+# Offset of bus address and phys address.
+phys-bus-offset = "0xC0000000"
+# Kernel address space base.
+kernel-aspace-base = "0xffff_0000_0000_0000"
+# Kernel address space size.
+kernel-aspace-size = "0x0000_ffff_ffff_f000"
 # MMIO regions with format (`base_paddr`, `size`).
 mmio-regions = [
     ["0xFE20_1000", "0x1000"],      # PL011 UART
@@ -29,3 +35,6 @@ uart-irq = "0x79"
 # GIC Address
 gicc-paddr = "0xFF84_2000"
 gicd-paddr = "0xFF84_1000"
+
+# RTC (PL031) Address (Need to read from DTB).
+rtc-paddr = "0x0"

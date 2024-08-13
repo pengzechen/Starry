@@ -44,8 +44,12 @@ else
   $(error "LOG" must be one of "off", "error", "warn", "info", "debug", "trace")
 endif
 
-ifeq ($(BUS),pci)
-  ax_feat += bus-pci
+ifeq ($(BUS),mmio)
+  ax_feat += bus-mmio
+endif
+
+ifeq ($(HV), y)
+  ax_feat += hv
 endif
 
 ifeq ($(HV), y)

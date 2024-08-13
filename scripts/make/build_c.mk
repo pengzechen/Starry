@@ -1,5 +1,5 @@
 rust_lib_name := axlibc
-rust_lib := target/$(TARGET)/$(MODE)/lib$(rust_lib_name).a
+rust_lib := $(TARGET_DIR)/$(TARGET)/$(MODE)/lib$(rust_lib_name).a
 
 ulib_dir := ulib/axlibc
 src_dir := $(ulib_dir)/c
@@ -19,7 +19,7 @@ CFLAGS += -DAX_LOG_$(shell echo $(LOG) | tr 'a-z' 'A-Z')
 
 CFLAGS += -nostdinc -fno-builtin -ffreestanding -Wall
 CFLAGS += -I$(CURDIR)/$(inc_dir)
-LDFLAGS += -nostdlib -static -no-pie --gc-sections -T$(LD_SCRIPT)
+LDFLAGS += -nostdlib -static -no-pie --gc-sections -znostart-stop-gc -T$(LD_SCRIPT)
 
 ifeq ($(MODE), release)
   CFLAGS += -O3

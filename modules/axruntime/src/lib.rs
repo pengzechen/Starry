@@ -24,7 +24,6 @@ extern crate axlog;
 
 #[cfg(all(target_os = "none", not(test)))]
 mod lang_items;
-mod trap;
 
 #[cfg(feature = "smp")]
 mod mp;
@@ -56,7 +55,7 @@ impl axlog::LogIf for LogIfImpl {
     }
 
     fn current_time() -> core::time::Duration {
-        axhal::time::current_time()
+        axhal::time::monotonic_time()
     }
 
     fn current_cpu_id() -> Option<usize> {
@@ -120,6 +119,11 @@ pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
         option_env!("AX_MODE").unwrap_or(""),
         option_env!("AX_LOG").unwrap_or(""),
     );
+    #[cfg(feature = "rtc")]
+    ax_println!(
+        "Boot at {}\n",
+        chrono::DateTime::from_timestamp_nanos(axhal::time::wall_time_nanos() as _),
+    );
 
     axlog::init();
     axlog::set_max_level(option_env!("AX_LOG").unwrap_or("")); // no effect if set `log-level-*` features
@@ -141,10 +145,7 @@ pub extern "C" fn rust_main(cpu_id: usize, dtb: usize) -> ! {
     init_allocator();
 
     #[cfg(feature = "paging")]
-    {
-        info!("Initialize kernel page table...");
-        remap_kernel_memory().expect("remap kernel memoy failed");
-    }
+    axmm::init_memory_management();
 
     info!("Initialize platform devices...");
     axhal::platform_init();
@@ -229,32 +230,6 @@ fn init_allocator() {
     }
 }
 
-#[cfg(feature = "paging")]
-fn remap_kernel_memory() -> Result<(), axhal::paging::PagingError> {
-    use axhal::mem::{memory_regions, phys_to_virt};
-    use axhal::paging::PageTable;
-    use lazy_init::LazyInit;
-
-    static KERNEL_PAGE_TABLE: LazyInit<PageTable> = LazyInit::new();
-
-    if axhal::cpu::this_cpu_is_bsp() {
-        let mut kernel_page_table = PageTable::try_new()?;
-        for r in memory_regions() {
-            kernel_page_table.map_region(
-                phys_to_virt(r.paddr),
-                r.paddr,
-                r.size,
-                r.flags.into(),
-                true,
-            )?;
-        }
-        KERNEL_PAGE_TABLE.init_by(kernel_page_table);
-    }
-
-    unsafe { axhal::arch::write_page_table_root(KERNEL_PAGE_TABLE.root_paddr()) };
-    Ok(())
-}
-
 #[cfg(feature = "irq")]
 fn init_interrupt() {
     use axhal::time::TIMER_IRQ_NUM;
@@ -267,7 +242,7 @@ fn init_interrupt() {
     static NEXT_DEADLINE: u64 = 0;
 
     fn update_timer() {
-        let now_ns = axhal::time::current_time_nanos();
+        let now_ns = axhal::time::monotonic_time_nanos();
         // Safety: we have disabled preemption in IRQ handler.
         let mut deadline = unsafe { NEXT_DEADLINE.read_current_raw() };
         if now_ns >= deadline {
