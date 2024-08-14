@@ -14,6 +14,7 @@ global_asm!(include_str!("exception.S"));
 
 type ExceptionHandler = fn(&mut TrapFrame);
 
+#[allow(clippy::declare_interior_mutable_const)]
 const EMPTY_HANDLER_VALUE: AtomicUsize = AtomicUsize::new(0);
 
 static LOWER_AARCH64_HANDLERS: [AtomicUsize; MAX_EXCEPTION_COUNT] =
@@ -30,7 +31,7 @@ pub fn register_exception_handler_aarch64(
         LOWER_AARCH64_HANDLERS[exception_class].store(handler as usize, Ordering::SeqCst);
         return true;
     }
-    return false;
+    false
 }
 
 fn call_handler(exception_class: usize, tf: &mut TrapFrame) -> bool {
@@ -39,9 +40,9 @@ fn call_handler(exception_class: usize, tf: &mut TrapFrame) -> bool {
         if handler != 0 {
             let handler: ExceptionHandler = unsafe { core::mem::transmute(handler) };
             handler(tf);
-            return true;
+            true
         } else {
-            return false;
+            false
         }
     } else {
         false
