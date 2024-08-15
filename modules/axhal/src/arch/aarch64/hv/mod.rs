@@ -1,4 +1,3 @@
-mod exception;
-pub mod exception_utils;
+mod trap;
 
-pub use exception::register_exception_handler_aarch64;
+pub use trap::{register_lower_aarch64_irq_handler, register_lower_aarch64_synchronous_handler};
